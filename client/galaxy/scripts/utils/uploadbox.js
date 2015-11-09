@@ -97,8 +97,7 @@
         }, false);
 
         // send request
-        console.debug('uploadbox::uploadpost() - Posting following data:');
-        console.debug(cnf);
+        Galaxy.logger.emit('debug', 'uploadbox::uploadpost()', [ 'Posting following data.', cnf ]);
         xhr.send(form);
     }
 

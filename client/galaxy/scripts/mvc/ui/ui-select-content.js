@@ -217,7 +217,7 @@ var View = Backbone.View.extend({
         _.each( options, function( items, src ) {
             select_options[ src ] = [];
             _.each( items, function( item ) {
-                var tags = _.reduce( item.tags, function( memo, tag ) { return memo + ', ' + tag }, '');
+                var tags = _.reduce( item.tags, function( memo, tag ) { return memo + ' [' + tag + ']' }, '');
                 select_options[ src ].push({
                     hid  : item.hid,
                     keep : item.keep,

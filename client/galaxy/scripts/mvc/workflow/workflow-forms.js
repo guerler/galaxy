@@ -98,6 +98,10 @@ define( [ 'utils/utils', 'mvc/form/form-view', 'mvc/tool/tool-form-base' ], func
         var options  = form.model.attributes;
         var workflow = options.workflow;
         var node     = options.node;
+        // remove pre-existing labels and annotations to avoid duplication when switching the tool version
+        options.inputs = options.inputs.filter( function ( item ) {
+            return item.name != '__label' && item.name != '__annotation'
+        });
         options.inputs.unshift({
             type    : 'text',
             name    : '__annotation',
@@ -295,27 +299,34 @@ define( [ 'utils/utils', 'mvc/form/form-view', 'mvc/tool/tool-form-base' ], func
         }
 
         if ( output_id ) {
-            inputs.push({
-                name        : 'pja__' + output_id + '__EmailAction',
-                label       : 'Email notification',
-                type        : 'boolean',
-                value       : String( Boolean( post_job_actions[ 'EmailAction' + output_id ] ) ),
-                ignore      : 'false',
-                help        : 'An email notification will be sent when the job has completed.',
-                payload     : {
-                    'host'  : window.location.host
-                }
-            });
-            inputs.push({
-                name        : 'pja__' + output_id + '__DeleteIntermediatesAction',
-                label       : 'Output cleanup',
-                type        : 'boolean',
-                value       : String( Boolean( post_job_actions[ 'DeleteIntermediatesAction' + output_id ] ) ),
-                ignore      : 'false',
-                help        : 'Upon completion of this step, delete non-starred outputs from completed workflow steps if they are no longer required as inputs.'
-            });
+            if (! inputs.some( function( item ) {return item.name == 'pja__' + output_id + '__EmailAction' })) {
+                // We add static PJA actions only if they do not already exist
+                inputs.push({
+                    name: 'pja__' + output_id + '__EmailAction',
+                    label: 'Email notification',
+                    type: 'boolean',
+                    value: String(Boolean(post_job_actions['EmailAction' + output_id])),
+                    ignore: 'false',
+                    help: 'An email notification will be sent when the job has completed.',
+                    payload: {
+                        'host': window.location.host
+                    }
+                });
+                inputs.push({
+                    name: 'pja__' + output_id + '__DeleteIntermediatesAction',
+                    label: 'Output cleanup',
+                    type: 'boolean',
+                    value: String(Boolean(post_job_actions['DeleteIntermediatesAction' + output_id])),
+                    ignore: 'false',
+                    help: 'Upon completion of this step, delete non-starred outputs from completed workflow steps if they are no longer required as inputs.'
+                });
+            }
             for ( var i in node.output_terminals ) {
-                inputs.push( _makeSection( i, datatypes ) );
+                var section = _makeSection(i, datatypes);
+                if (! inputs.some( function( item ){ return item.title == section.title }) ){
+                    // We only add sections that do not already exist
+                    inputs.push(section);
+                }
             }
         }
     }

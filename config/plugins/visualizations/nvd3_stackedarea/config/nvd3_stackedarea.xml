@@ -6,7 +6,7 @@
     </macros>
     <description>Renders a stacked area using NVD3 hosted at http://www.nvd3.org.</description>
     <expand macro="data"/>
-    <entry_point entry_point_type="chart" src="static/nvd3bar.js"></entry_point>
+    <entry_point entry_point_type="chart" src="static/nvd3.js"></entry_point>
     <specs>
         <expand macro="specs"/>
         <use_panels>no</use_panels>

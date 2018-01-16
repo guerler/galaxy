@@ -25,8 +25,6 @@ var View = Backbone.View.extend({
     },
 
     _renderRegular: function() {
-        var self = this;
-        var index = [];
         var title_length = 20;
         var $el = $("<div/>").addClass("ui-thumbnails-grid");
         this.collection.each(model => {
@@ -114,12 +112,20 @@ var View = Backbone.View.extend({
 
     /* Thumbnail template with image */
     _templateThumbnailItem: function(options) {
-        return `<div class="ui-thumbnails-item ui-thumbnails-item-float" value="${options.id}">${this._templateImage(options)}<div class="ui-thumbnails-title ui-form-info"><span class="fa ${options.title_icon}"/>${options.title}</div><div>`;
+        return `<div class="ui-thumbnails-item ui-thumbnails-item-float" value="${options.id}">${this._templateImage(
+            options
+        )}<div class="ui-thumbnails-title ui-form-info"><span class="fa ${options.title_icon}"/>${
+            options.title
+        }</div><div>`;
     },
 
     /* Thumbnail template with image and description */
     _templateRegularItem: function(options) {
-        return `<div class="ui-thumbnails-item" value="${options.id}"><table><tr><td>${this._templateImage(options)}</td><td><div class="ui-thumbnails-description-title ui-form-info">${options.title}</div><div class="ui-thumbnails-description-text ui-form-info">${options.description}</div></td></tr><div>`;
+        return `<div class="ui-thumbnails-item" value="${options.id}"><table><tr><td>${this._templateImage(
+            options
+        )}</td><td><div class="ui-thumbnails-description-title ui-form-info">${
+            options.title
+        }</div><div class="ui-thumbnails-description-text ui-form-info">${options.description}</div></td></tr><div>`;
     }
 });
 export default { View: View };

@@ -1,9 +1,8 @@
 <template>
-    <div>
+    <div :class="nodeClass">
         <div class="node-header unselectable clearfix">
             <b-button
                 class="node-destroy py-0 float-right"
-                variant="primary"
                 size="sm"
                 aria-label="destroy node"
                 @click="onDestroy"
@@ -16,7 +15,6 @@
                 class="node-dropdown float-right"
                 toggle-class="py-0 px-1"
                 offset="50"
-                variant="primary"
                 size="sm"
             >
                 <template v-slot:button-content>
@@ -65,6 +63,11 @@ export default {
             type: Object,
             default: null,
         },
+    },
+    computed: {
+        nodeClass() {
+            return `node-type-${this.type}`;
+        }
     },
     methods: {
         onDestroy() {

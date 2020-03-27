@@ -83,7 +83,6 @@ export function showForm(workflow, node, datatypes) {
             content.workflow = workflow;
             content.datatypes = datatypes;
             content.icon = WorkflowIcons[node.type];
-            content.cls = "ui-portlet-section";
             let formWrapper = null;
             if (node.type == "tool") {
                 formWrapper = new ToolForm(content);

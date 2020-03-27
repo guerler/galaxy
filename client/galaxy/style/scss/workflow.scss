@@ -1,6 +1,12 @@
 .workflow-client {
     .workflow-panel {
         background: $white;
+        .workflow-form {
+            @extend .ui-portlet-section;
+        }
+        .workflow-tool-form {
+            @extend .ui-portlet-section;
+        }
     }
     .workflow-center {
         z-index: 0;
@@ -17,14 +23,6 @@
                 z-index: 1001;
                 border: solid $white 1px;
                 box-shadow: 0 0 0 3px $brand-primary;
-            }
-            .node-type-tool {
-                .node-header {
-                    background: $brand-info;
-                }
-                .node-body {
-                    border-bottom: dotted $brand-info 1px;
-                }
             }
             .node-header {
                 @extend .card-header;

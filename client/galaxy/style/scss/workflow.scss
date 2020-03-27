@@ -2,13 +2,9 @@
     .workflow-panel {
         background: $white;
         .workflow-form {
-            @extend .ui-portlet-section;
             .portlet-header:first-child {
                 @extend .font-weight-bold;
             }
-        }
-        .workflow-tool-form {
-            @extend .ui-portlet-section;
         }
     }
     .workflow-center {
@@ -34,11 +30,6 @@
                 cursor: move;
                 background: $brand-primary;
                 color: $white;
-                button {
-                    background: transparent;
-                    color: $white;
-                    border: none;
-                }
             }
             .node-body {
                 @extend .card-body;

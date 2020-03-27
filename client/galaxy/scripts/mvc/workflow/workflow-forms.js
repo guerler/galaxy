@@ -15,7 +15,7 @@ export class DefaultForm {
         _addLabelAnnotation(this, node);
         this.form = new Form({
             ...options,
-            cls: "workflow-form",
+            cls: "workflow-form ui-portlet-section",
             onchange() {
                 axios
                     .post(`${getAppRoot()}api/workflows/build_module`, {
@@ -47,7 +47,7 @@ export class ToolForm {
             text_disable: "Set at Runtime",
             narrow: true,
             initial_errors: true,
-            cls: "workflow-tool-form",
+            cls: "ui-portlet-section",
             postchange(process, form) {
                 const Galaxy = getGalaxyInstance();
                 const options = form.model.attributes;

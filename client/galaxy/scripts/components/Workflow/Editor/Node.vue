@@ -5,27 +5,21 @@
                 class="node-destroy py-0 float-right"
                 size="sm"
                 aria-label="destroy node"
+                variant="primary"
                 @click="onDestroy"
             >
-                <i class="fa fa-times" />
+                <i class="fa fa-fw fa-times" />
             </b-button>
-            <b-dropdown
-                right
-                no-caret
-                class="node-dropdown float-right"
-                toggle-class="py-0 px-1"
-                offset="50"
+            <b-button
+                class="node-clone py-0 float-right"
                 size="sm"
+                aria-label="clone node"
+                variant="primary"
+                @click="onClone"
             >
-                <template v-slot:button-content>
-                    <i class="fa fa-fw fa-caret-down" />
-                </template>
-                <b-dropdown-item aria-label="clone node" role="button" href="#" class="node-clone" @click="onClone">
-                    <span class="fa fa-fw fa-files-o" />
-                    Duplicate
-                </b-dropdown-item>
-            </b-dropdown>
-            <span class="node-title ml-1">{{ title }}</span>
+                <i class="fa fa-fw fa-files-o" />
+            </b-button>
+            <span class="node-title">{{ title }}</span>
         </div>
         <div class="node-body">
             <div>

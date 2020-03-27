@@ -3,6 +3,9 @@
         background: $white;
         .workflow-form {
             @extend .ui-portlet-section;
+            .portlet-header:first-child {
+                @extend .font-weight-bold;
+            }
         }
         .workflow-tool-form {
             @extend .ui-portlet-section;

@@ -1,5 +1,5 @@
 <template>
-    <div :id="idString" :name="name" :node-label="label" class="workflow-node">
+    <div :id="idString" :name="name" :node-label="label" class="workflow-node" draggable>
         <div class="node-header unselectable clearfix">
             <b-button
                 class="node-destroy py-0 float-right"

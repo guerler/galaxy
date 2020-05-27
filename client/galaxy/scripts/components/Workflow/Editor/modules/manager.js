@@ -114,21 +114,23 @@ class Workflow extends EventEmitter {
             })
             .bind("dragclickonly", () => {
                 self._activateNode(node);
-            })
-            .bind("drag", function (e, d) {
-                // Move
-                const po = $(this).offsetParent().offset();
-                // Find relative offset and scale by zoom
-                const x = (d.offsetX - po.left) / self.canvas_manager.canvasZoom;
-                const y = (d.offsetY - po.top) / self.canvas_manager.canvasZoom;
-                $(this).css({ left: x, top: y });
-                // Redraw
-                $(this)
-                    .find(".terminal")
-                    .each(function () {
-                        this.terminal.redraw();
-                    });
             });
+
+        node.$el.addEventListener("drag", function (d) {
+            // Move
+            console.log("drag");
+            const po = $(this).offsetParent().offset();
+            // Find relative offset and scale by zoom
+            const x = (d.offsetX - po.left) / self.canvas_manager.canvasZoom;
+            const y = (d.offsetY - po.top) / self.canvas_manager.canvasZoom;
+            $(this).css({ left: x, top: y });
+            // Redraw
+            $(this)
+                .find(".terminal")
+                .each(function () {
+                    this.terminal.redraw();
+                });
+        });
 
         // Set node attributes and add to nodes list
         this.nodes[node.id] = node;

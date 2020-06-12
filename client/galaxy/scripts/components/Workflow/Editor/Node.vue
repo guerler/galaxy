@@ -434,7 +434,7 @@ export default {
             })(element.parentNode);
             // Remove active class
             element.classList.remove("node-active");
-        },
+        }
     },
 };
 </script>

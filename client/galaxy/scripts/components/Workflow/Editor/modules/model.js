@@ -12,7 +12,6 @@ export function fromSimple(workflow, data, appendData = false) {
         });
         workflow.nodeIndex = 0;
     }
-    workflow.version = data.version;
     workflow.report = data.report || {};
     Object.values(data.steps).forEach((step) => {
         // If workflow being copied into another, wipe UUID and let

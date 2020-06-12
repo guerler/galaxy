@@ -54,7 +54,6 @@ export async function saveWorkflow(workflow) {
             workflow.name = data.name;
             workflow.hasChanges = false;
             workflow.stored = true;
-            workflow.version = data.version;
             return data;
         } catch (e) {
             rethrowSimple(e);

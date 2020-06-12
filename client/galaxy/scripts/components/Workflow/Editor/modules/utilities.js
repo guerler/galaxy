@@ -110,9 +110,7 @@ export function showUpgradeMessage(data) {
             details += `<li>${m}</li>`;
         });
         if (details) {
-            upgrade_message += `<li>Step ${parseInt(step_id, 10) + 1}: ${
-                step.name
-            }<ul>${details}</ul></li>`;
+            upgrade_message += `<li>Step ${parseInt(step_id, 10) + 1}: ${step.name}<ul>${details}</ul></li>`;
         }
     });
     if (upgrade_message) {

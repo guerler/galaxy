@@ -24,27 +24,23 @@
             <div id="workflow-canvas" class="unified-panel-body workflow-canvas" v-show="isCanvas">
                 <ZoomControl :zoom-level="zoomLevel" @onZoom="onZoom" />
                 <div id="canvas-viewport">
-                    <div ref="canvas" id="canvas-container">
-                        <WorkflowNode
-                            v-for="(step, key) in steps"
-                            :id="key"
-                            :name="step.name"
-                            :type="step.type"
-                            :content-id="step.content_id"
-                            :step="step"
-                            :key="key"
-                            :datatypes-mapping="datatypesMapping"
-                            :get-manager="getManager"
-                            :get-canvas-manager="getCanvasManager"
-                            @onAdd="onAdd"
-                            @onUpdate="onUpdate"
-                            @onClone="onClone"
-                            @onCreate="onInsertTool"
-                            @onChange="onChange"
-                            @onActivate="onActivate"
-                            @onRemove="onRemove"
-                        />
-                    </div>
+                    <DataProvider :url="workflowUrl" @created="onCreated">
+                        <template>
+                            <Workflow
+                                :datatypes-mapping="datatypesMapping"
+                                :get-manager="getManager"
+                                :get-canvas-manager="getCanvasManager"
+                                :steps="steps"
+                                @onAdd="onAdd"
+                                @onUpdate="onUpdate"
+                                @onClone="onClone"
+                                @onCreate="onInsertTool"
+                                @onChange="onChange"
+                                @onActivate="onActivate"
+                                @onRemove="onRemove"
+                            />
+                        </template>
+                    </DataProvider>
                 </div>
                 <div class="workflow-overview" aria-hidden="true">
                     <div class="workflow-overview-body">
@@ -95,7 +91,7 @@
 </template>
 
 <script>
-import { getDatatypes, getModule, getVersions, saveWorkflow, loadWorkflow } from "./modules/services";
+import { getDatatypes, getModule, getVersions, saveWorkflow } from "./modules/services";
 import {
     showWarnings,
     showUpgradeMessage,
@@ -105,6 +101,7 @@ import {
     showForm,
     saveAs,
 } from "./modules/utilities";
+import { fromSimple } from "./modules/model";
 import { autoLayout } from "./modules/layout";
 import WorkflowCanvas from "./modules/canvas";
 import WorkflowOptions from "./Options";
@@ -117,11 +114,14 @@ import EditorPanel from "./EditorPanel";
 import { hide_modal, show_message, show_modal } from "layout/modal";
 import WorkflowAttributes from "./Attributes";
 import ZoomControl from "./ZoomControl";
-import WorkflowNode from "./Node";
+import Workflow from "./Workflow";
+import DataProvider from "components/Common/DataProvider";
+
 import Vue from "vue";
 
 export default {
     components: {
+        DataProvider,
         EditorPanel,
         MarkdownEditor,
         SidePanel,
@@ -129,7 +129,7 @@ export default {
         WorkflowOptions,
         WorkflowAttributes,
         ZoomControl,
-        WorkflowNode,
+        Workflow,
     },
     props: {
         id: {
@@ -185,14 +185,13 @@ export default {
             activeNode: null,
         };
     },
-    created() {
+    mounted() {
         getDatatypes().then((response) => {
             this.datatypesMapping = response.datatypes_mapping;
             this.datatypes = response.datatypes;
 
             // canvas overview management
             this.canvasManager = new WorkflowCanvas(this, this.$refs.canvas);
-            this.loadCurrent(this.id, this.version);
         });
 
         // Notify user if workflow has not been saved yet
@@ -202,7 +201,24 @@ export default {
             }
         };
     },
+    computed: {
+        workflowUrl() {
+            const versionQuery = this.version ? `version=${this.version}` : "";
+            return `${getAppRoot()}workflow/load_workflow?_=true&id=${this.id}&${versionQuery}`;
+        },
+    },
     methods: {
+        onCreated(data) {
+            fromSimple(this, data);
+            const report = data.report || {};
+            const markdown = report.markdown || reportDefault;
+            this.$refs["report-editor"].input = markdown;
+            //this.canvasManager.draw_overview(true);
+            showUpgradeMessage(data);
+            getVersions(this.id).then((versions) => {
+                this.versions = versions;
+            });
+        },
         onActivate(node) {
             if (this.activeNode != node) {
                 if (this.activeNode) {
@@ -344,25 +360,7 @@ export default {
                     }
                 }
                 this.version = version;
-                this.loadCurrent(this.id, version);
             }
-        },
-        loadCurrent(id, version) {
-            show_message("Loading workflow...", "progress");
-            loadWorkflow(this, id, version)
-                .then((data) => {
-                    const report = data.report || {};
-                    const markdown = report.markdown || reportDefault;
-                    this.$refs["report-editor"].input = markdown;
-                    this.canvasManager.draw_overview(true);
-                    showUpgradeMessage(data);
-                    getVersions(this.id).then((versions) => {
-                        this.versions = versions;
-                    });
-                })
-                .catch((response) => {
-                    show_modal("Loading workflow failed...", response, { Ok: hide_modal });
-                });
         },
         getManager() {
             return this;

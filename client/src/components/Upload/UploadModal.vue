@@ -112,9 +112,13 @@ export default {
         },
         auto: {
             type: Object,
-            default: function () {
+            default: () => {
                 return UploadUtils.AUTO_EXTENSION;
             },
+        },
+        history: {
+            type: String,
+            default: null,
         },
     },
     data: function () {
@@ -129,6 +133,7 @@ export default {
             extensionsSet: false,
             datatypesMapper: null,
             datatypesMapperReady: true,
+            historyId: this.history,
         };
     },
     created: function () {
@@ -245,11 +250,14 @@ export default {
         },
         initStateWhenHistoryReady() {
             const Galaxy = getGalaxyInstance();
-            if (!Galaxy.currHistoryPanel || !Galaxy.currHistoryPanel.model) {
-                window.setTimeout(() => {
-                    this.initStateWhenHistoryReady();
-                }, 500);
-                return;
+            if (!this.historyId) {
+                if (!Galaxy.currHistoryPanel || !Galaxy.currHistoryPanel.model) {
+                    window.setTimeout(() => {
+                        this.initStateWhenHistoryReady();
+                    }, 500);
+                    return;
+                }
+                this.historyId = Galaxy.currHistoryPanel.model.get("id");
             }
             this.historyAvailable = true;
             this.currentUser = Galaxy.user.id;
@@ -259,8 +267,7 @@ export default {
         },
         /** Refresh user and current history */
         currentHistory: function () {
-            const Galaxy = getGalaxyInstance();
-            return this.currentUser && Galaxy.currHistoryPanel.model.get("id");
+            return this.currentUser && this.historyId;
         },
         /**
          * Package API data from array of models

@@ -78,7 +78,7 @@ export default {
         },
         allowUpload: {
             type: Boolean,
-            default: false,
+            default: true,
         },
     },
     data() {
@@ -133,6 +133,7 @@ export default {
                 multiple: this.multiple,
                 format: this.format,
                 callback: this.callback,
+                history: this.history,
                 modalShow: true,
             };
             mountUploadModal(propsData);

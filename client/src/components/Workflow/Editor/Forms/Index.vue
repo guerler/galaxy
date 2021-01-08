@@ -1,6 +1,7 @@
 <template>
     <div>
         ToolForm Content
+        {{ node.id }}
     </div>
 </template>
 
@@ -15,10 +16,10 @@ export default {
             type: Function,
             required: true,
         },
-        getActiveNode: {
-            type: Function,
-            required: true,
-        }
+        node: {
+            type: Object,
+            required: false,
+        },
     },
     data() {
         return {

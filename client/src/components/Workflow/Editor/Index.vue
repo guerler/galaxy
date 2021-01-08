@@ -145,9 +145,9 @@
                                     @scrollTo="scrollTo"
                                 />
                                 <div id="right-content" class="right-content" />
-                                <Form
+                                <WorkflowForm
                                     :get-manager="getManager"
-                                    :get-node="getActiveNode"
+                                    :node="activeNode"
                                     :datatypes="datatypes"
                                 />
                             </div>
@@ -174,7 +174,7 @@ import {
 } from "./modules/utilities";
 import WorkflowCanvas from "./modules/canvas";
 import WorkflowOptions from "./Options";
-import Form from "components/Workflow/Editor/Forms/Index";
+import WorkflowForm from "components/Workflow/Editor/Forms/Index";
 import MarkdownEditor from "components/Markdown/MarkdownEditor";
 import ToolBoxWorkflow from "components/Panels/ToolBoxWorkflow";
 import SidePanel from "components/Panels/SidePanel";
@@ -196,7 +196,7 @@ export default {
         SidePanel,
         StateUpgradeModal,
         ToolBoxWorkflow,
-        Form,
+        WorkflowForm,
         WorkflowOptions,
         WorkflowAttributes,
         ZoomControl,
@@ -303,9 +303,8 @@ export default {
                 document.activeElement.blur();
                 node.makeActive();
                 this.activeNode = node;
+                this.canvasManager.drawOverview();
             }
-            showForm(this, node, this.datatypes);
-            this.canvasManager.drawOverview();
         },
         attemptRefactor(actions) {
             if (this.hasChanges) {
@@ -551,9 +550,6 @@ export default {
         },
         getCanvasManager() {
             return this.canvasManager;
-        },
-        getActiveNode() {
-            return this.activeNode;
         },
         onInsertedStateMessages(insertedStateMessages) {
             this.insertedStateMessages = insertedStateMessages;

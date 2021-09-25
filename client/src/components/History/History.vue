@@ -1,12 +1,5 @@
 <template>
-    <HistoryContentProvider
-        :parent="history"
-        :params="params"
-        :disable-poll="false"
-        :debug="false"
-        :debounce-period="500"
-        v-slot="{ loading, payload, manualReload, setScrollPos }"
-    >
+    <UrlDataProvider v-if="history && history.contents_url" :url="getUrl(history.contents_url)" v-slot="{ result: payload, loading }">
         <ExpandedItems
             :scope-key="history.id"
             :get-item-key="(item) => item.type_id"
@@ -42,52 +35,34 @@
                         <HistoryMessages class="m-2" :history="history" />
                     </template>
 
-                    <template v-slot:listcontrols>
-                        <ContentOperations
-                            :history="history"
-                            :total-matches="payload.totalMatches"
-                            :loading="loading"
-                            :params.sync="params"
-                            :content-selection="selectedItems"
-                            @update:content-selection="selectItems"
-                            :show-selection="showSelection"
-                            @update:show-selection="setShowSelection"
-                            @resetSelection="resetSelection"
-                            @selectAllContent="selectItems(payload.contents)"
-                            @manualReload="manualReload"
-                            :expanded-count="expandedCount"
-                            @collapseAllContent="collapseAll"
-                        />
-                    </template>
-
                     <template v-slot:listing>
                         <HistoryEmpty v-if="history.empty" class="m-2" />
                         <HistoryEmpty v-else-if="payload && payload.noResults" message="No Results." class="m-2" />
-                        <Scroller
-                            v-else-if="payload"
-                            :class="{ loadingBackground: loading }"
-                            key-field="hid"
-                            v-bind="payload"
-                            :debug="false"
-                            @scroll="setScrollPos"
-                        >
-                            <template v-slot="{ item, index, rowKey }">
-                                <HistoryContentItem
-                                    :item="item"
-                                    :index="index"
-                                    :row-key="rowKey"
-                                    :show-selection="showSelection"
-                                    :expanded="isExpanded(item)"
-                                    @update:expanded="setExpanded(item, $event)"
-                                    :selected="isSelected(item)"
-                                    @update:selected="setSelected(item, $event)"
-                                    @viewCollection="$emit('viewCollection', item)"
-                                    :data-hid="item.hid"
-                                    :data-index="index"
-                                    :data-row-key="rowKey"
-                                />
-                            </template>
-                        </Scroller>
+                        <div ref="listing" class="listing">
+                            <ul class="list-unstyled m-0">
+                                <li
+                                    v-for="(item, index) in payload"
+                                    :key="getItemKey(item)"
+                                    :data-row-index="index"
+                                    :data-row-key="getItemKey(item)"
+                                >
+                                    <HistoryContentItem
+                                        :item="getItem(item)"
+                                        :index="index"
+                                        :row-key="getItemKey(item)"
+                                        :show-selection="showSelection"
+                                        :expanded="isExpanded(item)"
+                                        @update:expanded="setExpanded(item, $event)"
+                                        :selected="isSelected(item)"
+                                        @update:selected="setSelected(item, $event)"
+                                        @viewCollection="$emit('viewCollection', item)"
+                                        :data-hid="item.hid"
+                                        :data-index="index"
+                                        :data-row-key="getItemKey(item)"
+                                    />
+                                </li>
+                            </ul>
+                        </div>
                     </template>
 
                     <template v-slot:modals>
@@ -96,10 +71,11 @@
                 </Layout>
             </SelectedItems>
         </ExpandedItems>
-    </HistoryContentProvider>
+    </UrlDataProvider>
 </template>
 
 <script>
+import { UrlDataProvider } from "components/providers/UrlDataProvider";
 import { History, SearchParams } from "./model";
 import { HistoryContentProvider, ExpandedItems, SelectedItems } from "./providers";
 import Layout from "./Layout";
@@ -121,6 +97,7 @@ export default {
         reportPayload,
     },
     components: {
+        UrlDataProvider,
         HistoryContentProvider,
         Layout,
         HistoryMessages,
@@ -148,5 +125,20 @@ export default {
             return this.history.id;
         },
     },
+    methods: {
+        getItem(item) {
+            return {...item, ...item.object};
+        },
+        getItemKey(item) {
+            return item["id"];
+        },
+        getUrl(url) {
+            return url.substring(1);
+        },
+        manualReload() {
+        },
+        setScrollPos() {
+        },
+    }
 };
 </script>

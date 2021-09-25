@@ -20,6 +20,7 @@ export const collectionPayload = (cfg = {}) => {
     const { totalElements: totalMatches, contents_url } = dsc;
 
     return publish((pos$) => {
+
         // split scroll position into objects where we exactly know which key to focus on, and those
         // where we have to figure out where to start
         const [ noKey$, hasKey$ ] = partition(pos$, (pos) => pos.key === null);

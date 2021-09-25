@@ -21,7 +21,7 @@ export const monitorQuery = (cfg = {}) => (request$) => {
     if (!isObservable(db$)) {
         throw new Error("Please pass a pouch database observable to monitorQuery");
     }
-    
+
     const debouncedRequest$ = request$.pipe(
         debounceTime(inputDebounce),
         distinctUntilChanged(deepEqual),

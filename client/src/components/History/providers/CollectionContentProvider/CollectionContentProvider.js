@@ -19,11 +19,11 @@ export default {
     },
 
     watch: {
-        /*dsc(newDsc, oldDsc) {
+        dsc(newDsc, oldDsc) {
             if (!(newDsc.id == oldDsc.id)) {
                 this.resetScrollPos();
             }
-        },*/
+        },
     },
 
     methods: {

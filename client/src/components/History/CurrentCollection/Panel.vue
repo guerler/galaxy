@@ -62,6 +62,7 @@
 import { History } from "../model";
 import { updateContentFields } from "../model/queries";
 import { cacheContent } from "../caching";
+
 import { UrlDataProvider } from "components/providers/UrlDataProvider";
 import { DscProvider, CollectionContentProvider, ExpandedItems } from "../providers";
 import Layout from "../Layout";
@@ -128,10 +129,6 @@ export default {
             return url.substring(1);
         },
         setScrollPos() {
-        },
-        getDatasetCollection(raw) {
-            console.log(raw);
-            return new DatasetCollection(raw);
         },
         // change the data of the root collection, anything past the root
         // collection is part of the dataset collection, which i believe is supposed to

@@ -48,7 +48,6 @@ export const twoWayMonitor = (cfg = {}) => (src$) => {
     return src$.pipe(
         hydrate([undefined, SearchParams]), 
         publish(input$ => {
-
             const upRequest$ = input$.pipe(
                 map(buildRequest({ seek: SEEK.ASC, pageSize })),
                 distinctUntilChanged(deepEqual),
@@ -72,7 +71,7 @@ export const twoWayMonitor = (cfg = {}) => (src$) => {
                 monitorQuery({ db$, inputDebounce, debug, label: "down" }),
                 alsoMatchWith(upRequest$),
             );
-        
+
             return merge(up$, down$)
         }),
         map((change) => {

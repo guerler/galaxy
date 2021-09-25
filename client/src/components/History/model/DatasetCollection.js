@@ -11,6 +11,7 @@ import { scrubModelProps } from "utils/safeAssign";
 
 export class DatasetCollection extends Content {
     loadProps(raw = {}) {
+        console.log(raw);
         if (!raw.contents_url) {
             throw new Error("missing contents_url", raw);
         }

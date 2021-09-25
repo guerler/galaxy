@@ -1,8 +1,8 @@
 <!-- When a dataset collection is being viewed, this panel shows the contents of that collection -->
 
 <template>
-    <DscProvider :is-root="isRoot" :debounce-period="500" :collection="selectedCollection" v-slot="{ dsc }">
-        <CollectionContentProvider v-if="dsc" :parent="dsc" :debug="false" v-slot="{ loading, payload, setScrollPos }">
+    <DscProvider :is-root="isRoot" :debounce-period="10" :collection="selectedCollection" v-slot="{ dsc }">
+        <UrlDataProvider v-if="dsc && dsc.contents_url" :url="getUrl(dsc.contents_url)" v-slot="{ result: payload, loading }">
             <ExpandedItems
                 :scope-key="selectedCollection.id"
                 :get-item-key="(item) => item.type_id"
@@ -27,32 +27,34 @@
                     </template>
 
                     <template v-slot:listing>
-                        <Scroller
-                            key-field="element_index"
-                            :class="{ loadingBackground: loading }"
-                            v-bind="payload"
-                            @scroll="setScrollPos"
-                            :debug="false"
-                        >
-                            <template v-slot="{ item, index, rowKey }">
-                                <CollectionContentItem
-                                    :item="item"
-                                    :index="index"
-                                    :row-key="rowKey"
-                                    :expanded="isExpanded(item)"
-                                    :writable="false"
-                                    :selectable="false"
-                                    @update:expanded="setExpanded(item, $event)"
-                                    @viewCollection="$emit('viewCollection', item)"
-                                    :data-index="index"
-                                    :data-row-key="rowKey"
-                                />
-                            </template>
-                        </Scroller>
+                        <div ref="listing" class="listing">
+                            <ul class="list-unstyled m-0">
+                                <li
+                                    v-for="(item, index) in payload"
+                                    :key="getItemKey(item)"
+                                    :data-row-index="index"
+                                    :data-row-key="getItemKey(item)"
+                                >
+                                    <CollectionContentItem
+                                        :item="item"
+                                        :index="index"
+                                        :row-key="getItemKey(item)"
+                                        :expanded="isExpanded(item)"
+                                        :writable="false"
+                                        :selectable="false"
+                                        @update:expanded="setExpanded(item, $event)"
+                                        @viewCollection="$emit('viewCollection', item)"
+                                        :data-index="index"
+                                        :data-row-key="getItemKey(item)"
+                                    />
+                                </li>
+                            </ul>
+                        </div>
+
                     </template>
                 </Layout>
             </ExpandedItems>
-        </CollectionContentProvider>
+        </UrlDataProvider>
     </DscProvider>
 </template>
 
@@ -60,13 +62,14 @@
 import { History } from "../model";
 import { updateContentFields } from "../model/queries";
 import { cacheContent } from "../caching";
-
+import { UrlDataProvider } from "components/providers/UrlDataProvider";
 import { DscProvider, CollectionContentProvider, ExpandedItems } from "../providers";
 import Layout from "../Layout";
 import TopNav from "./TopNav";
 import Details from "./Details";
 import Scroller from "../Scroller";
 import { CollectionContentItem } from "../ContentItem";
+import { DatasetCollection } from "../model";
 
 import { reportPayload } from "../providers/ContentProvider/helpers";
 import IconButton from "components/IconButton";
@@ -85,6 +88,7 @@ export default {
         CollectionContentItem,
         ExpandedItems,
         IconButton,
+        UrlDataProvider,
     },
     props: {
         history: { type: History, required: true },
@@ -114,6 +118,18 @@ export default {
         },
     },
     methods: {
+        getItemKey(item) {
+            return item["element_index"];
+        },
+        getUrl(url) {
+            return url.substring(1);
+        },
+        setScrollPos() {
+        },
+        getDatasetCollection(raw) {
+            console.log(raw);
+            return new DatasetCollection(raw);
+        },
         // change the data of the root collection, anything past the root
         // collection is part of the dataset collection, which i believe is supposed to
         // be immutable, so only edit name, tags, blah of top-level selected collection,

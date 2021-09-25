@@ -49,6 +49,7 @@ export default {
     },
     methods: {
         drillDown(coll) {
+            console.log(Date.now());
             this.breadcrumbs = [...this.breadcrumbs, coll];
         },
     },

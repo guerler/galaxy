@@ -20,7 +20,6 @@ export const collectionPayload = (cfg = {}) => {
     const { totalElements: totalMatches, contents_url } = dsc;
 
     return publish((pos$) => {
-
         // split scroll position into objects where we exactly know which key to focus on, and those
         // where we have to figure out where to start
         const [ noKey$, hasKey$ ] = partition(pos$, (pos) => pos.key === null);
@@ -70,6 +69,10 @@ export const collectionPayload = (cfg = {}) => {
 
         return new Observable((obs) => {
             const watchSub = payload$.subscribe(obs);
+            payload$.subscribe((pars) => {
+                console.log(Date.now());
+                console.log(pars);
+            });
             watchSub.add(serverLoad$.subscribe());
             return watchSub;
         });

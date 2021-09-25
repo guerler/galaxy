@@ -21,11 +21,17 @@ export const monitorQuery = (cfg = {}) => (request$) => {
     if (!isObservable(db$)) {
         throw new Error("Please pass a pouch database observable to monitorQuery");
     }
-
+    
     const debouncedRequest$ = request$.pipe(
         debounceTime(inputDebounce),
         distinctUntilChanged(deepEqual),
     );
+
+    debouncedRequest$.subscribe((par) => {
+        console.log("debounceRequest");
+        console.log(Date.now());
+        console.log(par);
+    });
 
     return debouncedRequest$.pipe(
         switchMap((request) => {
@@ -48,6 +54,17 @@ export const monitorQuery = (cfg = {}) => (request$) => {
                 map((doc) => ({ doc, match: docMatch(doc), update: true })),
                 show(debug, (change) => console.log("monitorQuery: update", change)),
             );
+            initial$.subscribe((par) => {
+                console.log("initial");
+                console.log(Date.now());
+                console.log(par);
+            });
+
+            updates$.subscribe((par) => {
+                console.log("updates");
+                console.log(Date.now());
+                console.log(par);
+            });
 
             return concat(initial$, updates$);
         }),

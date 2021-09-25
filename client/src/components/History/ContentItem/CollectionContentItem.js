@@ -12,7 +12,7 @@ export default {
                 case "dataset_collection":
                     return "Subcollection";
                 default:
-                    return "Placeholder";
+                    return "Subdataset";
             }
         },
     },

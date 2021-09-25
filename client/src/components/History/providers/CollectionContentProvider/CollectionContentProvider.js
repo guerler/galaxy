@@ -19,15 +19,16 @@ export default {
     },
 
     watch: {
-        dsc(newDsc, oldDsc) {
+        /*dsc(newDsc, oldDsc) {
             if (!(newDsc.id == oldDsc.id)) {
                 this.resetScrollPos();
             }
-        },
+        },*/
     },
 
     methods: {
         initStreams() {
+            console.log(Date.now());
             const { debouncePeriod, pageSize, params$, scrollPos$, debug } = this;
             const parent$ = this.watch$("dsc", true);
             const sources = { params$, parent$, scrollPos$ };

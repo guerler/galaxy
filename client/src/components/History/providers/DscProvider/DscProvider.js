@@ -17,11 +17,9 @@ import { monitorContentQuery, monitorDscQuery } from "../../caching";
 import { DatasetCollection } from "../../model/DatasetCollection";
 import deepEqual from "deep-equal";
 
-// passed object should have a pouch _id for monitoring
-const hasPouchId = (o) => "_id" in o;
 export default {
     props: {
-        collection: { type: Object, required: true, validator: hasPouchId },
+        collection: { type: Object, required: true },
         isRoot: { type: Boolean, required: true },
     },
     data() {

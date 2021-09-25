@@ -77,7 +77,7 @@
 <script>
 import { UrlDataProvider } from "components/providers/UrlDataProvider";
 import { History, SearchParams } from "./model";
-import { HistoryContentProvider, ExpandedItems, SelectedItems } from "./providers";
+import { ExpandedItems, SelectedItems } from "./providers";
 import Layout from "./Layout";
 import HistoryMessages from "./HistoryMessages";
 import HistoryDetails from "./HistoryDetails";
@@ -98,7 +98,6 @@ export default {
     },
     components: {
         UrlDataProvider,
-        HistoryContentProvider,
         Layout,
         HistoryMessages,
         HistoryDetails,

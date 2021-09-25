@@ -38,7 +38,7 @@ export const contentPayload = (cfg = {}) => {
         parent: history,
         filters = new SearchParams(),
         pageSize = SearchParams.pageSize,
-        debouncePeriod = 250,
+        debouncePeriod = 10,
         loadingTimeout = 2000,
         disablePoll = false,
         debug = false,

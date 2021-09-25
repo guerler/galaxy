@@ -13,7 +13,7 @@ export const collectionPayload = (cfg = {}) => {
         pageSize = SearchParams.pageSize,
         debug = false,
         loadingEvents$ = new Subject(),
-        debouncePeriod = 100,
+        debouncePeriod = 10,
         chunkSize = pageSize
     } = cfg;
 

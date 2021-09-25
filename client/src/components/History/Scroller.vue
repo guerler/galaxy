@@ -74,7 +74,7 @@ export default {
         // avoid an infinite loop when we visually adjust the scroller bar upon
         // receiving new content by suppressing outgoing update events until the
         // DOM update has finished.
-        suppressionPeriod: { type: Number, default: 250 },
+        suppressionPeriod: { type: Number, default: 10 },
 
         // debug flag
         debug: { type: Boolean, default: false },
@@ -173,7 +173,7 @@ export default {
         this.suppressEvents = false;
         this.suppressionTimeout = null;
         // this.debouncedUpdateCursor = debounce(this.updateCursor, 100);
-        this.debouncedAdjustScrollTop = debounce(this.adjustScrollTop, 100);
+        this.debouncedAdjustScrollTop = debounce(this.adjustScrollTop, 10);
     },
 
     updated() {

@@ -112,6 +112,9 @@ import Scroller from "./Scroller";
 import { HistoryContentItem } from "./ContentItem";
 import { reportPayload } from "./providers/ContentProvider/helpers";
 import HistoryMenu from "./HistoryMenu";
+import Vue from "vue";
+
+Vue.config.performance = true
 
 export default {
     filters: {

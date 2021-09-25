@@ -19,7 +19,7 @@ export const ContentProvider = {
         parent: { type: Object, required: true },
         params: { type: SearchParams, default: () => new SearchParams() },
         pageSize: { type: Number, default: SearchParams.pageSize },
-        debouncePeriod: { type: Number, default: 1000 },
+        debouncePeriod: { type: Number, default: 10 },
         debug: { type: Boolean, default: false },
     },
 

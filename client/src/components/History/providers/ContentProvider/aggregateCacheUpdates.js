@@ -32,7 +32,7 @@ export const aggregateCacheUpdates = (monitor, cfg = {}) => (src$) => {
         pageSize = SearchParams.pageSize,
 
         // input and output throttling
-        debouncePeriod = 250,
+        debouncePeriod = 10,
 
         // field and key order for the contents
         keyField = "hid",

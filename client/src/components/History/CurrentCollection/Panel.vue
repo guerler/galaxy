@@ -36,7 +36,7 @@
                                     :data-row-key="getItemKey(item)"
                                 >
                                     <CollectionContentItem
-                                        :item="item"
+                                        :item="getItem(item)"
                                         :index="index"
                                         :row-key="getItemKey(item)"
                                         :expanded="isExpanded(item)"
@@ -118,6 +118,9 @@ export default {
         },
     },
     methods: {
+        getItem(item) {
+            return {...item, ...item.object};
+        },
         getItemKey(item) {
             return item["element_index"];
         },

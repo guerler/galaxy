@@ -4,8 +4,7 @@ import { getAllContentByFilter } from "./queries";
  * Content crud operations, usually an ajax call + a cache function
  */
 
-export const updateSelectedContent = () => async () => {
-};
+export const updateSelectedContent = () => async () => {};
 
 export const hideSelectedContent = updateSelectedContent({
     visible: false,

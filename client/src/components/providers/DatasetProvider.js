@@ -24,3 +24,14 @@ export default {
         },
     },
 };
+
+async function datasets({ url }) {
+    try {
+        const { data } = await axios.get(url);
+        return data;
+    } catch (e) {
+        rethrowSimple(e);
+    }
+}
+
+export const Datasets = SingleQueryProvider(datasets);

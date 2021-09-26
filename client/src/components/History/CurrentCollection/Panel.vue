@@ -1,7 +1,11 @@
 <!-- When a dataset collection is being viewed, this panel shows the contents of that collection -->
 
 <template>
-    <UrlDataProvider v-if="selectedCollection && selectedCollection.contents_url" :url="getUrl(selectedCollection.contents_url)" v-slot="{ result: payload, loading }">
+    <DatasetCollectionDetails
+        v-if="selectedCollection && selectedCollection.contents_url"
+        :url="selectedCollection.contents_url"
+        v-slot="{ result: payload, loading }"
+    >
         <ExpandedItems
             :scope-key="selectedCollection.id"
             :get-item-key="(item) => item.type_id"
@@ -13,16 +17,15 @@
                 </template>
 
                 <template v-slot:localNav>
-                    <IconButton
-                        icon="download"
-                        title="Download Collection"
-                        :href="downloadCollectionUrl"
-                        download
-                    />
+                    <IconButton icon="download" title="Download Collection" :href="downloadCollectionUrl" download />
                 </template>
 
                 <template v-slot:details>
-                    <Details :dsc="getDatasetCollection(selectedCollection)" :writable="writable" @update:dsc="updateDsc(selectedCollection, $event)" />
+                    <Details
+                        :dsc="getDatasetCollection(selectedCollection)"
+                        :writable="writable"
+                        @update:dsc="updateDsc(selectedCollection, $event)"
+                    />
                 </template>
 
                 <template v-slot:listing>
@@ -49,18 +52,17 @@
                             </li>
                         </ul>
                     </div>
-
                 </template>
             </Layout>
         </ExpandedItems>
-    </UrlDataProvider>
+    </DatasetCollectionDetails>
 </template>
 
 <script>
 import { History } from "../model";
 import { updateContentFields } from "../model/queries";
 
-import { UrlDataProvider } from "components/providers/UrlDataProvider";
+import { DatasetCollectionDetails } from "components/providers/DatasetCollectionProvider";
 import { ExpandedItems } from "../providers";
 import Layout from "../Layout";
 import TopNav from "./TopNav";
@@ -84,7 +86,7 @@ export default {
         CollectionContentItem,
         ExpandedItems,
         IconButton,
-        UrlDataProvider,
+        DatasetCollectionDetails,
     },
     props: {
         history: { type: History, required: true },
@@ -118,16 +120,12 @@ export default {
             return new DatasetCollection(selectedCollection);
         },
         getItem(item) {
-            return {...item, ...item.object};
+            return { ...item, ...item.object };
         },
         getItemKey(item) {
             return item["element_index"];
         },
-        getUrl(url) {
-            return url.substring(1);
-        },
-        setScrollPos() {
-        },
+        setScrollPos() {},
         // change the data of the root collection, anything past the root
         // collection is part of the dataset collection, which i believe is supposed to
         // be immutable, so only edit name, tags, blah of top-level selected collection,

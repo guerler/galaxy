@@ -1,5 +1,5 @@
 <template>
-    <UrlDataProvider v-if="history && history.contents_url" :url="getUrl(history.contents_url)" v-slot="{ result: payload, loading }">
+    <Datasets v-if="history && history.contents_url" :url="history.contents_url" v-slot="{ result: payload, loading }">
         <ExpandedItems
             :scope-key="history.id"
             :get-item-key="(item) => item.type_id"
@@ -71,11 +71,11 @@
                 </Layout>
             </SelectedItems>
         </ExpandedItems>
-    </UrlDataProvider>
+    </Datasets>
 </template>
 
 <script>
-import { UrlDataProvider } from "components/providers/UrlDataProvider";
+import { Datasets } from "components/providers/DatasetProvider";
 import { History, SearchParams } from "./model";
 import { ExpandedItems, SelectedItems } from "./providers";
 import Layout from "./Layout";
@@ -90,14 +90,14 @@ import { reportPayload } from "./providers/helpers";
 import HistoryMenu from "./HistoryMenu";
 import Vue from "vue";
 
-Vue.config.performance = true
+Vue.config.performance = true;
 
 export default {
     filters: {
         reportPayload,
     },
     components: {
-        UrlDataProvider,
+        Datasets,
         Layout,
         HistoryMessages,
         HistoryDetails,
@@ -126,7 +126,7 @@ export default {
     },
     methods: {
         getItem(item) {
-            return {...item, ...item.object};
+            return { ...item, ...item.object };
         },
         getItemKey(item) {
             return item["id"];
@@ -134,10 +134,8 @@ export default {
         getUrl(url) {
             return url.substring(1);
         },
-        manualReload() {
-        },
-        setScrollPos() {
-        },
-    }
+        manualReload() {},
+        setScrollPos() {},
+    },
 };
 </script>

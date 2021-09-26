@@ -1,11 +1,14 @@
-import { default as RxProviderMixin } from "./rxProviders";
-import { datasetCollectionMonitor } from "./monitors";
+import axios from "axios";
+import { SingleQueryProvider } from "components/providers/SingleQueryProvider";
+import { rethrowSimple } from "utils/simple-error";
 
-export default {
-    mixins: [RxProviderMixin],
-    methods: {
-        buildMonitor() {
-            return datasetCollectionMonitor();
-        },
-    },
-};
+async function datasetCollectionDetails({ url }) {
+    try {
+        const { data } = await axios.get(url);
+        return data;
+    } catch (e) {
+        rethrowSimple(e);
+    }
+}
+
+export const DatasetCollectionDetails = SingleQueryProvider(datasetCollectionDetails);

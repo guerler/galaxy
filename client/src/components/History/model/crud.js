@@ -1,16 +1,10 @@
-import { bulkCacheContent } from "../caching";
-import { bulkContentUpdate, getAllContentByFilter } from "./queries";
+import { getAllContentByFilter } from "./queries";
 
 /**
  * Content crud operations, usually an ajax call + a cache function
  */
 
-export const updateSelectedContent = (updates) => async (history, type_ids) => {
-    // single ajax call with wierd syntax because.... reasons
-    const changes = await bulkContentUpdate(history, type_ids, updates);
-    const cacheResult = await bulkCacheContent(changes, true);
-    console.log("cacheResult", changes, cacheResult);
-    return cacheResult;
+export const updateSelectedContent = () => async () => {
 };
 
 export const hideSelectedContent = updateSelectedContent({

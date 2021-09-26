@@ -16,7 +16,6 @@
 import DscUI from "./DscUI";
 import { DatasetCollection } from "../../model";
 import { deleteDatasetCollection, updateContentFields } from "../../model/queries";
-import { cacheContent } from "../../caching";
 
 export default {
     components: {
@@ -39,7 +38,6 @@ export default {
                 const newFields = Object.assign(collection, {
                     isDeleted: result.deleted,
                 });
-                await cacheContent(newFields);
             }
         },
         async onUnhide() {
@@ -50,7 +48,6 @@ export default {
         },
         async onUpdate(changes) {
             const newContent = await updateContentFields(this.item, changes);
-            await cacheContent(newContent);
         },
     },
 };

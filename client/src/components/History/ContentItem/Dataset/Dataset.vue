@@ -16,7 +16,6 @@
 import DatasetUI from "./DatasetUI";
 import { Dataset } from "../../model";
 import { deleteContent, updateContentFields } from "../../model/queries";
-import { cacheContent } from "../../caching";
 import { copy as sendToClipboard } from "utils/clipboard";
 import { absPath } from "utils/redirect";
 
@@ -35,7 +34,6 @@ export default {
     methods: {
         async onDelete(opts = {}) {
             const ajaxResult = await deleteContent(this.item, opts);
-            await cacheContent(ajaxResult);
         },
         async onUnhide() {
             await this.onUpdate({ visible: true });
@@ -45,7 +43,6 @@ export default {
         },
         async onUpdate(changes) {
             const newContent = await updateContentFields(this.item, changes);
-            await cacheContent(newContent);
         },
         onCopyLink() {
             const relPath = this.dataset.getUrl("download");

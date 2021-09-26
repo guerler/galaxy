@@ -59,7 +59,6 @@
 <script>
 import { History } from "../model";
 import { updateContentFields } from "../model/queries";
-import { cacheContent } from "../caching";
 
 import { UrlDataProvider } from "components/providers/UrlDataProvider";
 import { ExpandedItems } from "../providers";
@@ -70,7 +69,7 @@ import Scroller from "../Scroller";
 import { CollectionContentItem } from "../ContentItem";
 import { DatasetCollection } from "../model";
 
-import { reportPayload } from "../providers/ContentProvider/helpers";
+import { reportPayload } from "../providers/helpers";
 import IconButton from "components/IconButton";
 
 export default {
@@ -135,7 +134,6 @@ export default {
         async updateDsc(collection, fields) {
             if (this.writable) {
                 const ajaxResult = await updateContentFields(collection, fields);
-                await cacheContent({ ...collection, ...ajaxResult });
             }
         },
     },

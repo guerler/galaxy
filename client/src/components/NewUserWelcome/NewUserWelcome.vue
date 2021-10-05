@@ -86,18 +86,6 @@ export default {
 </script>
 
 <style scoped type="text/css">
-.card {
-    border: 0px;
-}
-.card-img {
-    height: 12rem;
-}
-.card-header,
-.card-footer {
-    border-bottom: 0px;
-    border-top: 0px;
-    background-color: #ffffff;
-}
 .carousel-fig {
     padding-bottom: 10;
 }

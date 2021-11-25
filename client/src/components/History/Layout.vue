@@ -4,7 +4,7 @@ amateur-hour baby-tool like Bootstrap instead of taking the afternoon
 to learn how CSS is supposed to work. -->
 
 <template>
-    <section class="history beta d-flex flex-column">
+    <section class="w-100 h-100 p-0">
         <header>
             <nav class="d-flex justify-content-between bg-secondary">
                 <slot name="globalNav">Global Nav Default</slot>
@@ -28,7 +28,7 @@ to learn how CSS is supposed to work. -->
         </section>
 
         <!-- scrolling list -->
-        <section class="position-relative flex-grow-1 scroller">
+        <section class="overflow-auto">
             <slot name="listing"></slot>
         </section>
 

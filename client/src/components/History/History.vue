@@ -1,5 +1,5 @@
 <template>
-    <Datasets v-if="history && history.contents_url" :url="history.contents_url" v-slot="{ result: payload, loading }">
+    <Datasets :url="getUrl()" v-slot="{ result: payload, loading }">
         <ExpandedItems
             :scope-key="history.id"
             :get-item-key="(item) => item.type_id"
@@ -75,6 +75,7 @@
 </template>
 
 <script>
+import { getAppRoot } from "onload/loadConfig";
 import { Datasets } from "components/providers/DatasetProvider";
 import { History, SearchParams } from "./model";
 import { ExpandedItems, SelectedItems } from "./providers";
@@ -116,6 +117,8 @@ export default {
     data() {
         return {
             params: new SearchParams(),
+            start: 0,
+            pageSize: 100,
             useItemSelection: false,
         };
     },
@@ -125,14 +128,16 @@ export default {
         },
     },
     methods: {
+        getUrl() {
+            const url = `${getAppRoot()}api/histories/${this.historyId}/contents/after/${this.start}/${this.pageSize}`;
+            console.log(url)
+            return url;
+        },
         getItem(item) {
             return { ...item, ...item.object };
         },
         getItemKey(item) {
             return item["id"];
-        },
-        getUrl(url) {
-            return url.substring(1);
         },
         manualReload() {},
         setScrollPos() {},

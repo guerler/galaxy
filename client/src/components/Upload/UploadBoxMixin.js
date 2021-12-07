@@ -12,6 +12,7 @@ import LazyLimited from "mvc/lazy/lazy-limited";
 import { findExtension } from "./utils";
 import { filesDialog } from "utils/data";
 import { getAppRoot } from "onload";
+import "utils/uploadbox";
 import axios from "axios";
 
 const localize = _l;

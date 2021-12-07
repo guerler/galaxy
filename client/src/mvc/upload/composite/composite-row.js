@@ -8,7 +8,7 @@ import UploadSettings from "mvc/upload/upload-settings";
 import UploadFtp from "mvc/upload/upload-ftp";
 import Popover from "mvc/ui/ui-popover";
 import Ui from "mvc/ui/ui-misc";
-import "utils/uploadbox";
+
 export default Backbone.View.extend({
     /** Dictionary of upload states and associated icons */
     status_classes: {

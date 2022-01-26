@@ -53,6 +53,7 @@ export class WorkflowRunModel {
         _.each(this.steps, (step, i) => {
             visitInputs(step.inputs, (input, name) => {
                 this.parms[i][name] = input;
+                input.error = null;
             });
         });
 
@@ -135,7 +136,7 @@ export class WorkflowRunModel {
 
         // select fields are shown for dynamic fields if all putative data inputs are available,
         // or if an explicit reference is specified as data_ref and available
-        _.each(this.steps, (step, i) => {
+        _.each(this.steps, (step) => {
             if (step.step_type == "tool") {
                 var data_resolved = true;
                 visitInputs(step.inputs, (input, name, context) => {

@@ -53,7 +53,6 @@ export class WorkflowRunModel {
         _.each(this.steps, (step, i) => {
             visitInputs(step.inputs, (input, name) => {
                 this.parms[i][name] = input;
-                input.error = null;
             });
         });
 

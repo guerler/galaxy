@@ -102,7 +102,7 @@ const validFilters = {
 };
 
 /* Add comparison aliases i.e. '*>value' is converted to '*_gt=value' */
-const validAlias = { _gt: ">", _lt: "<" };
+const validAlias = { ">": "_gt", "<": "_lt" };
 
 /* Parses single text input into a dict of field->value pairs. */
 export function getFilters(filterText) {
@@ -112,7 +112,7 @@ export function getFilters(filterText) {
     if (filterText.length == 0) {
         return [];
     }
-    Object.entries(validAlias).forEach(([suffix, alias]) => {
+    Object.entries(validAlias).forEach(([alias, suffix]) => {
         filterText = filterText.replaceAll(alias, `${suffix}=`);
     });
     let matches = filterText.match(pairSplitRE);

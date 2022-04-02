@@ -34,6 +34,17 @@ const getters = {
             });
             return reverse(filtered);
         },
+    getHistoryItemByHid:
+        (state) =>
+        ({ historyId, hid }) => {
+            const itemArray = state.items[historyId] || [];
+            for (const item of itemArray) {
+                if (item && item.hid == hid) {
+                    return item;
+                }
+            }
+            console.debug("getHistoryItemByHid failed. Hid not found.", historyId, hid);
+        },
 };
 
 const getQueryString = (filterText) => {

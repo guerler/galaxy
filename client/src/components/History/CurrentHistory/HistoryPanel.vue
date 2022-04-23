@@ -83,6 +83,7 @@
                                         :name="item.name"
                                         :expand-dataset="isExpanded(item)"
                                         :is-dataset="item.history_content_type == 'dataset'"
+                                        :is-highlighted="highlighted[item.hid]"
                                         :selected="isSelected(item)"
                                         :selectable="showSelection"
                                         @update:expand-dataset="setExpanded(item, $event)"
@@ -90,7 +91,8 @@
                                         @view-collection="$emit('view-collection', item)"
                                         @delete="onDelete(item)"
                                         @undelete="onUndelete(item)"
-                                        @unhide="onUnhide(item)" />
+                                        @unhide="onUnhide(item)"
+                                        @mouseover="onMouseOver(item)" />
                                 </template>
                             </Listing>
                         </div>
@@ -141,6 +143,7 @@ export default {
         return {
             filterText: "",
             invisible: {},
+            highlighted: {},
             offset: 0,
             showAdvanced: false,
         };
@@ -148,6 +151,7 @@ export default {
     watch: {
         queryKey() {
             this.invisible = {};
+            this.highlighted = {};
             this.offset = 0;
         },
     },
@@ -173,17 +177,20 @@ export default {
         hasMatches(payload) {
             return !!payload && payload.length > 0;
         },
-        onScroll(offset) {
-            this.offset = offset;
+        onDelete(item) {
+            this.setInvisible(item);
+            deleteContent(item);
         },
         onHideSelection(selectedItems) {
             selectedItems.forEach((item) => {
                 this.setInvisible(item);
             });
         },
-        onDelete(item) {
-            this.setInvisible(item);
-            deleteContent(item);
+        onMouseOver(item) {
+            Vue.set(this.highlighted, item.hid, true);
+        },
+        onScroll(offset) {
+            this.offset = offset;
         },
         onUndelete(item) {
             this.setInvisible(item);

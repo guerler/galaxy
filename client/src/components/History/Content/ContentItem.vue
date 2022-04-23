@@ -9,7 +9,6 @@
         @mouseover="$emit('mouseover')">
         <div class="p-1 cursor-pointer" @click.stop="onClick">
             <div class="d-flex justify-content-between">
-                <div v-if="isHighlighted">{{ isHighlighted }}</div>
                 <span class="p-1 font-weight-bold">
                     <span v-if="selectable" class="selector">
                         <icon
@@ -25,7 +24,10 @@
                             :icon="['far', 'square']"
                             @click.stop="$emit('update:selected', true)" />
                     </span>
-                    <span v-if="hasStateIcon">
+                    <span v-if="isHighlighted">
+                        <icon fixed-width icon="check" />
+                    </span>
+                    <span v-else-if="hasStateIcon">
                         <icon fixed-width :icon="contentState.icon" :spin="contentState.spin" />
                     </span>
                     <span class="id hid">{{ id }}</span>

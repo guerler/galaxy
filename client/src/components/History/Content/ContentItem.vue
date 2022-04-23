@@ -9,7 +9,7 @@
         @mouseover="$emit('mouseover')">
         <div class="p-1 cursor-pointer" @click.stop="onClick">
             <div class="d-flex justify-content-between">
-                <div v-if="isHighlighted">Highlighted!</div>
+                <div v-if="isHighlighted">{{ isHighlighted }}</div>
                 <span class="p-1 font-weight-bold">
                     <span v-if="selectable" class="selector">
                         <icon
@@ -80,7 +80,7 @@ export default {
         item: { type: Object, required: true },
         id: { type: Number, required: true },
         isDataset: { type: Boolean, default: true },
-        isHighlighted: { type: Boolean, default: false },
+        isHighlighted: { type: String, default: null },
         isHistoryItem: { type: Boolean, default: true },
         name: { type: String, required: true },
         selected: { type: Boolean, default: false },

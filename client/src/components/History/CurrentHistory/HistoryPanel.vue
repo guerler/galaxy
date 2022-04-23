@@ -82,8 +82,8 @@
                                         :id="item.hid"
                                         :name="item.name"
                                         :expand-dataset="isExpanded(item)"
-                                        :is-dataset="item.history_content_type == 'dataset'"
-                                        :is-highlighted="highlighted[item.hid]"
+                                        :is-dataset="isDataset(item)"
+                                        :is-highlighted="isHighlighted(item)"
                                         :selected="isSelected(item)"
                                         :selectable="showSelection"
                                         @update:expand-dataset="setExpanded(item, $event)"
@@ -105,10 +105,11 @@
 
 <script>
 import Vue from "vue";
+import { deepeach } from "utils/utils";
 import { HistoryItemsProvider } from "components/providers/storeProviders";
 import LoadingSpan from "components/LoadingSpan";
 import ContentItem from "components/History/Content/ContentItem";
-import { deleteContent, updateContentFields } from "components/History/model/queries";
+import { deleteContent, getDatasetParameters, updateContentFields } from "components/History/model/queries";
 import ExpandedItems from "components/History/Content/ExpandedItems";
 import SelectedItems from "components/History/Content/SelectedItems";
 import Listing from "components/History/Layout/Listing";
@@ -174,6 +175,13 @@ export default {
         },
     },
     methods: {
+        isDataset(item) {
+            return item.history_content_type == "dataset";
+        },
+        isHighlighted(item) {
+            const key = `${item.id}-${item.history_content_type}`;
+            return this.highlighted[key];
+        },
         hasMatches(payload) {
             return !!payload && payload.length > 0;
         },
@@ -187,7 +195,21 @@ export default {
             });
         },
         onMouseOver(item) {
-            Vue.set(this.highlighted, item.hid, true);
+            const newHighlighted = {};
+            if (this.isDataset(item)) {
+                getDatasetParameters(item.id).then(({ parameters }) => {
+                    deepeach(parameters, (details) => {
+                        if (details.id && details.src) {
+                            if (details.id != item.id) {
+                                const historyContentType = details.src == "hda" ? "dataset" : "dataset_collection";
+                                const key = `${details.id}-${historyContentType}`;
+                                newHighlighted[key] = "input";
+                            }
+                        }
+                    });
+                    this.highlighted = newHighlighted;
+                });
+            }
         },
         onScroll(offset) {
             this.offset = offset;

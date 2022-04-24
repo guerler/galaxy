@@ -10,9 +10,11 @@ import { deepeach } from "utils/utils";
 const paramStash = new Map();
 
 /** Performs request to obtain dataset parameters */
-async function getDatasetParameters(datasetId) {
+async function getDatasetParameters(datasetId, jobId) {
     if (!paramStash.has(datasetId)) {
-        const url = `api/datasets/${datasetId}/parameters_display?hda_ldda=hda`;
+        const url = jobId
+            ? `api/jobs/${jobId}/parameters_display`
+            : `api/datasets/${datasetId}/parameters_display?hda_ldda=hda`;
         const { data } = await axios.get(prependPath(url));
         paramStash.set(datasetId, data);
     }
@@ -31,20 +33,18 @@ function getKey(details) {
 /** Returns highlighting details */
 export async function getHighlights(item) {
     const highlights = {};
-    if (item.history_content_type == "dataset") {
-        const { outputs, parameters } = await getDatasetParameters(item.id);
-        deepeach(parameters, (details) => {
-            const key = getKey(details);
-            if (key) {
-                highlights[key] = "input";
-            }
-        });
-        deepeach(outputs, (details) => {
-            const key = getKey(details);
-            if (key) {
-                highlights[key] = "output";
-            }
-        });
-    }
+    const { outputs, parameters } = await getDatasetParameters(item.id, item.job_source_id);
+    deepeach(parameters, (details) => {
+        const key = getKey(details);
+        if (key) {
+            highlights[key] = "input";
+        }
+    });
+    deepeach(outputs, (details) => {
+        const key = getKey(details);
+        if (key) {
+            highlights[key] = "output";
+        }
+    });
     return highlights;
 }

@@ -83,6 +83,7 @@
                                         :name="item.name"
                                         :expand-dataset="isExpanded(item)"
                                         :is-dataset="isDataset(item)"
+                                        :highlight="getHighlight(item)"
                                         :selected="isSelected(item)"
                                         :selectable="showSelection"
                                         @update:expand-dataset="setExpanded(item, $event)"
@@ -90,7 +91,9 @@
                                         @view-collection="$emit('view-collection', item)"
                                         @delete="onDelete(item)"
                                         @undelete="onUndelete(item)"
-                                        @unhide="onUnhide(item)" />
+                                        @unhide="onUnhide(item)"
+                                        @mouseleave="onMouseLeave(item)"
+                                        @mouseover="onMouseOver(item)" />
                                 </template>
                             </Listing>
                         </div>
@@ -107,6 +110,7 @@ import { HistoryItemsProvider } from "components/providers/storeProviders";
 import LoadingSpan from "components/LoadingSpan";
 import ContentItem from "components/History/Content/ContentItem";
 import { deleteContent, updateContentFields } from "components/History/model/queries";
+import { getHighlights } from "components/History/Content/model/highlights";
 import ExpandedItems from "components/History/Content/ExpandedItems";
 import SelectedItems from "components/History/Content/SelectedItems";
 import Listing from "components/History/Layout/Listing";
@@ -141,6 +145,8 @@ export default {
         return {
             filterText: "",
             invisible: {},
+            highlights: {},
+            highlightsKey: null,
             offset: 0,
             showAdvanced: false,
         };
@@ -170,6 +176,13 @@ export default {
         },
     },
     methods: {
+        getHighlight(item) {
+            const key = this.getItemKey(item);
+            return this.highlights[key];
+        },
+        getItemKey(item) {
+            return `${item.id}-${item.history_content_type}`;
+        },
         hasMatches(payload) {
             return !!payload && payload.length > 0;
         },
@@ -184,6 +197,17 @@ export default {
             selectedItems.forEach((item) => {
                 this.setInvisible(item);
             });
+        },
+        onMouseLeave(item) {
+            this.highlights = {};
+            this.highlightsKey = null;
+        },
+        async onMouseOver(item) {
+            const key = this.getItemKey(item);
+            if (this.highlightsKey != key) {
+                this.highlightsKey = key;
+                this.highlights = await getHighlights(item);
+            }
         },
         onScroll(offset) {
             this.offset = offset;

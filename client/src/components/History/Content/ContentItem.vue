@@ -5,7 +5,9 @@
         draggable
         :data-hid="id"
         :data-state="state"
-        @dragstart="onDragStart">
+        @dragstart="onDragStart"
+        @mouseleave="onMouseLeave"
+        @mouseover="onMouseOver">
         <div class="p-1 cursor-pointer" @click.stop="onClick">
             <div class="d-flex justify-content-between">
                 <span class="p-1 font-weight-bold">
@@ -23,8 +25,17 @@
                             :icon="['far', 'square']"
                             @click.stop="$emit('update:selected', true)" />
                     </span>
-                    <span v-if="hasStateIcon">
+                    <span v-else-if="highlight == 'input'">
+                        <span class="text-info fa fa-arrow-circle-up fa-fw" />
+                    </span>
+                    <span v-else-if="highlight == 'output' || hover">
+                        <span class="fa fa-check-circle fa-fw" />
+                    </span>
+                    <span v-else-if="hasStateIcon">
                         <icon fixed-width :icon="contentState.icon" :spin="contentState.spin" />
+                    </span>
+                    <span v-else>
+                        <span class="fa fa-circle-thin fa-fw" />
                     </span>
                     <span class="id hid">{{ id }}</span>
                     <span>:</span>
@@ -76,6 +87,7 @@ export default {
     },
     props: {
         expandDataset: { type: Boolean, required: true },
+        highlight: { type: String, default: null },
         id: { type: Number, required: true },
         isDataset: { type: Boolean, default: true },
         isHistoryItem: { type: Boolean, default: true },
@@ -83,6 +95,11 @@ export default {
         name: { type: String, required: true },
         selected: { type: Boolean, default: false },
         selectable: { type: Boolean, default: false },
+    },
+    data() {
+        return {
+            hover: false,
+        };
     },
     computed: {
         contentId() {
@@ -146,6 +163,15 @@ export default {
             } else {
                 backboneRoute("datasets/edit", { dataset_id: this.item.id });
             }
+        },
+
+        onMouseLeave() {
+            this.hover = false;
+            this.$emit("mouseleave");
+        },
+        onMouseOver() {
+            this.hover = true;
+            this.$emit("mouseover");
         },
     },
 };

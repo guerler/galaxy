@@ -1,12 +1,11 @@
 <template>
-    <div class="listing-layout">
-        <virtual-list
-            ref="listing"
-            class="listing"
-            data-key="id"
-            :data-sources="items"
-            :data-component="{}"
-            @scroll="onScroll">
+    <div
+        class="listing-layout"
+        @scroll.prevent="onScrollThrottle"
+        @mousewheel.prevent="onScrollThrottle"
+        @wheel.prevent="onScrollThrottle"
+        @DOMMouseScroll.prevent="onScrollThrottle">
+        <virtual-list ref="listing" class="listing" data-key="id" :data-sources="items" :data-component="{}">
             <template v-slot:item="{ item }">
                 <slot name="item" :item="item" />
             </template>
@@ -34,7 +33,7 @@ export default {
     data() {
         return {
             throttlePeriod: 20,
-            deltaMax: 20,
+            deltaMax: 50,
         };
     },
     watch: {
@@ -48,8 +47,8 @@ export default {
         }, this.throttlePeriod);
     },
     methods: {
-        onScrollHandler(event) {
-            /* CURRENTLY UNUSED
+        onScroll(event) {
+            console.log(event);
             // this avoids diagonal scrolling, we either scroll left/right or top/down
             // both events are throttled and the default handler has been prevented.
             if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
@@ -59,6 +58,7 @@ export default {
                 const deltaY = Math.max(Math.min(event.deltaY, deltaMax), -deltaMax);
                 this.offset = Math.max(0, listing.getOffset() + deltaY);
                 this.$refs.listing.scrollToOffset(this.offset);
+                this.$emit("scroll", this.$refs.listing.range.start);
             } else {
                 // dispatch horizontal scrolling as regular event
                 var wheelEvent = new WheelEvent("wheel", {
@@ -68,11 +68,6 @@ export default {
                 });
                 event.target.dispatchEvent(wheelEvent);
             }
-            */
-        },
-        onScroll() {
-            const rangeStart = this.$refs.listing.range.start;
-            this.$emit("scroll", rangeStart);
         },
     },
 };
@@ -83,9 +78,7 @@ export default {
 .listing-layout {
     .listing {
         @include absfill();
-        scroll-behavior: smooth;
-        overflow-y: scroll;
-        overflow-x: hidden;
+        overflow: scroll;
     }
 }
 </style>

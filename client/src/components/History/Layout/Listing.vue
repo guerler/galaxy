@@ -1,11 +1,11 @@
 <template>
     <div
-        class="listing-layout"
-        @scroll.prevent="onScrollThrottle"
-        @mousewheel.prevent="onScrollThrottle"
-        @wheel.prevent="onScrollThrottle"
-        @DOMMouseScroll.prevent="onScrollThrottle">
-        <virtual-list ref="listing" class="listing" data-key="id" :data-sources="items" :data-component="{}">
+        class="listing-layout">
+        <virtual-list ref="listing" class="listing" data-key="id" :data-sources="items" :data-component="{}"
+        @scroll.prevent="onScroll"
+        @mousewheel.prevent="onScroll"
+        @wheel.prevent="onScroll"
+        @DOMMouseScroll.prevent="onScroll">
             <template v-slot:item="{ item }">
                 <slot name="item" :item="item" />
             </template>
@@ -32,8 +32,8 @@ export default {
     },
     data() {
         return {
-            throttlePeriod: 20,
-            deltaMax: 50,
+            throttlePeriod: 0,
+            deltaMax: 10000,
         };
     },
     watch: {
@@ -49,8 +49,10 @@ export default {
     methods: {
         onScroll(event) {
             console.log(event);
+            //event.target.dispatchEvent(event);
+            return;
             // this avoids diagonal scrolling, we either scroll left/right or top/down
-            // both events are throttled and the default handler has been prevented.
+            /*/ both events are throttled and the default handler has been prevented.
             if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
                 // handle vertical scrolling with virtual scroller
                 const listing = this.$refs.listing;
@@ -59,7 +61,7 @@ export default {
                 this.offset = Math.max(0, listing.getOffset() + deltaY);
                 this.$refs.listing.scrollToOffset(this.offset);
                 this.$emit("scroll", this.$refs.listing.range.start);
-            } else {
+            } else {*/
                 // dispatch horizontal scrolling as regular event
                 var wheelEvent = new WheelEvent("wheel", {
                     deltaX: event.deltaX,
@@ -67,7 +69,7 @@ export default {
                     cancelable: false,
                 });
                 event.target.dispatchEvent(wheelEvent);
-            }
+            //}
         },
     },
 };
@@ -78,7 +80,9 @@ export default {
 .listing-layout {
     .listing {
         @include absfill();
-        overflow: scroll;
+        scroll-behavior: smooth;
+        overflow-y: scroll;
+        overflow-x: hidden;
     }
 }
 </style>

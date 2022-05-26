@@ -122,8 +122,13 @@ export default {
                 return this.item.state;
             }
         },
-        tags() {
-            return this.item.tags;
+        tags: {
+            get() {
+                return this.item.tags;
+            },
+            set(newTags) {
+                this.$emit("tag-change", this.item, newTags);
+            },
         },
         tagsDisabled() {
             return !this.expandDataset || !this.isHistoryItem;

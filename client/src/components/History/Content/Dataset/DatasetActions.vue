@@ -104,7 +104,11 @@ export default {
             window.location.href = this.downloadUrl;
         },
         onError() {
-            this.backboneRoute("datasets/error", { dataset_id: this.item.id });
+            if (this.$router) {
+                this.$router.push(`/datasets/${this.item.id}/error`);
+            } else {
+                this.backboneRoute("datasets/error", { dataset_id: this.item.id });
+            }
         },
         onInfo() {
             if (this.$router) {

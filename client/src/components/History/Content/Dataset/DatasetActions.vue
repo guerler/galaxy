@@ -122,7 +122,7 @@ export default {
                 tryIframe: false,
             };
             if (!this.iframeAdd(redirectParams)) {
-                this.$router.push(`${path}`);
+                this.$router.push(path);
             }
         },
     },

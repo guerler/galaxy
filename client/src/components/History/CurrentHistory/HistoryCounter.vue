@@ -44,7 +44,6 @@
 </template>
 
 <script>
-import { backboneRoute } from "components/plugins/legacyNavigation";
 import prettyBytes from "pretty-bytes";
 
 export default {
@@ -58,7 +57,7 @@ export default {
     },
     methods: {
         onDashboard() {
-            backboneRoute("/storage");
+            this.$route.push("/storage");
         },
         setFilter(newFilterText) {
             this.$emit("update:filter-text", newFilterText);

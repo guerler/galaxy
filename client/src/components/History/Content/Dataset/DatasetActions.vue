@@ -59,13 +59,12 @@
 </template>
 
 <script>
-import { legacyNavigationMixin } from "components/plugins/legacyNavigation";
+import { iframeAdd } from "components/plugins/legacyNavigation";
 import { prependPath } from "utils/redirect";
 import { copy as sendToClipboard } from "utils/clipboard";
 import { absPath } from "utils/redirect";
 
 export default {
-    mixins: [legacyNavigationMixin],
     props: {
         item: { type: Object, required: true },
     },
@@ -113,17 +112,12 @@ export default {
             this.$router.push(`/root?job_id=${this.item.creating_job}`);
         },
         onVisualize() {
-            const name = this.item.name || "";
-            const title = `Visualization of ${name}`;
-            const path = `/visualizations?dataset_id=${this.item.id}`;
-            const redirectParams = {
-                path: path,
-                title: title,
-                tryIframe: false,
-            };
-            if (!this.iframeAdd(redirectParams)) {
-                this.$router.push(path);
-            }
+            const name = this.item.name || "...";
+            iframeAdd({
+                title: `Visualization of ${name}`,
+                path: `/visualizations?dataset_id=${this.item.id}`,
+                $router: this.$router,
+            });
         },
     },
 };

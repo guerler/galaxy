@@ -9,27 +9,27 @@ import { enableLogging, disableLogging } from "./framework/log-level";
 jest.setTimeout(30000);
 
 // number of creation/destroy cycles
-const n = 5;
+const nCycles = 5;
 
 // memory test helper
 async function evaluate(name) {
     const memoryUsage = new MemoryUsage();
     const results = [memoryUsage.getDelta()];
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < nCycles; i++) {
         // component mounting
         let wrapper = Components[name]();
+        const detector = new LeakDetector(wrapper);
         await flushPromises();
         await wrapper.vm.$nextTick();
-        const detector = new LeakDetector(wrapper);
-        // memory usage
+        // destroy component
         wrapper.vm.$destroy();
         wrapper = null;
-        // leak detector
+        // evaluate leaks and memory usage
         const isLeaking = await detector.isLeaking();
         expect(isLeaking).toBeFalsy();
         results.push(memoryUsage.getDelta());
     }
-    console.log(name, results);
+    console.log(`${name}\t ${results}`);
 }
 
 // performance analysis creates/destroys components and measures
@@ -48,7 +48,8 @@ describe("Performance Analysis", () => {
 
     // performance test case
     it("testing for memory usage", async () => {
-        const name = "workflow/editor/index";
-        await evaluate(name);
+        for (let componentRoute of Object.keys(Components)) {
+            await evaluate(componentRoute);
+        }
     });
 });

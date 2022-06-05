@@ -1,5 +1,7 @@
-import mountWorkflowEditorIndex from "./WorkflowEditorIndex";
+import Home from "./Home";
+import WorkflowEditorIndex from "./WorkflowEditorIndex";
 
 export default {
-    "workflow/editor/index": mountWorkflowEditorIndex,
+    "/": Home,
+    "workflow/editor/index": WorkflowEditorIndex,
 };

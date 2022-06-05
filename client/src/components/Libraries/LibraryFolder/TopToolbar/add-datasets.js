@@ -25,6 +25,12 @@ var AddDatasets = Backbone.View.extend({
         this.showImportModal(options);
     },
 
+    beforeDestroy() {
+        if (this.jstree) {
+            this.jstree.destroy();
+        }
+    },
+
     /*
      Slightly adopted Backbone code
      */

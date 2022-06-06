@@ -1,4 +1,4 @@
-const consoleDebug = console.debug;
+const consoleDebug = console.warn;
 const consoleInfo = console.info;
 const consoleWarn = console.warn;
 

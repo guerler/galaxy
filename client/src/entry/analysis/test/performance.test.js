@@ -1,3 +1,9 @@
+jest.useFakeTimers("modern");
+jest.setSystemTime(new Date(2022, 1, 1));
+
+// increase test timeout
+jest.setTimeout(9999999);
+
 import Routes from "./routes";
 import LeakDetector from "jest-leak-detector";
 import flushPromises from "flush-promises";
@@ -5,42 +11,38 @@ import { MemoryUsage } from "./framework/memory-usage";
 import { createServer } from "./framework/fake-server";
 import { enableLogging, disableLogging } from "./framework/log-level";
 
-// increase test timeout
-jest.setTimeout(30000);
-
-// number of creation/destroy cycles
+// number of creation and disposal cycles
 const nCycles = 7;
 
-// memory test helper
-async function evaluate(name) {
+/** Evaluates cycles of creating and disposing components */
+async function evaluateCycle(name) {
     const memoryUsage = new MemoryUsage();
     const results = [memoryUsage.getDelta()];
     for (let i = 0; i < nCycles; i++) {
-        // component mounting
-        let wrapper = Routes[name]();
-        const detector = new LeakDetector(wrapper);
-        await flushPromises();
-        await wrapper.vm.$nextTick();
-        // destroy component
-        wrapper.vm.$destroy();
-        wrapper = null;
-        // evaluate leaks and memory usage
-        const isLeaking = await detector.isLeaking();
-        expect(isLeaking).toBeFalsy();
+        await evaluateRoute(name);
         results.push(memoryUsage.getDelta());
     }
     console.log(`${name}\t ${results}`);
 }
 
-// use base route to normalize heap and garbage collector
-async function reset() {
-    let wrapper = Routes["/"]();
+/** Creates and disposes individual components */
+async function evaluateRoute(name) {
+    // component mounting
+    let wrapper = Routes[name]();
     const detector = new LeakDetector(wrapper);
-    await detector.isLeaking();
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+    // destroy component
+    await wrapper.vm.$destroy();
+    wrapper = null;
+    // evaluate leaks and memory usage
+    const isLeaking = await detector.isLeaking();
+    expect(isLeaking).toBeFalsy();
 }
 
-// performance analysis creates/destroys routes and measures
-// memory usage and leak behavior.
+/** This is a performance and memory usage analysis rather than a test. A range of routes is
+ * visited leading to the creation and destruction of components while the heap usage is
+ * continuously evaluated. */
 describe("Client Route Memory Usage in MB", () => {
     // build server and omit certain log-levels
     beforeEach(() => {
@@ -55,9 +57,11 @@ describe("Client Route Memory Usage in MB", () => {
 
     // performance test case
     it("testing memory usage of routes (listed in index.js)", async () => {
-        await reset();
+        await evaluateRoute("/");
+        const memoryUsage = new MemoryUsage();
         for (let route of Object.keys(Routes)) {
-            await evaluate(route);
+            await evaluateCycle(route);
         }
+        console.log("Total usage: ", memoryUsage.getDelta());
     });
 });

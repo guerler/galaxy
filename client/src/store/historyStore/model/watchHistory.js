@@ -8,7 +8,6 @@
 import store from "store/index";
 import { urlData } from "utils/url";
 import { getCurrentHistoryFromServer } from "./queries";
-import { getGalaxyInstance } from "app";
 
 const limit = 1000;
 const throttlePeriod = 3000;
@@ -17,9 +16,14 @@ const throttlePeriod = 3000;
 let lastUpdateTime = null;
 
 // last time changed history items have been requested
-let lastRequestDate = new Date();
+let lastRequestDate = null;
 
 export async function watchHistory() {
+    // record first date
+    if (!lastRequestDate) {
+        lastRequestDate = new Date();
+    }
+
     // get current history
     const history = await getCurrentHistoryFromServer();
     const historyId = history.id;
@@ -50,13 +54,6 @@ export async function watchHistory() {
         store.commit("saveDatasets", { payload });
         store.commit("saveHistoryItems", { historyId, payload });
         store.commit("saveCollectionObjects", { payload });
-        // trigger changes in legacy handler
-        const Galaxy = getGalaxyInstance();
-        if (Galaxy) {
-            Galaxy.user.fetch({
-                url: `${Galaxy.user.urlRoot()}/${Galaxy.user.id || "current"}`,
-            });
-        }
     }
     setTimeout(() => {
         watchHistory();

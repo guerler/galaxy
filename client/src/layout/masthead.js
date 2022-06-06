@@ -20,13 +20,13 @@ export class MastheadState {
 
         // set up the quota meter (And fetch the current user data from trans)
         // add quota meter to masthead
-        if (!Galaxy.quotaMeter) {
+        /*if (!Galaxy.quotaMeter) {
             Galaxy.quotaMeter = new QuotaMeter.UserQuotaMeter({
                 model: Galaxy.user,
                 quotaUrl: Galaxy.config.quota_url,
             });
-        }
-        this.quotaMeter = Galaxy.quotaMeter;
+        }*/
+        Galaxy.quotaMeter = this.quotaMeter = {};
 
         // loop through beforeunload functions if the user attempts to unload the page
         $(window)

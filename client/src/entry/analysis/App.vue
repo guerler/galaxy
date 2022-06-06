@@ -55,7 +55,6 @@ export default {
     },
     data() {
         return {
-            config: getGalaxyInstance().config,
             confirmation: null,
             mastheadState: new MastheadState(),
             resendUrl: `${getAppRoot()}user/resend_verification`,
@@ -75,6 +74,9 @@ export default {
         };
     },
     computed: {
+        config() {
+            return getGalaxyInstance().config;
+        },
         showMasthead() {
             const masthead = this.$route.query.hide_masthead;
             if (masthead !== undefined) {

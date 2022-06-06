@@ -47,7 +47,7 @@ export default new VueRouter({
         },
         {
             path: "/folders/:folder_id/permissions",
-            name: "LibraryFolder",
+            name: "LibraryFolderPermissions",
             component: LibraryFolderPermissions,
             props: true,
         },

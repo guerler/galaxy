@@ -52,7 +52,7 @@ export default {
         toolBoxProperties() {
             const Galaxy = getGalaxyInstance();
             return {
-                storedWorkflowMenuEntries: Galaxy.config.stored_workflow_menu_entries,
+                storedWorkflowMenuEntries: Galaxy.config.stored_workflow_menu_entries || [],
             };
         },
     },

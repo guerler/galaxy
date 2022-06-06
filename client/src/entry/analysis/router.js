@@ -22,7 +22,6 @@ import Grid from "components/Grid/Grid";
 import GridShared from "components/Grid/GridShared";
 import GridHistory from "components/Grid/GridHistory";
 import HistoryImport from "components/HistoryImport";
-import HistoryView from "components/HistoryView";
 import InteractiveTools from "components/InteractiveTools/InteractiveTools";
 import InvocationReport from "components/Workflow/InvocationReport";
 import JobDetails from "components/JobInformation/JobDetails";
@@ -169,13 +168,6 @@ export function getRouter(Galaxy) {
                         }),
                     },
                     {
-                        path: "histories/view",
-                        component: HistoryView,
-                        props: (route) => ({
-                            id: route.query.id,
-                        }),
-                    },
-                    {
                         path: "histories/show_structure",
                         component: DisplayStructured,
                         props: (route) => ({
@@ -278,8 +270,8 @@ export function getRouter(Galaxy) {
                         path: "user",
                         component: UserPreferences,
                         props: {
-                            enableQuotas: Galaxy.config.enable_quotas,
-                            userId: Galaxy.user.id,
+                            enableQuotas: Galaxy.config?.enable_quotas,
+                            userId: Galaxy.user?.id,
                         },
                         redirect: redirectAnon(),
                     },

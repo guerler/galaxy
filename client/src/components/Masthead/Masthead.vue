@@ -93,8 +93,8 @@ export default {
         loadWebhookMenuItems(this.extensionTabs);
     },
     mounted() {
-        this.mastheadState.quotaMeter.setElement(this.$refs["quota-meter-container"]);
-        this.mastheadState.quotaMeter.render();
+        //this.mastheadState.quotaMeter.setElement(this.$refs["quota-meter-container"]);
+        //this.mastheadState.quotaMeter.render();
     },
     methods: {
         addItem(item) {

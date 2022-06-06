@@ -39,13 +39,14 @@ export class HistoryPanelProxy {
         };
 
         // watch the store, update history id
-        store.watch(
-            (state, getters) => getters["history/currentHistory"],
-            (history) => {
-                this.model.id = history.id;
-                this.model.set("name", history.name);
-            }
-        );
+        store.watch &&
+            store.watch(
+                (state, getters) => getters["history/currentHistory"],
+                (history) => {
+                    this.model.id = history.id;
+                    this.model.set("name", history.name);
+                }
+            );
 
         // start watching the history with continuous queries
         watchHistory();

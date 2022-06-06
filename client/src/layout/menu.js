@@ -154,7 +154,7 @@ export function fetchMenu(options = {}) {
     //
     // Admin.
     //
-    if (Galaxy.user.get("is_admin")) {
+    if (Galaxy.user.get && Galaxy.user.get("is_admin")) {
         menu.push({
             id: "admin",
             title: _l("Admin"),
@@ -249,6 +249,10 @@ export function fetchMenu(options = {}) {
             };
         }
     } else {
+        let username = null;
+        if (Galaxy.user.get) {
+            username = Galaxy.user.get("username") ? Galaxy.user.get("username") : Galaxy.user.get("email");
+        }
         userTab = {
             id: "user",
             title: _l("User"),
@@ -257,9 +261,7 @@ export function fetchMenu(options = {}) {
             tooltip: _l("Account and saved data"),
             menu: [
                 {
-                    title: `${_l("Logged in as")} ${
-                        Galaxy.user.get("username") ? Galaxy.user.get("username") : Galaxy.user.get("email")
-                    }`,
+                    title: `${_l("Logged in as")} ${username}`,
                     disabled: true,
                 },
                 {

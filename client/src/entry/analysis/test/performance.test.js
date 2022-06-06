@@ -1,4 +1,4 @@
-import Components from "./components";
+import Routes from "./routes";
 import LeakDetector from "jest-leak-detector";
 import flushPromises from "flush-promises";
 import { MemoryUsage } from "./framework/memory-usage";
@@ -9,7 +9,7 @@ import { enableLogging, disableLogging } from "./framework/log-level";
 jest.setTimeout(30000);
 
 // number of creation/destroy cycles
-const nCycles = 5;
+const nCycles = 7;
 
 // memory test helper
 async function evaluate(name) {
@@ -17,7 +17,7 @@ async function evaluate(name) {
     const results = [memoryUsage.getDelta()];
     for (let i = 0; i < nCycles; i++) {
         // component mounting
-        let wrapper = Components[name]();
+        let wrapper = Routes[name]();
         const detector = new LeakDetector(wrapper);
         await flushPromises();
         await wrapper.vm.$nextTick();
@@ -32,9 +32,16 @@ async function evaluate(name) {
     console.log(`${name}\t ${results}`);
 }
 
-// performance analysis creates/destroys components and measures
+// use base route to normalize heap and garbage collector
+async function reset() {
+    let wrapper = Routes["/"]();
+    const detector = new LeakDetector(wrapper);
+    await detector.isLeaking();
+}
+
+// performance analysis creates/destroys routes and measures
 // memory usage and leak behavior.
-describe("Performance Analysis", () => {
+describe("Client Route Memory Usage in MB", () => {
     // build server and omit certain log-levels
     beforeEach(() => {
         disableLogging();
@@ -47,9 +54,10 @@ describe("Performance Analysis", () => {
     });
 
     // performance test case
-    it("testing for memory usage", async () => {
-        for (let componentRoute of Object.keys(Components)) {
-            await evaluate(componentRoute);
+    it("testing memory usage of routes (listed in index.js)", async () => {
+        await reset();
+        for (let route of Object.keys(Routes)) {
+            await evaluate(route);
         }
     });
 });

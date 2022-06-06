@@ -6,8 +6,13 @@ import { ariaSelectOutputNode } from "./aria";
 export function attachDragging(el, callbacks) {
     const $el = $(el);
     Object.entries(callbacks).forEach(([k, v]) => {
-        $el.bind(k, v);
+        $el.on(k, v);
     });
+}
+
+export function detachDragging(el) {
+    const $el = $(el);
+    $el.off();
 }
 
 export class InputDragging {

@@ -170,38 +170,39 @@ var View = Backbone.View.extend({
                 this.$select.select2("destroy");
             }
             this.matched_tags = {};
-            this.$select.select2({
-                data: this.data2,
-                closeOnSelect: !this.model.get("multiple"),
-                multiple: this.model.get("multiple"),
-                query: (q) => {
-                    this.matched_tags = {};
-                    var pagesize = this.model.get("pagesize");
-                    var results = _.filter(this.data2, (e) => {
-                        var found = false;
-                        _.each(e.tags, (tag) => {
-                            if (this._match(q.term, tag)) {
-                                found = this.matched_tags[tag] = true;
-                            }
+            this.$select.select2 &&
+                this.$select.select2({
+                    data: this.data2,
+                    closeOnSelect: !this.model.get("multiple"),
+                    multiple: this.model.get("multiple"),
+                    query: (q) => {
+                        this.matched_tags = {};
+                        var pagesize = this.model.get("pagesize");
+                        var results = _.filter(this.data2, (e) => {
+                            var found = false;
+                            _.each(e.tags, (tag) => {
+                                if (this._match(q.term, tag)) {
+                                    found = this.matched_tags[tag] = true;
+                                }
+                            });
+                            return found || this._match(q.term, e.text);
                         });
-                        return found || this._match(q.term, e.text);
-                    });
-                    q.callback({
-                        results: results.slice((q.page - 1) * pagesize, q.page * pagesize),
-                        more: results.length >= q.page * pagesize,
-                    });
-                },
-                formatResult: (result) => {
-                    let extraTagWarning = "";
-                    const filteredTags = _.filter(result.tags, (t) =>
-                        Object.prototype.hasOwnProperty.call(this.matched_tags, t)
-                    );
-                    if (filteredTags.length > 5) {
-                        extraTagWarning = `&nbsp;<div class="label label-warning">${
-                            filteredTags.length - 5
-                        } more tags</div>`;
-                    }
-                    return `
+                        q.callback({
+                            results: results.slice((q.page - 1) * pagesize, q.page * pagesize),
+                            more: results.length >= q.page * pagesize,
+                        });
+                    },
+                    formatResult: (result) => {
+                        let extraTagWarning = "";
+                        const filteredTags = _.filter(result.tags, (t) =>
+                            Object.prototype.hasOwnProperty.call(this.matched_tags, t)
+                        );
+                        if (filteredTags.length > 5) {
+                            extraTagWarning = `&nbsp;<div class="label label-warning">${
+                                filteredTags.length - 5
+                            } more tags</div>`;
+                        }
+                        return `
                     ${_.escape(result.text)}
                     <div>
                         ${filteredTags.slice(0, 5).reduce((memo, tag) => {
@@ -217,8 +218,8 @@ var View = Backbone.View.extend({
                         }, "")}
                         ${extraTagWarning}
                    </div>`;
-                },
-            });
+                    },
+                });
             this.$(".select2-container .select2-search input").off("blur");
         } else {
             this.$select.find("option").remove();
@@ -233,7 +234,7 @@ var View = Backbone.View.extend({
     /** Handles field enabling/disabling, usually used when no options are available */
     _changeDisabled: function () {
         if (this.model.get("searchable")) {
-            this.$select.select2(this.model.get("disabled") ? "disable" : "enable");
+            this.$select.select2 && this.$select.select2(this.model.get("disabled") ? "disable" : "enable");
         } else {
             this.$select.prop("disabled", this.model.get("disabled"));
         }
@@ -381,7 +382,7 @@ var View = Backbone.View.extend({
             } else {
                 new_value = this.data2index[new_value];
             }
-            this.$select.select2("data", new_value);
+            this.$select.select2 && this.$select.select2("data", new_value);
         } else {
             this.$select.val(new_value);
         }
@@ -390,7 +391,7 @@ var View = Backbone.View.extend({
     /** Get value from dom */
     _getValue: function () {
         var val = null;
-        if (this.model.get("searchable")) {
+        if (this.$select.select2 && this.model.get("searchable")) {
             var selected = this.$select.select2("data");
             if (selected) {
                 if (Array.isArray(selected)) {

@@ -90,7 +90,7 @@ import Recommendations from "components/Workflow/Editor/Recommendations";
 import NodeInput from "./NodeInput";
 import NodeOutput from "./NodeOutput";
 import { ActiveOutputs } from "./modules/outputs";
-import { attachDragging } from "./modules/dragging";
+import { attachDragging, detachDragging } from "./modules/dragging";
 Vue.use(BootstrapVue);
 
 const OFFSET_RANGE = 100;
@@ -243,7 +243,9 @@ export default {
             this.$emit("onUpdate", this);
         }
     },
-
+    beforeDestroy() {
+        detachDragging();
+    },
     methods: {
         onChange() {
             this.onRedraw();

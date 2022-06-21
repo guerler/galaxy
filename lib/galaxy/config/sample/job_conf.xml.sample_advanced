@@ -1152,6 +1152,7 @@
             <param id="retry_on_exit_statusReason">...</param>
             <param id="retry_on_exit_reason">...</param>
             <param id="retry_on_exit_exitCode">...</param>
+            <param id="retry_on_exit_action">exit</param>
             -->
         </destination>
         <destination id="aws_batch_gpu" runner="aws_batch">

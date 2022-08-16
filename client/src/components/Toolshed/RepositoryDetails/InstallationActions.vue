@@ -1,26 +1,22 @@
 <template>
     <div>
-        <span class="d-inline-block status">
-            <span v-if="installingState" class="fa fa-spinner fa-spin" />
-            {{ status }}
-        </span>
         <div class="d-inline-block">
             <b-button
-                :disabled="!installState"
+                v-if="installState"
                 :class="buttonClass"
                 :variant="installState ? 'primary' : ''"
                 @click="onInstall">
                 Install
             </b-button>
             <b-button
-                :disabled="!uninstallState"
+                v-if="uninstallState"
                 :class="buttonClass"
                 :variant="uninstallState ? 'danger' : ''"
                 @click="onUninstall">
                 Uninstall
             </b-button>
             <b-button
-                :disabled="!resetState"
+                v-if="resetState"
                 :class="buttonClass"
                 :title="l('Reset Broken or Stuck Installation')"
                 :variant="resetState ? 'warning' : ''"
@@ -58,9 +54,6 @@ export default {
         resetState() {
             return !this.installState && !this.uninstallState;
         },
-        installingState() {
-            return this.status !== "Error" && this.resetState;
-        },
     },
     methods: {
         onInstall() {
@@ -77,10 +70,3 @@ export default {
     },
 };
 </script>
-
-<style lang="scss" scoped>
-.status {
-    display: inline-block;
-    min-width: 80px;
-}
-</style>

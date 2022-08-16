@@ -28,6 +28,15 @@
                             <span v-if="!data.value" :class="repoChecked" />
                             <span v-else :class="repoUnchecked" />
                         </template>
+                        <template v-slot:cell(status)="row">
+                            <span v-if="row.item.status">
+                                <span
+                                    v-if="!['Error', 'Installed', 'Uninstalled'].includes(row.item.status)"
+                                    class="fa fa-spinner fa-spin" />
+                                {{ row.item.status }}
+                            </span>
+                            <span v-else> - </span>
+                        </template>
                         <template v-slot:cell(actions)="row">
                             <InstallationActions
                                 :status="row.item.status"
@@ -96,6 +105,7 @@ export default {
                 { key: "tools", label: "Tools and Versions" },
                 { key: "profile", label: "Requires" },
                 { key: "missing_test_components", label: "Tests" },
+                { key: "status", label: "Status" },
                 { key: "actions", label: "", class: "toolshed-repo-actions" },
             ],
             showSettings: false,

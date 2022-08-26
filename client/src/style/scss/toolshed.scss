@@ -19,3 +19,38 @@
         list-style-type: none;
     }
 }
+
+// honeypot for registration form
+#for_bears {
+    display: none;
+}
+
+// password complexity monitor
+#change_password,
+#registrationForm {
+    .progress {
+        width: 200px;
+        margin-left: 20px;
+    }
+    .progress-bar {
+        color: black;
+        text-align: left;
+    }
+}
+
+/* Toolshed, reports custom styles from mako templates */
+body.toolshed,
+body.reports {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    #left {
+        background: #c1c9e5 url(../../assets/images/menu_bg.png) top repeat-x;
+    }
+    .unified-panel-body {
+        overflow: auto;
+    }
+    .toolMenu {
+        margin-left: 10px;
+    }
+}

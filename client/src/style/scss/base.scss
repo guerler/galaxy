@@ -584,84 +584,7 @@ div.toolSectionTitle {
     }
 }
 
-#loading_indicator {
-    position: fixed;
-    right: 10px;
-    top: 10px;
-    height: 32px;
-    width: 32px;
-    display: none;
-    background: url(../../assets/images/largespinner.gif);
-}
-
-#content_table td {
-    text-align: right;
-    white-space: nowrap;
-    padding: 2px 10px;
-}
-
-#content_table th {
-    white-space: nowrap;
-    padding: 2px 10px;
-}
-
-#content_table td.stringalign {
-    text-align: left;
-}
-
-#content_table .dark_row {
-    background-color: #ddd;
-}
-
-#content_table th {
-    background-color: #aaa;
-}
-
-// ==== Integrated tool form styles
-
-.toolMenuAndView .toolForm {
-    float: left;
-    background-color: $white;
-    margin: 10px;
-}
-
-// @import "base_sprites";
-
-.text-and-autocomplete-select {
-    // -sprite-group: fugue;
-    // -sprite-image: fugue/control-270@extend png;
-    // -sprite-horiz-position: right;
-    background: none;
-    position: relative;
-    padding-right: 18px;
-    &:after {
-        margin-top: 6px;
-        position: absolute;
-        top: 2px;
-        right: 6px;
-        width: 10px;
-        height: 10px;
-        @include caret();
-        @include opacity(80);
-    }
-}
-
-.icon-button.general-question {
-    background: url(../../assets/images/question-octagon-frame.png) no-repeat;
-    float: right;
-    margin-top: 3px;
-    margin-right: 4px;
-}
-
-.icon-button.tag-question {
-    background: url(../../assets/images/question-balloon.png) no-repeat;
-    float: right;
-    margin-top: 3px;
-    margin-right: 4px;
-}
-
 // ==== General Sprites ====
-
 @import "sprite-fugue.scss";
 
 .icon-button.tag {
@@ -755,24 +678,6 @@ div.toolSectionTitle {
     }
 }
 
-// honeypot for registration form
-#for_bears {
-    display: none;
-}
-
-// password complexity monitor
-#change_password,
-#registrationForm {
-    .progress {
-        width: 200px;
-        margin-left: 20px;
-    }
-    .progress-bar {
-        color: black;
-        text-align: left;
-    }
-}
-
 // workflow
 .wf {
     overflow: auto;
@@ -827,23 +732,6 @@ div.toolSectionTitle {
 /* For Vue */
 [v-cloak] {
     display: none;
-}
-
-/* Toolshed, reports custom styles from mako templates */
-body.toolshed,
-body.reports {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    #left {
-        background: #c1c9e5 url(../../assets/images/menu_bg.png) top repeat-x;
-    }
-    .unified-panel-body {
-        overflow: auto;
-    }
-    .toolMenu {
-        margin-left: 10px;
-    }
 }
 
 /* Used in Galaxy IE for spinner loading TODO: Remove in IE entrypoint refactoring */

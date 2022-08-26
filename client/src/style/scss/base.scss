@@ -514,57 +514,6 @@ div.permissionContainer {
     padding-left: 5px;
 }
 
-// ============================================================================ History
-@import "ui/icon-btn.scss";
-@import "list-item.scss";
-@import "dataset.scss";
-@import "history.scss";
-@import "collection.scss";
-@import "job.scss";
-
-@import "ui/search-input.scss";
-@import "ui/dataset-choice.scss";
-@import "ui/peek-column-selector.scss";
-@import "ui/pagination.scss";
-@import "ui/error-modal.scss";
-
-// ==== Tool menu styles
-.toolMenuContainer {
-    color: $panel-text-color;
-    a {
-        color: $panel-text-color;
-    }
-    background: $panel-bg-color;
-    min-height: 100%;
-}
-
-div.toolSectionTitle {
-    font-weight: 500;
-    font-size: $h4-font-size;
-}
-
-div.toolTitle,
-div.toolSectionTitle {
-    display: block;
-    .labels {
-        float: right;
-    }
-    .title-link {
-        @extend .px-3;
-        @extend .py-1;
-        text-decoration: none;
-        display: block;
-        &:hover {
-            background: darken($panel-bg-color, 5%);
-        }
-    }
-    a.text-muted {
-        &:hover {
-            background: inherit;
-        }
-    }
-}
-
 // ==== General Sprites ====
 @import "sprite-fugue.scss";
 

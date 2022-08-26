@@ -54,3 +54,22 @@ body.reports {
         margin-left: 10px;
     }
 }
+
+.action-button {
+    @extend .btn;
+    @extend .btn-secondary;
+}
+a.action-button {
+    color: $btn-default-color;
+    background: $btn-default-bg;
+    text-decoration: none;
+}
+.action-button > img {
+    vertical-align: middle;
+}
+.action-button:hover {
+    @extend .btn, :hover;
+}
+.action-button:active {
+    @extend .btn, .active;
+}

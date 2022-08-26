@@ -335,18 +335,6 @@ button {
 a.btn {
     text-decoration: none;
 }
-.action-button {
-    @extend .btn;
-    @extend .btn-secondary;
-}
-a.action-button {
-    color: $btn-default-color;
-    background: $btn-default-bg;
-    text-decoration: none;
-}
-.action-button > img {
-    vertical-align: middle;
-}
 
 .btn-xs {
     // The 'new' bootstrap 4 btn-sm is about the same size as the old btn-xs,
@@ -359,13 +347,6 @@ a.action-button {
     // compatibility for external stuff using .btn-default, which is now
     // .btn-secondary.
     @extend .btn-secondary;
-}
-
-.action-button:hover {
-    @extend .btn, :hover;
-}
-.action-button:active {
-    @extend .btn, .active;
 }
 
 // A content button is a button in content items

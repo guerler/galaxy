@@ -1,0 +1,186 @@
+.loading-elt-overlay {
+    background-color: white;
+    opacity: 0.5;
+    width: 100%;
+    height: 100%;
+    z-index: 14000;
+    position: fixed;
+    display: none;
+}
+
+// Data grid style
+.grid-table {
+    @extend .w-100;
+}
+.grid-header {
+    @extend .mb-2;
+}
+.grid-header .title {
+    @extend .font-weight-bold;
+}
+.grid {
+    @extend .pt-2;
+    @extend .w-100;
+    border-collapse: collapse;
+}
+.grid tbody td {
+    @extend .border-top;
+    @extend .border-bottom;
+    @extend .p-1;
+}
+.grid tbody td:empty {
+    @extend .p-0;
+}
+.grid thead tr {
+    height: 2em;
+}
+.grid thead th {
+    @extend .p-1;
+    @extend .border-top;
+    @extend .border-bottom;
+    line-height: $line-height-base;
+    background: $brand-light;
+    color: $text-color;
+    text-align: left;
+    white-space: nowrap;
+}
+.grid tfoot td {
+    @extend .border-top;
+    @extend .border-bottom;
+    @extend .p-1;
+    background-color: $brand-light;
+}
+.grid .current {
+    background-color: lighten($brand-success, 20%);
+}
+
+// Pulled out of grid base
+.count-box {
+    min-width: 1.1em;
+    padding: 5px;
+    border-width: 1px;
+    border-style: solid;
+    text-align: center;
+    display: inline-block;
+}
+.text-filter-val {
+    border: solid 1px #aaaaaa;
+    padding: 1px 2px 1px 3px;
+    margin-right: 5px;
+    border-radius: 0.5em;
+    font-style: italic;
+}
+.page-link-grid a,
+.inactive-link {
+    padding: 0px 7px 0px 7px;
+    color: #555;
+}
+.inactive-link,
+.current-filter {
+    font-weight: bold;
+    color: #000;
+}
+#advanced-search td {
+    padding: 3px;
+}
+#advanced-search table {
+    border-collapse: separate;
+}
+.delete-search-icon {
+    background: url(../../assets/images/delete_tag_icon_gray.png) center no-repeat;
+    display: inline-block;
+    width: 10px;
+    cursor: pointer;
+    height: 18px;
+    vertical-align: middle;
+    margin-left: 2px;
+}
+.search-box-input {
+    @extend .ui-input;
+    float: left;
+}
+.search-box {
+    vertical-align: bottom;
+    display: inline-block;
+    padding: 0;
+    white-space: nowrap;
+}
+.gray-background {
+    background-color: #dddddd;
+}
+
+div.odd_row {
+    background: $table-bg-accent;
+}
+
+#footer {
+    display: none;
+}
+
+// A menu button is a button that has an attached popup menu
+ul.manage-table-actions {
+    float: right;
+    margin-top: -2.5em;
+}
+ul.manage-table-actions li {
+    display: block;
+    float: left;
+    margin-left: 0.5em;
+}
+
+.menubutton {
+    @extend .btn;
+    @extend .btn-secondary;
+
+    &:hover {
+        @extend .btn, :hover;
+    }
+    &:active {
+        @extend .btn, .active;
+    }
+
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+    @extend .unselectable;
+
+    a {
+        text-decoration: none;
+    }
+
+    .menubutton-label,
+    > label {
+        position: relative;
+        display: inline-block;
+        border-right: none;
+        text-decoration: none;
+        text-align: left;
+        // The following properties truncate the text and force the button to have one line
+        max-height: 2 * $line-height-base;
+        line-height: $line-height-base;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &.popup .menubutton-label {
+        margin: -5px 0;
+        border-right: solid $btn-default-border 1px;
+        padding-right: 6px;
+    }
+
+    &.popup,
+    &.popup.split {
+        padding-right: 18px;
+        @include caret();
+        &:after {
+            margin-left: 0.5rem;
+            // top: 45%;
+            // position: absolute;
+            // right: 6px;
+        }
+    }
+}
+
+.menubutton.background-none {
+    background: none;
+}

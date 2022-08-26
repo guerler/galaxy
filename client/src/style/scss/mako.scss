@@ -1,0 +1,296 @@
+// Forms
+div.toolFormBody div.toolFormTitle {
+    background: transparent;
+    border: none;
+    font-weight: bold;
+    border-bottom: solid $form-border 1px;
+    margin-bottom: 5px;
+}
+
+div.toolFormDisabled div.toolFormTitle {
+    background: #f5f5f5;
+    border-color: $border-color;
+}
+
+div.toolFormDisabled {
+    border-color: $border-color;
+}
+
+div.toolHelp {
+    margin-top: 15px;
+    padding: 5px;
+}
+
+div.toolHelpBody {
+    width: 100%;
+}
+
+div.toolFormRow {
+    position: relative;
+}
+
+div.form,
+div.toolForm {
+    border: solid $form-border 1px;
+    @include border-radius($border-radius-base);
+}
+
+div.form-title,
+div.toolFormTitle {
+    // font-size: $font-size-base * 1.25;
+    // line-height: $line-height-base * 1.5;
+    padding: 5px 10px;
+    background: $form-heading-bg;
+    border-bottom: solid $form-border 1px;
+    word-wrap: break-word;
+}
+
+div.form-body {
+    padding: 5px 0;
+}
+
+div.form-row {
+    position: relative;
+    padding: 5px 10px;
+}
+
+div.form-title-row {
+    padding: 5px 10px;
+}
+
+div.repeat-group-item {
+    border-left: solid $form-border 5px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+}
+
+div.form-row-error {
+    background: $state-danger-bg;
+}
+
+div.form-row label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.2em;
+}
+
+div.form-row label.inline {
+    display: inline;
+}
+
+div.form-row-input {
+    width: 90%;
+    float: left;
+}
+
+div.form-row-input label {
+    font-weight: normal;
+    display: inline;
+}
+
+.form-row.form-actions {
+    background: whiteSmoke;
+    border-top: solid #ddd 1px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-top: 5px;
+}
+
+.form-row {
+    select,
+    textarea,
+    input[type="text"],
+    input[type="file"],
+    input[type="password"] {
+        // -webkit-box-sizing: border-box;
+        max-width: 90%;
+    }
+    display: block;
+}
+
+// Messages
+.form-help {
+    word-break: break-word;
+}
+
+.errormessagelarge,
+.warningmessagelarge,
+.donemessagelarge,
+.infomessagelarge,
+.form-help .error,
+.form-help .warning,
+.form-help .note {
+    @extend .alert;
+    min-height: 36px;
+    padding-left: 52px;
+    background-image: url(../../assets/images/error_large.png);
+    background-repeat: no-repeat;
+    background-position: 10px 5px;
+    .messagerow {
+        padding: 10px 20px;
+    }
+}
+
+.errormessagelarge {
+    @extend .alert-danger;
+    padding-left: 52px;
+}
+
+.warningmessagelarge {
+    @extend .alert-warning;
+    padding-left: 52px;
+    background-image: url(../../assets/images/warn_large.png);
+}
+
+.donemessagelarge {
+    @extend .alert-success;
+    padding-left: 52px;
+    background-image: url(../../assets/images/ok_large.png);
+}
+
+.infomessagelarge {
+    @extend .alert-info;
+    background-image: url(../../assets/images/info_large.png);
+}
+
+.errormessage,
+.warningmessage,
+.donemessage,
+.infomessage,
+.errormessagesmall,
+.warningmessagesmall,
+.donemessagesmall,
+.infomessagesmall,
+.form-help .error,
+.form-help .warning,
+.form-help .note {
+    @extend .alert;
+    padding: 5px;
+    padding-left: 25px;
+    min-height: 15px;
+    background-image: url(../../assets/images/error_small.png);
+    background-repeat: no-repeat;
+    background-position: 5px 6px;
+}
+
+.errormessage,
+.errormessagesmall,
+.form-help .error {
+    @extend .alert-danger;
+}
+
+.warningmessage,
+.warningmessagesmall,
+.form-help .warning {
+    @extend .alert-warning;
+    background-image: url(../../assets/images/warn_small.png);
+}
+
+.donemessage,
+.donemessagesmall {
+    @extend .alert-success;
+    background-image: url(../../assets/images/ok_small.png);
+}
+
+.infomessage,
+.infomessagesmall,
+.form-help .note {
+    @extend .alert-info;
+    background-image: url(../../assets/images/info_small.png);
+}
+
+.errormark,
+.warningmark,
+.donemark,
+.infomark,
+.ok_bgr,
+.err_bgr {
+    padding-left: 20px;
+    min-height: 15px;
+    background: url(../../assets/images/error_small.png) no-repeat;
+}
+
+.warningmark {
+    background-image: url(../../assets/images/warn_small.png);
+}
+
+.donemark {
+    background-image: url(../../assets/images/ok_small.png);
+}
+
+.infomark,
+.ok_bgr {
+    background-image: url(../../assets/images/info_small.png);
+}
+
+/* I think this is only used in view details */
+table.simple {
+    font-size: 12px;
+    background: #fff;
+    margin: 1em;
+    border-collapse: collapse;
+    text-align: left;
+}
+table.simple th {
+    font-size: 14px;
+    font-weight: normal;
+    padding: 10px 8px;
+    border-bottom: 2px solid #333;
+}
+table.simple td {
+    padding: 10px 8px 0px 8px;
+}
+table.simple tbody tr:hover td {
+    color: #333;
+}
+table.tabletip {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+table.tabletip th {
+    white-space: nowrap;
+    border-bottom: 1px solid #444;
+    padding-right: 3px;
+}
+table.tabletip td {
+    border-bottom: 1px solid #ddd;
+}
+table.tabletip tbody tr:hover td {
+    background-color: #eee;
+}
+
+table.colored {
+    border-top: solid $table-border-color 1px;
+    border-bottom: solid $table-border-color 1px;
+}
+
+table.colored td,
+table.colored th {
+    text-align: left;
+    padding: 5px;
+    line-height: $line-height-base;
+}
+
+table.colored tr.header {
+    background: $table-heading-bg;
+    background-repeat: repeat-x;
+    background-position: top;
+    font-weight: bold;
+}
+
+table.colored tr {
+    background: $white;
+}
+
+table.colored tr.odd_row {
+    background: $table-bg-accent;
+}
+
+div.debug {
+    margin: 10px;
+    padding: 5px;
+    background: #ffff99;
+    border: solid #ffff33 1px;
+    color: black;
+}

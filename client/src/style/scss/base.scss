@@ -1000,17 +1000,10 @@ a.action-button {
 
 .content-buttons {
     .btn {
-        background-color: transparent !important;
         border-color: transparent !important;
-        box-shadow: none !important;
     }
-
     .btn:hover {
-        color: $brand-info;
-    }
-
-    .btn:active {
-        color: $brand-dark;
+        background-color: rgba($white, .4);
     }
 }
 

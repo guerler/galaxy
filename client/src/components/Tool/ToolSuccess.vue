@@ -1,5 +1,6 @@
 <template>
-    <div class="donemessagelarge">
+    <b-alert variant="success" show>
+        <icon icon="check-circle" class="h1 m-2 float-right text-success" />
         <p>
             Executed <b>{{ toolName }}</b> and successfully added {{ nJobsText }} to the queue.
         </p>
@@ -20,7 +21,7 @@
             the job has been run the status will change from 'running' to 'finished' if completed successfully or
             'error' if problems were encountered.
         </p>
-    </div>
+    </b-alert>
 </template>
 
 <script>

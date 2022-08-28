@@ -3,13 +3,13 @@ import { default as Masthead } from "./Masthead.vue";
 import { mount } from "@vue/test-utils";
 import { getLocalVue } from "jest/helpers";
 import { WindowManager } from "layout/window-manager";
-import { fetchMenu } from "layout/menu";
+import { fetchMenu } from "./menu";
 import { loadWebhookMenuItems } from "./_webhooks";
 import { userStore } from "store/userStore";
 import { configStore } from "store/configStore";
 
 jest.mock("app");
-jest.mock("layout/menu");
+jest.mock("./menu");
 jest.mock("./_webhooks");
 
 describe("Masthead.vue", () => {
@@ -81,7 +81,6 @@ describe("Masthead.vue", () => {
                 hidden: true,
             },
         ];
-        const initialActiveTab = "shared";
 
         // window manager assumes this is a Backbone collection - mock that out.
         tabs.add = (x) => {
@@ -96,7 +95,6 @@ describe("Masthead.vue", () => {
         wrapper = mount(Masthead, {
             propsData: {
                 mastheadState,
-                initialActiveTab,
             },
             store,
             localVue,
@@ -115,7 +113,7 @@ describe("Masthead.vue", () => {
         expect(wrapper.findAll("li.nav-item").length).toBe(5);
         // Ensure specified link title respected.
         expect(wrapper.find("#analysis a").text()).toBe("Analyze");
-        expect(wrapper.find("#analysis a").attributes("href")).toBe("/root");
+        expect(wrapper.find("#analysis a").attributes("href")).toBe("root");
     });
 
     it("should render tab items with menus", () => {
@@ -124,7 +122,7 @@ describe("Masthead.vue", () => {
         expect(wrapper.find("#shared").classes("dropdown")).toBe(true);
 
         expect(wrapper.findAll("#shared .dropdown-menu li").length).toBe(1);
-        expect(wrapper.find("#shared .dropdown-menu li a").attributes().href).toBe("/_menu_url");
+        expect(wrapper.find("#shared .dropdown-menu li a").attributes().href).toBe("_menu_url");
         expect(wrapper.find("#shared .dropdown-menu li a").attributes().target).toBe("_menu_target");
         expect(wrapper.find("#shared .dropdown-menu li a").text()).toBe("_menu_title");
     });
@@ -135,8 +133,8 @@ describe("Masthead.vue", () => {
     });
 
     it("should highlight the active tab", () => {
-        expect(wrapper.find("#analysis").classes("active")).toBe(false);
-        expect(wrapper.find("#shared").classes("active")).toBe(true);
+        expect(wrapper.find("#analysis").classes("active")).toBe(true);
+        expect(wrapper.find("#shared").classes("active")).toBe(false);
     });
 
     it("should display window manager button", async () => {

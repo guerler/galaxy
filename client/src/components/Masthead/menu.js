@@ -11,7 +11,7 @@ export function fetchMenu(options = {}) {
     //
     menu.push({
         id: "analysis",
-        url: "",
+        url: "/",
         tooltip: _l("Tools and Current History"),
         icon: "fa-home",
     });
@@ -24,7 +24,7 @@ export function fetchMenu(options = {}) {
         title: _l("Workflow"),
         tooltip: _l("Chain tools into workflows"),
         disabled: !Galaxy.user.id,
-        url: "workflows/list",
+        url: "/workflows/list",
         target: "__use_router__",
     });
 
@@ -38,7 +38,7 @@ export function fetchMenu(options = {}) {
                 title: _l("Visualize"),
                 tooltip: _l("Visualize datasets"),
                 disabled: !Galaxy.user.id,
-                url: "visualizations",
+                url: "/visualizations",
                 target: "__use_router__",
             });
         }
@@ -53,7 +53,7 @@ export function fetchMenu(options = {}) {
         // hidden though.
         menu.push({
             title: _l("Data Libraries"),
-            url: "libraries",
+            url: "/libraries",
             id: "libraries",
         });
     } else {
@@ -65,26 +65,26 @@ export function fetchMenu(options = {}) {
             menu: [
                 {
                     title: _l("Data Libraries"),
-                    url: "libraries",
+                    url: "/libraries",
                 },
                 {
                     title: _l("Histories"),
-                    url: "histories/list_published",
+                    url: "/histories/list_published",
                     target: "__use_router__",
                 },
                 {
                     title: _l("Workflows"),
-                    url: "workflows/list_published",
+                    url: "/workflows/list_published",
                     target: "__use_router__",
                 },
                 {
                     title: _l("Visualizations"),
-                    url: "visualizations/list_published",
+                    url: "/visualizations/list_published",
                     target: "__use_router__",
                 },
                 {
                     title: _l("Pages"),
-                    url: "pages/list_published",
+                    url: "/pages/list_published",
                     target: "__use_router__",
                 },
             ],
@@ -98,7 +98,7 @@ export function fetchMenu(options = {}) {
         menu.push({
             id: "admin",
             title: _l("Admin"),
-            url: "admin",
+            url: "/admin",
             tooltip: _l("Administer this Galaxy"),
             cls: "admin-only",
         });
@@ -144,16 +144,16 @@ export function fetchMenu(options = {}) {
             },
             {
                 title: _l("Interactive Tours"),
-                url: "tours",
+                url: "/tours",
                 target: "__use_router__",
             },
             {
                 title: _l("Introduction to Galaxy"),
-                url: "welcome/new",
+                url: "/welcome/new",
             },
             {
                 title: _l("About"),
-                url: "about",
+                url: "/about",
                 target: "__use_router__",
             },
             {
@@ -176,7 +176,7 @@ export function fetchMenu(options = {}) {
                 id: "user",
                 title: _l("Login or Register"),
                 cls: "loggedout-only",
-                url: "login",
+                url: "/login",
                 tooltip: _l("Log in or register a new account"),
             };
         } else {
@@ -185,7 +185,7 @@ export function fetchMenu(options = {}) {
                 title: _l("Login"),
                 cls: "loggedout-only",
                 tooltip: _l("Login"),
-                url: "login",
+                url: "/login",
             };
         }
     } else {
@@ -204,12 +204,12 @@ export function fetchMenu(options = {}) {
                 },
                 {
                     title: _l("Preferences"),
-                    url: "user",
+                    url: "/user",
                     target: "__use_router__",
                 },
                 {
                     title: _l("Custom Builds"),
-                    url: "custom_builds",
+                    url: "/custom_builds",
                     target: "__use_router__",
                 },
                 { divider: true },
@@ -220,28 +220,28 @@ export function fetchMenu(options = {}) {
                 },
                 {
                     title: _l("Datasets"),
-                    url: "datasets/list",
+                    url: "/datasets/list",
                     target: "__use_router__",
                 },
                 {
                     title: _l("Histories"),
-                    url: "histories/list",
+                    url: "/histories/list",
                     target: "__use_router__",
                 },
                 {
                     title: _l("Histories shared with me"),
-                    url: "histories/list_shared",
+                    url: "/histories/list_shared",
                     target: "__use_router__",
                     hidden: Galaxy.config.single_user,
                 },
                 {
                     title: _l("Pages"),
-                    url: "pages/list",
+                    url: "/pages/list",
                     target: "__use_router__",
                 },
                 {
                     title: _l("Workflow Invocations"),
-                    url: "workflows/invocations",
+                    url: "/workflows/invocations",
                     target: "__use_router__",
                 },
             ],
@@ -249,7 +249,7 @@ export function fetchMenu(options = {}) {
         if (Galaxy.config.visualizations_visible) {
             userTab.menu.push({
                 title: _l("Visualizations"),
-                url: "visualizations/list",
+                url: "/visualizations/list",
                 target: "__use_router__",
             });
         }
@@ -257,7 +257,7 @@ export function fetchMenu(options = {}) {
             userTab.menu.push({ divider: true });
             userTab.menu.push({
                 title: _l("Active InteractiveTools"),
-                url: "interactivetool_entry_points/list",
+                url: "/interactivetool_entry_points/list",
                 target: "__use_router__",
             });
         }

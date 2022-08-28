@@ -55,6 +55,10 @@ export default {
             type: String,
             default: null,
         },
+        initialActiveTab: {
+            type: String,
+            default: "analysis",
+        },
         mastheadState: {
             type: Object,
             default: null,
@@ -66,34 +70,19 @@ export default {
     },
     data() {
         return {
+            activeTab: this.initialActiveTab,
             baseTabs: [],
             extensionTabs: [],
-            currentTab: "analysis",
             windowTab: this.mastheadState.windowManager.getTab(),
             windowToggle: false,
         };
     },
-    computed: {
-        activeTab() {
-            const currentRoute = this.$route.path;
-            let matchedId = null;
-            for (let tab of this.baseTabs) {
-                const tabId = tab.id;
-                if (currentRoute == `/${tab.url}`) {
-                    matchedId = tabId;
-                    break;
-                } else if (tab.menu) {
-                    for (let item of tab.menu) {
-                        if (currentRoute == `/${item.url}`) {
-                            matchedId = tabId;
-                            break;
-                        }
-                    }
-                }
-            }
-            this.currentTab = matchedId || this.currentTab;
-            return this.currentTab;
+    watch: {
+        $route() {
+            this.updateActive();
         },
+    },
+    computed: {
         brandTitle() {
             let brandTitle = this.displayGalaxyBrand ? "Galaxy " : "";
             if (this.brand) {
@@ -108,6 +97,7 @@ export default {
     },
     created() {
         this.baseTabs = fetchMenu(this.menuOptions);
+        this.updateActive();
         loadWebhookMenuItems(this.extensionTabs);
     },
     methods: {
@@ -116,6 +106,29 @@ export default {
         },
         onWindowToggle() {
             this.windowToggle = !this.windowToggle;
+        },
+        updateActive() {
+            const currentRoute = this.$route?.path;
+            if (currentRoute) {
+                let matchedId = null;
+                for (const tab of this.baseTabs) {
+                    const tabId = tab.id;
+                    if (currentRoute == tab.url) {
+                        matchedId = tabId;
+                        break;
+                    } else if (tab.menu) {
+                        for (const item of tab.menu) {
+                            if (currentRoute == item.url) {
+                                matchedId = tabId;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (matchedId) {
+                    this.activeTab = matchedId;
+                }
+            }
         },
         _tabToJson(el) {
             const defaults = {

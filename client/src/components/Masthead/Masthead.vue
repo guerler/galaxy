@@ -8,7 +8,7 @@
         <b-navbar-nav>
             <masthead-item
                 v-for="(tab, idx) in tabs"
-                v-show="!(tab.hidden === undefined ? false : tab.hidden)"
+                v-show="tab.hidden !== true"
                 :key="`tab-${idx}`"
                 :tab="tab"
                 :active-tab="activeTab" />
@@ -89,8 +89,7 @@ export default {
             return brandTitle;
         },
         tabs() {
-            const tabs = [].concat(this.baseTabs, this.extensionTabs);
-            return tabs.map(this._tabToJson);
+            return [].concat(this.baseTabs, this.extensionTabs);
         },
     },
     created() {
@@ -126,19 +125,6 @@ export default {
                     this.activeTab = matchedId;
                 }
             }
-        },
-        _tabToJson(el) {
-            const defaults = {
-                visible: true,
-                target: "_parent",
-            };
-            let asJson;
-            if (el.toJSON instanceof Function) {
-                asJson = el.toJSON();
-            } else {
-                asJson = el;
-            }
-            return Object.assign({}, defaults, asJson);
         },
     },
 };

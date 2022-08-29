@@ -25,23 +25,19 @@ export function fetchMenu(options = {}) {
         tooltip: _l("Chain tools into workflows"),
         disabled: !Galaxy.user.id,
         url: "/workflows/list",
-        target: "__use_router__",
     });
 
     //
     // Visualization tab.
     //
     if (Galaxy.config.visualizations_visible) {
-        if (Galaxy.config.visualizations_visible) {
-            menu.push({
-                id: "visualization",
-                title: _l("Visualize"),
-                tooltip: _l("Visualize datasets"),
-                disabled: !Galaxy.user.id,
-                url: "/visualizations",
-                target: "__use_router__",
-            });
-        }
+        menu.push({
+            id: "visualization",
+            title: _l("Visualize"),
+            tooltip: _l("Visualize datasets"),
+            disabled: !Galaxy.user.id,
+            url: "/visualizations",
+        });
     }
 
     //
@@ -70,22 +66,18 @@ export function fetchMenu(options = {}) {
                 {
                     title: _l("Histories"),
                     url: "/histories/list_published",
-                    target: "__use_router__",
                 },
                 {
                     title: _l("Workflows"),
                     url: "/workflows/list_published",
-                    target: "__use_router__",
                 },
                 {
                     title: _l("Visualizations"),
                     url: "/visualizations/list_published",
-                    target: "__use_router__",
                 },
                 {
                     title: _l("Pages"),
                     url: "/pages/list_published",
-                    target: "__use_router__",
                 },
             ],
         });
@@ -145,7 +137,6 @@ export function fetchMenu(options = {}) {
             {
                 title: _l("Interactive Tours"),
                 url: "/tours",
-                target: "__use_router__",
             },
             {
                 title: _l("Introduction to Galaxy"),
@@ -154,7 +145,6 @@ export function fetchMenu(options = {}) {
             {
                 title: _l("About"),
                 url: "/about",
-                target: "__use_router__",
             },
             {
                 title: _l("Terms and Conditions"),
@@ -205,12 +195,10 @@ export function fetchMenu(options = {}) {
                 {
                     title: _l("Preferences"),
                     url: "/user",
-                    target: "__use_router__",
                 },
                 {
                     title: _l("Custom Builds"),
                     url: "/custom_builds",
-                    target: "__use_router__",
                 },
                 { divider: true },
                 {
@@ -221,28 +209,23 @@ export function fetchMenu(options = {}) {
                 {
                     title: _l("Datasets"),
                     url: "/datasets/list",
-                    target: "__use_router__",
                 },
                 {
                     title: _l("Histories"),
                     url: "/histories/list",
-                    target: "__use_router__",
                 },
                 {
                     title: _l("Histories shared with me"),
                     url: "/histories/list_shared",
-                    target: "__use_router__",
                     hidden: Galaxy.config.single_user,
                 },
                 {
                     title: _l("Pages"),
                     url: "/pages/list",
-                    target: "__use_router__",
                 },
                 {
                     title: _l("Workflow Invocations"),
                     url: "/workflows/invocations",
-                    target: "__use_router__",
                 },
             ],
         };
@@ -250,7 +233,6 @@ export function fetchMenu(options = {}) {
             userTab.menu.push({
                 title: _l("Visualizations"),
                 url: "/visualizations/list",
-                target: "__use_router__",
             });
         }
         if (Galaxy.config.interactivetools_enable) {
@@ -258,7 +240,6 @@ export function fetchMenu(options = {}) {
             userTab.menu.push({
                 title: _l("Active InteractiveTools"),
                 url: "/interactivetool_entry_points/list",
-                target: "__use_router__",
             });
         }
     }

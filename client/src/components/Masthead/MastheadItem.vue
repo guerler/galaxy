@@ -5,7 +5,6 @@
         v-b-tooltip.hover.bottom
         v-b-popover.manual.bottom="{ id: tab.id, content: popoverNote, html: true }"
         :class="classes"
-        :style="styles"
         :href="tab.url"
         :target="tab.target || '_parent'"
         role="menuitem"
@@ -27,7 +26,6 @@
         v-b-tooltip.hover.bottom
         v-b-popover.manual.bottom="{ id: tab.id, content: popoverNote, html: true }"
         :class="classes"
-        :style="styles"
         :text="tab.title"
         href="#"
         :title="tab.tooltip"
@@ -105,14 +103,6 @@ export default {
                 [this.tab.icon, this.tab.icon],
             ]);
         },
-        styles() {
-            return {
-                visibility: this.tab.visible ? "visible" : "hidden",
-            };
-        },
-        galaxyIframe() {
-            return document.getElementById("galaxy_main");
-        },
     },
     mounted() {
         window.addEventListener("blur", this.hideDropdown);
@@ -140,11 +130,11 @@ export default {
                 }, 3000);
             } else if (!tab.menu) {
                 event.preventDefault();
-                const Galaxy = getGalaxyInstance();
-                if (tab.target === "__use_router__" && this.$router) {
+                if (!tab.target && this.$router) {
                     this.$router.push(tab.url);
                 } else {
                     try {
+                        const Galaxy = getGalaxyInstance();
                         Galaxy.frame.add({ ...tab, url: tab.url });
                     } catch (err) {
                         console.warn("Missing frame element on galaxy instance", err);

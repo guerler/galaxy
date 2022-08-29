@@ -21,7 +21,6 @@
 <script>
 import { BNavbar, BNavbarBrand, BNavbarNav } from "bootstrap-vue";
 import MastheadItem from "./MastheadItem";
-import { fetchMenu } from "entry/analysis/menu";
 import { loadWebhookMenuItems } from "./_webhooks";
 import QuotaMeter from "./QuotaMeter.vue";
 
@@ -38,6 +37,10 @@ export default {
         displayGalaxyBrand: {
             type: Boolean,
             default: true,
+        },
+        baseTabs: {
+            type: Array,
+            default: () => [],
         },
         brand: {
             type: String,
@@ -63,15 +66,10 @@ export default {
             type: Object,
             default: null,
         },
-        menuOptions: {
-            type: Object,
-            default: null,
-        },
     },
     data() {
         return {
             activeTab: this.initialActiveTab,
-            baseTabs: [],
             extensionTabs: [],
             windowTab: this.mastheadState.windowManager.getTab(),
             windowToggle: false,
@@ -96,7 +94,6 @@ export default {
         },
     },
     created() {
-        this.baseTabs = fetchMenu(this.menuOptions);
         this.updateActive();
         loadWebhookMenuItems(this.extensionTabs);
     },

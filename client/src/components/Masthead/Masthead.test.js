@@ -3,27 +3,21 @@ import { default as Masthead } from "./Masthead.vue";
 import { mount } from "@vue/test-utils";
 import { getLocalVue } from "jest/helpers";
 import { WindowManager } from "layout/window-manager";
-import { fetchMenu } from "entry/analysis/menu";
 import { loadWebhookMenuItems } from "./_webhooks";
 import { userStore } from "store/userStore";
 import { configStore } from "store/configStore";
 
 jest.mock("app");
-jest.mock("entry/analysis/menu");
 jest.mock("./_webhooks");
 
 describe("Masthead.vue", () => {
     let wrapper;
     let localVue;
     let windowManager;
-    let tabs;
+    let baseTabs;
     let store;
     let state;
     let actions;
-
-    function stubFetchMenu() {
-        return tabs;
-    }
 
     function stubLoadWebhooks(items) {
         items.push({
@@ -34,7 +28,6 @@ describe("Masthead.vue", () => {
         });
     }
 
-    fetchMenu.mockImplementation(stubFetchMenu);
     loadWebhookMenuItems.mockImplementation(stubLoadWebhooks);
 
     beforeEach(() => {
@@ -59,7 +52,7 @@ describe("Masthead.vue", () => {
             },
         });
 
-        tabs = [
+        baseTabs = [
             // Main Analysis Tab..
             {
                 id: "analysis",
@@ -83,8 +76,8 @@ describe("Masthead.vue", () => {
         ];
 
         // window manager assumes this is a Backbone collection - mock that out.
-        tabs.add = (x) => {
-            tabs.push(x);
+        baseTabs.add = (x) => {
+            baseTabs.push(x);
             return x;
         };
         windowManager = new WindowManager({});
@@ -95,6 +88,7 @@ describe("Masthead.vue", () => {
         wrapper = mount(Masthead, {
             propsData: {
                 mastheadState,
+                baseTabs,
             },
             store,
             localVue,

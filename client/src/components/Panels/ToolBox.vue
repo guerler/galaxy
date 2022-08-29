@@ -166,8 +166,7 @@ export default {
                 openGlobalUploadModal();
             } else if (tool.form_style === "regular") {
                 evt.preventDefault();
-                const Galaxy = getGalaxyInstance();
-                // encode spaces in tool.id
+                // encode spaces in tool.id and push route
                 const toolId = tool.id;
                 const toolVersion = tool.version;
                 this.$router.push(`/?tool_id=${encodeURIComponent(toolId)}&version=${toolVersion}`);

@@ -5,13 +5,13 @@
             <Masthead
                 v-if="showMasthead"
                 id="masthead"
-                :masthead-state="mastheadState"
-                :display-galaxy-brand="config.display_galaxy_brand"
+                :base-tabs="baseTabs"
                 :brand="config.brand"
                 :brand-link="staticUrlToPrefixed(config.logo_url)"
                 :brand-image="staticUrlToPrefixed(config.logo_src)"
                 :brand-image-secondary="staticUrlToPrefixed(config.logo_src_secondary)"
-                :menu-options="config" />
+                :display-galaxy-brand="config.display_galaxy_brand"
+                :masthead-state="mastheadState" />
             <alert
                 v-if="config.message_box_visible && config.message_box_content"
                 id="messagebox"
@@ -43,6 +43,7 @@ import Masthead from "components/Masthead/Masthead.vue";
 import { getGalaxyInstance } from "app";
 import { getAppRoot } from "onload";
 import { HistoryPanelProxy } from "components/History/adapters/HistoryPanelProxy";
+import { fetchMenu } from "./menu";
 
 export default {
     components: {
@@ -57,6 +58,9 @@ export default {
         };
     },
     computed: {
+        baseTabs() {
+            return fetchMenu(this.config);
+        },
         showMasthead() {
             const masthead = this.$route.query.hide_masthead;
             if (masthead !== undefined) {

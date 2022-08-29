@@ -14,6 +14,7 @@ export function fetchMenu(options = {}) {
         url: "/",
         tooltip: _l("Tools and Current History"),
         icon: "fa-home",
+        target: "_top",
     });
 
     //
@@ -48,9 +49,9 @@ export function fetchMenu(options = {}) {
         // functionality as a representation for external data.  The rest is
         // hidden though.
         menu.push({
+            id: "libraries",
             title: _l("Data Libraries"),
             url: "/libraries",
-            id: "libraries",
         });
     } else {
         menu.push({
@@ -62,6 +63,7 @@ export function fetchMenu(options = {}) {
                 {
                     title: _l("Data Libraries"),
                     url: "/libraries",
+                    target: "_top",
                 },
                 {
                     title: _l("Histories"),
@@ -93,6 +95,7 @@ export function fetchMenu(options = {}) {
             url: "/admin",
             tooltip: _l("Administer this Galaxy"),
             cls: "admin-only",
+            target: "_top",
         });
     }
 

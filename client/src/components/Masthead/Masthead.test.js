@@ -3,13 +3,13 @@ import { default as Masthead } from "./Masthead.vue";
 import { mount } from "@vue/test-utils";
 import { getLocalVue } from "jest/helpers";
 import { WindowManager } from "layout/window-manager";
-import { fetchMenu } from "./menu";
+import { fetchMenu } from "entry/analysis/menu";
 import { loadWebhookMenuItems } from "./_webhooks";
 import { userStore } from "store/userStore";
 import { configStore } from "store/configStore";
 
 jest.mock("app");
-jest.mock("./menu");
+jest.mock("entry/analysis/menu");
 jest.mock("./_webhooks");
 
 describe("Masthead.vue", () => {

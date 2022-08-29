@@ -21,7 +21,7 @@
 <script>
 import { BNavbar, BNavbarBrand, BNavbarNav } from "bootstrap-vue";
 import MastheadItem from "./MastheadItem";
-import { fetchMenu } from "./menu";
+import { fetchMenu } from "entry/analysis/menu";
 import { loadWebhookMenuItems } from "./_webhooks";
 import QuotaMeter from "./QuotaMeter.vue";
 

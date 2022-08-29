@@ -170,7 +170,7 @@ export default {
                 // encode spaces in tool.id
                 const toolId = tool.id;
                 const toolVersion = tool.version;
-                Galaxy.router.push(`/?tool_id=${encodeURIComponent(toolId)}&version=${toolVersion}`);
+                this.$router.push(`/?tool_id=${encodeURIComponent(toolId)}&version=${toolVersion}`);
             }
         },
         onToggle() {

@@ -5,7 +5,6 @@
         v-b-tooltip.hover.bottom
         v-b-popover.manual.bottom="{ id: tab.id, content: popoverNote, html: true }"
         :class="classes"
-        :style="styles"
         :href="formatUrl(tab.url)"
         :target="tab.target || '_parent'"
         role="menuitem"
@@ -27,7 +26,6 @@
         v-b-tooltip.hover.bottom
         v-b-popover.manual.bottom="{ id: tab.id, content: popoverNote, html: true }"
         :class="classes"
-        :style="styles"
         :text="tab.title"
         href="#"
         :title="tab.tooltip"
@@ -104,11 +102,6 @@ export default {
                 ["fa fa-fw", true],
                 [this.tab.icon, this.tab.icon],
             ]);
-        },
-        styles() {
-            return {
-                visibility: this.tab.visible ? "visible" : "hidden",
-            };
         },
         galaxyIframe() {
             return document.getElementById("galaxy_main");

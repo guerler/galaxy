@@ -36,6 +36,7 @@ module.exports = (env = {}, argv = {}) => {
         entry: {
             analysis: ["polyfills", "bundleEntries", "entry/analysis"],
             generic: ["polyfills", "bundleEntries", "entry/generic"],
+            mygalaxyui: ["polyfills", "bundleEntries", "entry/mygalaxyui"],
         },
         output: {
             path: path.join(__dirname, "../", "/static/dist"),

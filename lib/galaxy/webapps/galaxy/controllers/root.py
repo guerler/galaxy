@@ -36,12 +36,11 @@ class RootController(controller.JSAppLauncher, UsesAnnotations):
         raise HTTPNotFound("This link may not be followed from within Galaxy.")
 
     @web.expose
-    def index(
-        self, trans: GalaxyWebTransaction, tool_id=None, workflow_id=None, history_id=None, m_c=None, m_a=None, **kwd
-    ):
+    def index(self, trans: GalaxyWebTransaction, app_name="analysis", history_id=None, **kwd):
         """
         Root and entry point for client-side web app.
 
+        Optional kwd parameters evaluated by the default 'analysis' client:
         :type       tool_id: str or None
         :param      tool_id: load center panel with given tool if not None
         :type   workflow_id: encoded id or None
@@ -65,7 +64,7 @@ class RootController(controller.JSAppLauncher, UsesAnnotations):
             unencoded_id = trans.security.decode_id(history_id)
             history = self.history_manager.get_owned(unencoded_id, trans.user)
             trans.set_history(history)
-        return self._bootstrapped_client(trans)
+        return self._bootstrapped_client(trans, app_name=app_name)
 
     @web.expose
     def login(self, trans: GalaxyWebTransaction, redirect=None, is_logout_redirect=False, **kwd):

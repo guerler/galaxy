@@ -8,10 +8,9 @@ const props = defineProps({
     <div class="mt-2 mb-4">
         <div v-if="title" class="title-bar my-2">
             <div class="stripe"></div>
-            <h2>{{ props.title }}</h2>
+            <h4>{{ props.title }}</h4>
             <div class="stripe"></div>
         </div>
-
         <div v-else class="stripe"></div>
         <slot />
     </div>
@@ -25,12 +24,6 @@ const props = defineProps({
     grid-template-columns: 1em auto 1fr;
     align-items: center;
     gap: 1em;
-
-    h2 {
-        font-size: 1.25em;
-        margin: 0;
-        font-weight: 700;
-    }
 }
 
 .stripe {

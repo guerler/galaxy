@@ -202,3 +202,8 @@ table.info_data_table th:nth-child(1) {
         color: #bfc7cf !important;
     }
 }
+
+// show sticky elements behind dropdown-menus
+.sticky-top {
+    z-index: 800;
+}

@@ -9,7 +9,8 @@
             <div class="center-container">
                 <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
                 <div v-show="!showCenter" class="center-panel" style="display: block">
-                    <router-view :key="$route.fullPath" />
+                    <router-view v-if="!windowEnabled" :key="$route.fullPath" />
+                    <div v-else>dynamic</div>
                 </div>
             </div>
         </div>
@@ -32,6 +33,12 @@ export default {
         return {
             showCenter: false,
         };
+    },
+    props: {
+        windowEnabled: {
+            type: Boolean,
+            default: false,
+        },
     },
     computed: {
         showPanels() {

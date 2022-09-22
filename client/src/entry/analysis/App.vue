@@ -32,7 +32,7 @@
                     <a class="ml-1" :href="resendUrl">Resend Verification</a>
                 </span>
             </alert>
-            <router-view @update:confirmation="confirmation = $event" />
+            <router-view @update:confirmation="confirmation = $event" :window-enabled="windowEnabled" />
         </div>
         <div id="dd-helper" />
     </div>
@@ -57,6 +57,7 @@ export default {
             confirmation: null,
             resendUrl: `${getAppRoot()}user/resend_verification`,
             windowManager: new WindowManager(),
+            windowEnabled: false,
         };
     },
     computed: {
@@ -71,7 +72,15 @@ export default {
             return true;
         },
         windowTab() {
-            return this.windowManager.getTab();
+            return {
+                id: "enable-window-manager",
+                icon: "fa-th",
+                tooltip: "Enable/Disable Window Manager",
+                visible: true,
+                onclick: () => {
+                    this.windowEnabled = !this.windowEnabled;
+                },
+            };
         },
     },
     watch: {

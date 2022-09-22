@@ -70,12 +70,6 @@ VueRouter.prototype.push = function push(location, windowManagerTitle = null) {
             return;
         }
     }
-    // show location in window manager
-    const Galaxy = getGalaxyInstance();
-    if (windowManagerTitle && Galaxy.frame && Galaxy.frame.active) {
-        Galaxy.frame.add({ title: windowManagerTitle, url: location });
-        return;
-    }
     // always emit event when a route is pushed
     this.app.$emit("router-push");
     // avoid console warning when user clicks to revisit same route

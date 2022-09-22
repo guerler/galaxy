@@ -1,27 +1,11 @@
-/** Adds window manager masthead icon and functionality **/
-import _l from "utils/localization";
+/** Adds window manager **/
 import WinBox from "winbox/src/js/winbox.js";
 import "winbox/dist/css/winbox.min.css";
 import { safePath } from "utils/redirect";
 
 export class WindowManager {
-    constructor(options) {
-        options = options || {};
+    constructor() {
         this.counter = 0;
-        this.active = false;
-    }
-
-    /** Return window masthead tab props */
-    getTab() {
-        return {
-            id: "enable-window-manager",
-            icon: "fa-th",
-            tooltip: _l("Enable/Disable Window Manager"),
-            visible: true,
-            onclick: () => {
-                this.active = !this.active;
-            },
-        };
     }
 
     /** Add and display a new window based on options. */

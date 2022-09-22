@@ -10,7 +10,9 @@
                 <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
                 <div v-show="!showCenter" class="center-panel" style="display: block">
                     <router-view v-if="!windowEnabled" :key="$route.fullPath" />
-                    <div v-else>dynamic</div>
+                    <div v-else>
+                        <component :is="activeComponent" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -23,14 +25,16 @@ import HistoryIndex from "components/History/Index";
 import ToolBox from "components/Panels/ProviderAwareToolBox";
 import SidePanel from "components/Panels/SidePanel";
 import CenterFrame from "./CenterFrame";
-
+import ActiveComponent from "./ActiveComponent";
 export default {
     components: {
+        ActiveComponent,
         CenterFrame,
         SidePanel,
     },
     data() {
         return {
+            activeComponents: [],
             showCenter: false,
         };
     },

@@ -1,4 +1,4 @@
-import { mount, createLocalVue } from "@vue/test-utils";
+import { mount, createLocalVue, config } from "@vue/test-utils";
 import Vuex from "vuex";
 
 // Galaxy related
@@ -74,8 +74,8 @@ describe("Client Route Memory Usage in MB", () => {
         localVue.use(Vuex);
         const router = getRouter(Galaxy);
         wrapper = mount(App, {
-            store,
             router,
+            store,
             propsData: {
             },
             stub: {
@@ -95,7 +95,7 @@ describe("Client Route Memory Usage in MB", () => {
     it("testing memory usage of routes (listed in index.js)", async () => {
         getAppRoot.mockImplementation(() => "/");
         getGalaxyInstance.mockImplementation(() => Galaxy);
-        console.log(getGalaxyInstance());
+        //console.log(getGalaxyInstance());
         await wrapper.$router.push("/");
         const memoryUsage = new MemoryUsage();
         /*for (let route of Object.keys(Routes)) {

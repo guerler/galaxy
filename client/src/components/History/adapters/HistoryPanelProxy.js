@@ -39,6 +39,7 @@ export class HistoryPanelProxy {
         };
 
         // watch the store, update history id
+        console.log(store);
         store.watch(
             (state, getters) => getters["history/currentHistory"],
             (history) => {

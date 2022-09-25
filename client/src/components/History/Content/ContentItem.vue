@@ -82,7 +82,7 @@
             @tag-click="onTagClick"
             @input="onTags" />
         <!-- collections are not expandable, so we only need the DatasetDetails component here -->
-        <b-collapse :visible="expandDataset">
+        <div v-if="expandDataset">
             <DatasetDetails
                 v-if="expandDataset"
                 :dataset="item"
@@ -91,7 +91,7 @@
                 :item-urls="itemUrls"
                 @edit="onEdit"
                 @toggleHighlights="toggleHighlights" />
-        </b-collapse>
+        </div>
     </div>
 </template>
 

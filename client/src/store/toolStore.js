@@ -6,6 +6,7 @@ export const state = {
 import Vue from "vue";
 import { getAppRoot } from "onload/loadConfig";
 import axios from "axios";
+import { filterTools } from "components/Panels/utilities";
 
 const getters = {
     getToolForId: (state) => (toolId) => {
@@ -21,33 +22,8 @@ const getters = {
     },
     getTools:
         (state) =>
-        ({ filterSettings }) => {
-            // if no filters
-            if (Object.keys(filterSettings).length == 0) {
-                return [];
-            }
-            const allTools = state.toolsList;
-            const returnedTools = [];
-
-            for (const tool in allTools) {
-                let hasMatches = false;
-                for (const [key, filterValue] of Object.entries(filterSettings)) {
-                    const actualValue = allTools[tool][key];
-                    if (filterValue) {
-                        if (!actualValue || !actualValue.toUpperCase().match(filterValue.toUpperCase())) {
-                            hasMatches = false;
-                            break;
-                        } else {
-                            hasMatches = true;
-                        }
-                    }
-                }
-                if (hasMatches) {
-                    returnedTools.push(allTools[tool]);
-                }
-            }
-
-            return returnedTools;
+        ({ toolbox }) => {
+            return state.toolsList ? filterTools(toolbox, state.toolsList) : [];
         },
 };
 
@@ -57,13 +33,31 @@ const actions = {
         const { data } = await axios.get(`${getAppRoot()}api/tools/${toolId}`);
         commit("saveToolForId", { toolId, toolData: data });
     },
-    fetchAllTools: async ({ state, commit }) => {
-        // Preventing store from being populated for every search: we fetch again only if:
-        // store isn't already populated (initial fetch)
-        if (state.toolsList.length === 0) {
-            console.log("fetching all tools once");
-            const { data } = await axios.get(`${getAppRoot()}api/tools?in_panel=False`);
-            commit("saveTools", { toolsData: data });
+    fetchAllTools: async ({ commit }, { filterSettings }) => {
+        if (Object.keys(filterSettings).length !== 0) {
+            // Parsing filterSettings to Whoosh query
+            let q = "";
+            for (const [key, filterValue] of Object.entries(filterSettings)) {
+                // Do OR search on name+description field
+                if (key == "name") {
+                    q += "(" + key + ":(" + filterValue + ") OR description" + ":(" + filterValue + ")) ";
+                } else if (key == "id") {
+                    q += "id_exact:(" + filterValue + ") ";
+                } else {
+                    q += key + ":(" + filterValue + ") ";
+                }
+            }
+            axios
+                .get(`${getAppRoot()}api/tools`, {
+                    params: { q },
+                })
+                .then((response) => {
+                    const foundTools = response.data;
+                    commit("saveTools", { toolsData: foundTools });
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
         }
     },
 };

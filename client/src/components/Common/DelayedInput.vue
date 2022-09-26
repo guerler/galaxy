@@ -6,7 +6,6 @@
             class="search-query"
             size="sm"
             autocomplete="off"
-            :disabled="includeAdvBtn && showAdvanced"
             :placeholder="placeholder"
             @input="delayQuery"
             @change="setQuery"
@@ -25,7 +24,6 @@
                 class="search-clear"
                 size="sm"
                 :title="titleClear | l"
-                :disabled="includeAdvBtn && showAdvanced"
                 data-description="reset query"
                 @click="clearBox">
                 <icon v-if="loading" icon="spinner" spin />

@@ -106,15 +106,28 @@ export default {
             ],
         };
     },
+    watch: {
+        tools() {
+            this.initialize();
+            this.$refs.toolTable.refresh();
+        },
+    },
     created() {
-        const initData = { summary: "", help_text: "", _showDetails: false, is_fetched: false };
-        this.buffer = this.tools.slice(0, this.bufferLen);
-        this.buffer.forEach((tool) => Object.assign(tool, { ...initData }));
-        this.buffer.forEach(async (tool, index) => {
-            await this.fetchHelp(index);
-        });
+        this.initialize();
     },
     methods: {
+        initialize() {
+            this.busy = true;
+            if (this.tools) {
+                const initData = { summary: "", help_text: "", _showDetails: false, is_fetched: false };
+                this.buffer = this.tools.slice(0, this.bufferLen);
+                this.buffer.forEach((tool) => Object.assign(tool, { ...initData }));
+                this.buffer.forEach(async (tool, index) => {
+                    await this.fetchHelp(index);
+                });
+                this.busy = false;
+            }
+        },
         onOpen(tool) {
             if (tool.id === "upload1") {
                 openGlobalUploadModal();

@@ -1,5 +1,5 @@
 <template>
-    <ToolsProvider v-slot="{ loading, result: itemsLoaded }" :filter-settings="filterSettings">
+    <ToolsProvider v-slot="{ loading, result: itemsLoaded }" :filter-settings="filterSettings" :toolbox="toolbox">
         <section class="overflow-auto h-100" @scroll="onScroll">
             <div class="mb-2">
                 <span class="row mb-1">
@@ -58,7 +58,7 @@ export default {
             type: String,
             default: "",
         },
-        panelSectionName: {
+        section: {
             type: String,
             default: "",
         },
@@ -66,7 +66,7 @@ export default {
             type: String,
             default: "",
         },
-        description: {
+        help: {
             type: String,
             default: "",
         },
@@ -77,15 +77,14 @@ export default {
         };
     },
     computed: {
+        toolbox() {
+            return this.$store.getters["panels/currentPanel"];
+        },
         filterSettings() {
             const newFilterSettings = {};
             Object.entries(this.$props).forEach(([filter, value]) => {
                 if (value && value !== "") {
-                    if (filter === "panelSectionName") {
-                        newFilterSettings["panel_section_name"] = value;
-                    } else {
-                        newFilterSettings[filter] = value;
-                    }
+                    newFilterSettings[filter] = value;
                 }
             });
             return newFilterSettings;

@@ -21,8 +21,10 @@
         <div class="unified-panel-controls">
             <tool-search
                 :current-panel-view="currentPanelView"
+                include-adv-btn
                 :placeholder="titleSearchTools"
                 :show-advanced.sync="showAdvanced"
+                :toolbox="toolbox"
                 :query="query"
                 @onQuery="onQuery"
                 @onResults="onResults" />

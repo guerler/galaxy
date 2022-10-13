@@ -6,7 +6,6 @@ export const state = {
 import Vue from "vue";
 import { getAppRoot } from "onload/loadConfig";
 import axios from "axios";
-import { filterTools } from "components/Panels/utilities";
 
 const getters = {
     getToolForId: (state) => (toolId) => {
@@ -20,11 +19,7 @@ const getters = {
             return "...";
         }
     },
-    getTools:
-        (state) =>
-        ({ toolbox }) => {
-            return state.toolsList ? filterTools(toolbox, state.toolsList) : [];
-        },
+    getTools: (state) => () => state.toolsList.length === 0 ? [] : state.toolsList,
 };
 
 const actions = {
@@ -47,7 +42,7 @@ const actions = {
                     q += key + ":(" + filterValue + ") ";
                 }
             }
-            axios
+            return axios
                 .get(`${getAppRoot()}api/tools`, {
                     params: { q },
                 })

@@ -3,7 +3,6 @@
         <DelayedInput
             :class="!showAdvanced && 'mb-3'"
             :query="query"
-            :loading="loading"
             :show-advanced="showAdvanced"
             :enable-advanced="enableAdvanced"
             :placeholder="placeholder"
@@ -76,7 +75,6 @@ export default {
         return {
             favorites: ["#favs", "#favorites", "#favourites"],
             minQueryLength: 3,
-            loading: false,
             filterSettings: {},
         };
     },
@@ -94,7 +92,6 @@ export default {
                 if (this.favorites.includes(q)) {
                     this.$emit("onResults", this.favoritesResults);
                 } else {
-                    this.loading = true;
                     const returnedTools = [];
                     const keys = ["name", "description"];
                     for (const section of this.toolbox) {
@@ -110,7 +107,6 @@ export default {
                             }
                         }
                     }
-                    this.loading = false;
                     this.$emit("onResults", returnedTools);
                 }
             } else {

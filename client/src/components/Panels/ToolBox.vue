@@ -20,8 +20,8 @@
         </div>
         <div class="unified-panel-controls">
             <tool-search
+                enable-advanced
                 :current-panel-view="currentPanelView"
-                include-adv-btn
                 :placeholder="titleSearchTools"
                 :show-advanced.sync="showAdvanced"
                 :toolbox="toolbox"

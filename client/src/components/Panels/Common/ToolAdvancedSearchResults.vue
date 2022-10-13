@@ -2,9 +2,9 @@
     <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy">
         <b-table striped bordered :fields="fields" :items="buffer">
             <template v-slot:cell(name)="row">
-                <span v-if="!row.item.help"
-                    ><b>{{ row.item.name }}</b> {{ row.item.description }}</span
-                >
+                <span v-if="!row.item.help">
+                    <b>{{ row.item.name }}</b> {{ row.item.description }}
+                </span>
                 <span v-else>
                     <b-link href="javascript:void(0)" role="button" @click.stop="row.toggleDetails()">
                         <b>{{ row.item.name }}</b> {{ row.item.description }}
@@ -15,11 +15,7 @@
             <template v-slot:row-details="row">
                 <b-card v-if="row.item.help">
                     <p class="mb-1" v-html="row.item.help" />
-                    <a
-                        :href="row.item.target === 'galaxy_main' ? 'javascript:void(0)' : row.item.link"
-                        @click.stop="onOpen(row.item)">
-                        Click here to open the tool
-                    </a>
+                    <a :href="row.item.link || '#'" @click.stop="onOpen(row.item)"> Click here to open the tool </a>
                 </b-card>
             </template>
             <template v-slot:cell(section)="row">
@@ -60,12 +56,13 @@
 </template>
 
 <script>
-const defaultBufferLen = 4;
+import Vue from "vue";
 import _l from "utils/localization";
 import infiniteScroll from "vue-infinite-scroll";
 import { openGlobalUploadModal } from "components/Upload";
 import { fetchData } from "./services";
-import Vue from "vue";
+
+const defaultBufferLen = 4;
 
 export default {
     directives: { infiniteScroll },

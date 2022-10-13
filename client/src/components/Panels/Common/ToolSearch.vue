@@ -5,7 +5,7 @@
             :query="query"
             :loading="loading"
             :show-advanced="showAdvanced"
-            :include-adv-btn="includeAdvBtn"
+            :enable-advanced="enableAdvanced"
             :placeholder="placeholder"
             @change="checkQuery"
             @onToggle="onToggle" />
@@ -51,7 +51,7 @@ export default {
             type: String,
             required: true,
         },
-        includeAdvBtn: {
+        enableAdvanced: {
             type: Boolean,
             default: false,
         },
@@ -98,12 +98,14 @@ export default {
                     const returnedTools = [];
                     const keys = ["name", "description"];
                     for (const section of this.toolbox) {
-                        for (const tool of section.elems) {
-                            for (const key of keys) {
-                                const actualValue = tool[key];
-                                if (actualValue && actualValue.toUpperCase().match(q.toUpperCase())) {
-                                    returnedTools.push(tool.id);
-                                    break;
+                        if (section.elems) {
+                            for (const tool of section.elems) {
+                                for (const key of keys) {
+                                    const actualValue = tool[key];
+                                    if (actualValue && actualValue.toUpperCase().match(q.toUpperCase())) {
+                                        returnedTools.push(tool.id);
+                                        break;
+                                    }
                                 }
                             }
                         }

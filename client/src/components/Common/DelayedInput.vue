@@ -12,7 +12,7 @@
             @keydown.esc="setQuery('')" />
         <b-input-group-append>
             <b-button
-                v-if="includeAdvBtn"
+                v-if="enableAdvanced"
                 size="sm"
                 :pressed="showAdvanced"
                 :variant="showAdvanced ? 'info' : 'secondary'"
@@ -51,7 +51,7 @@ export default {
             type: Number,
             default: 1000,
         },
-        includeAdvBtn: {
+        enableAdvanced: {
             type: Boolean,
             default: false,
         },

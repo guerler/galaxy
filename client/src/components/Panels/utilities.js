@@ -23,7 +23,6 @@ export function filterToolSections(tools, results) {
             tools = flattenToolsSection(section);
             toolsResultsSection = mapToolsResults(tools, results);
             toolsResultsSection = sortToolsResults(toolsResultsSection);
-
             return {
                 ...section,
                 elems: toolsResultsSection,

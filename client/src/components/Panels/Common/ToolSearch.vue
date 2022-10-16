@@ -2,14 +2,18 @@
     <div>
         <small v-if="showAdvanced">Filter by name:</small>
         <DelayedInput
-            :class="!showAdvanced && 'mb-3'"
+            id="delayed-input"
+            :class="!showAdvanced"
             :query="query"
             :show-advanced="showAdvanced"
             :enable-advanced="enableAdvanced"
             :placeholder="showAdvanced ? 'any name' : placeholder"
             @change="checkQuery"
             @onToggle="onToggle" />
-        <div
+        <b-popover
+            target="delayed-input"
+            triggers="hover"
+            placement="top"
             v-if="showAdvanced"
             description="advanced tool filters"
             @keyup.enter="onSearch"
@@ -36,7 +40,7 @@
                     <span>{{ "Cancel" | localize }}</span>
                 </b-button>
             </div>
-        </div>
+        </b-popover>
     </div>
 </template>
 

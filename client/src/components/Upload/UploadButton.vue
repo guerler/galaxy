@@ -1,11 +1,10 @@
 <template>
-    <b-button
+    <b-nav-item
         id="tool-panel-upload-button"
         v-b-tooltip.hover.bottom
         :aria-label="title | localize"
         :title="title | localize"
         class="upload-button"
-        size="sm"
         @click="showUploadDialog">
         <div class="progress">
             <div
@@ -16,10 +15,9 @@
                 }" />
         </div>
         <span class="position-relative">
-            <font-awesome-icon icon="upload" class="mr-1" />
-            <b v-localize>Upload Data</b>
+            <font-awesome-icon icon="upload" />
         </span>
-    </b-button>
+    </b-nav-item>
 </template>
 
 <script>

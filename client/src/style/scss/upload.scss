@@ -8,11 +8,7 @@
 }
 
 .upload-button {
-    @extend .w-100;
-    @extend .mb-2;
     @extend .position-relative;
-    border-radius: $border-radius;
-    cursor: pointer;
     .progress {
         @extend .position-absolute;
         @extend .w-100;
@@ -21,13 +17,13 @@
         left: 0;
         background-color: transparent;
         .progress-bar-danger {
-            background: $state-danger-bg;
+            background: darken($state-danger-bg, $brand-masthead-progress-darken);
         }
         .progress-bar-success {
-            background: $state-success-bg;
+            background: darken($state-success-bg, $brand-masthead-progress-darken);
         }
         .progress-bar-info {
-            background: $state-running-bg;
+            background: darken($state-running-bg, $brand-masthead-progress-darken);
         }
         .progress-bar-notransition {
             -webkit-transition: none;

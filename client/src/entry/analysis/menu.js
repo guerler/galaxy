@@ -248,5 +248,6 @@ export function fetchMenu(options = {}) {
         }
     }
     menu.push(userTab);
+
     return menu;
 }

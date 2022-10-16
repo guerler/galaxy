@@ -1,10 +1,5 @@
 <template>
     <div id="columns">
-        <SidePanel
-            v-if="showPanels"
-            side="left"
-            :current-panel="getToolBox()"
-            :current-panel-properties="toolBoxProperties" />
         <div id="center">
             <div class="center-container">
                 <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
@@ -17,9 +12,7 @@
     </div>
 </template>
 <script>
-import { getGalaxyInstance } from "app";
 import HistoryIndex from "components/History/Index";
-import ToolBox from "components/Panels/ProviderAwareToolBox";
 import SidePanel from "components/Panels/SidePanel";
 import CenterFrame from "./CenterFrame";
 
@@ -41,12 +34,6 @@ export default {
             }
             return true;
         },
-        toolBoxProperties() {
-            const Galaxy = getGalaxyInstance();
-            return {
-                storedWorkflowMenuEntries: Galaxy.config.stored_workflow_menu_entries,
-            };
-        },
     },
     mounted() {
         // Using a custom event here which, in contrast to watching $route,
@@ -59,9 +46,6 @@ export default {
     methods: {
         getHistoryIndex() {
             return HistoryIndex;
-        },
-        getToolBox() {
-            return ToolBox;
         },
         hideCenter() {
             this.showCenter = false;

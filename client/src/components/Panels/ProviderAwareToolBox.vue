@@ -1,5 +1,5 @@
 <template>
-    <ConfigProvider v-slot="{ config }" class="d-flex flex-column">
+    <ConfigProvider v-slot="{ config }">
         <ToolPanelViewProvider
             v-if="config.default_panel_view"
             v-slot="{ currentPanel, currentPanelView }"

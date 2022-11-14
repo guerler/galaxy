@@ -799,7 +799,6 @@ class DatasetInterface(BaseUIController, UsesAnnotations, UsesItemRatings, UsesE
             return trans.fill_template_mako(
                 "dataset/display_application/display.mako",
                 msg=msg,
-                display_app=display_app,
                 display_link=display_link,
                 refresh=refresh,
                 preparable_steps=preparable_steps,

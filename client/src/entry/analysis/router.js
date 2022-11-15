@@ -180,7 +180,7 @@ export function getRouter(Galaxy) {
                         component: AvailableDatatypes,
                     },
                     {
-                        path: "display_applications/:datasetId/:appName/:linkName/:userId/:appAction/:actionParam",
+                        path: "display_applications/:datasetId/:appName/:linkName",
                         component: DisplayApplication,
                         props: true,
                         redirect: redirectAnon(),

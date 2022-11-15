@@ -16,6 +16,8 @@ from typing import (
 
 from sqlalchemy.orm.session import object_session
 
+from urllib.parse import quote_plus
+
 from galaxy import (
     datatypes,
     exceptions,
@@ -488,6 +490,8 @@ class HDASerializer(  # datasets._UnflattenedMetadataDatasetAssociationSerialize
                         "target": link_app.url.get("target_frame", "_blank"),
                         "href": link_app.get_display_url(hda, trans),
                         "text": gettext.gettext(link_app.name),
+                        "app_name": quote_plus(link_app.display_application.id),
+                        "link_name": quote_plus(link_app.id),
                     }
                 )
             if app_links:

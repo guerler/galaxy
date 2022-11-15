@@ -15,7 +15,7 @@
                             <span class="font-weight-bold">{{ displayApp.label }}</span>
                             <span v-for="(link, linkKey) in displayApp.links" :key="linkKey">
                                 <span v-if="linkKey == 0">(</span>
-                                <b-link :href="link.href" :target="link.target">{{ link.text }}</b-link>
+                                <b-link :href="getUrl(link)" :target="link.target">{{ link.text }}</b-link>
                                 <span v-if="linkKey != displayApp.links.length - 1">, </span>
                                 <span v-else>)</span>
                             </span>
@@ -37,6 +37,7 @@
     </div>
 </template>
 <script>
+import { safePath } from "utils/redirect";
 import { DatasetProvider } from "components/providers";
 export default {
     components: {
@@ -46,6 +47,11 @@ export default {
         datasetId: {
             type: String,
             required: true,
+        },
+    },
+    methods: {
+        getUrl(link) {
+            return safePath(`/display_applications/${ this.datasetId }/${ link.app_name }/${ link.link_name }`);
         },
     },
 };

@@ -45,3 +45,34 @@ class DisplayApplicationsController(BaseGalaxyAPIController):
         payload = payload or {}
         ids = payload.get("ids", [])
         return self.manager.reload(ids)
+
+    @expose_api
+    @require_admin
+    def create_link(self,
+        trans,
+        dataset_id=None,
+        user_id=None,
+        app_name=None,
+        link_name=None,
+        app_action=None,
+        action_param=None,
+        action_param_extra=None,
+        **kwd):
+        """
+        POST /api/display_applications/create_link
+
+        Reloads the list of display applications.
+
+        :param  ids:  list containing ids of display to be reloaded
+        :type   ids:  list
+        """
+        return dict(
+            link="YOUR NEW LINK",
+            user_id=user_id,
+            dataset_id=dataset_id,
+            action_param=action_param,
+            action_param_extra=action_param_extra,
+            app_action=app_action,
+            link_name=link_name,
+            app_name=app_name,
+        )

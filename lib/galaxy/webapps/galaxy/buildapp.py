@@ -799,6 +799,14 @@ def populate_api_routes(webapp, app):
     )
 
     webapp.mapper.connect(
+        "create_link",
+        "/api/display_applications/create_link",
+        controller="display_applications",
+        action="create_link",
+        conditions=dict(method=["POST"]),
+    )
+
+    webapp.mapper.connect(
         "reload",
         "/api/display_applications/reload",
         controller="display_applications",

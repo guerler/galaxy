@@ -1,6 +1,20 @@
+<script setup>
+import { safePath } from "utils/redirect";
+import { DatasetProvider } from "components/providers";
+import { defineProps } from "vue";
+const props = defineProps({
+    datasetId: {
+        type: String,
+        required: true,
+    },
+});
+function getUrl(link) {
+    return safePath(`/display_applications/${ props.datasetId }/${ link.app_name }/${ link.link_name }`);
+};
+</script>
 <template>
     <div>
-        <DatasetProvider :id="datasetId" v-slot="{ result: dataset }">
+        <DatasetProvider :id="props.datasetId" v-slot="{ result: dataset }">
             <b-alert
                 v-if="
                     (dataset && dataset.display_apps && dataset.display_apps.length > 0) ||
@@ -36,23 +50,3 @@
         </DatasetProvider>
     </div>
 </template>
-<script>
-import { safePath } from "utils/redirect";
-import { DatasetProvider } from "components/providers";
-export default {
-    components: {
-        DatasetProvider,
-    },
-    props: {
-        datasetId: {
-            type: String,
-            required: true,
-        },
-    },
-    methods: {
-        getUrl(link) {
-            return safePath(`/display_applications/${ this.datasetId }/${ link.app_name }/${ link.link_name }`);
-        },
-    },
-};
-</script>

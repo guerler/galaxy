@@ -24,6 +24,7 @@ import DatasetAttributes from "components/DatasetInformation/DatasetAttributes";
 import DatasetDetails from "components/DatasetInformation/DatasetDetails";
 import DatasetError from "components/DatasetInformation/DatasetError";
 import DatasetList from "components/Dataset/DatasetList";
+import DisplayApplication from "components/Visualizations/DisplayApplication";
 import AvailableDatatypes from "components/AvailableDatatypes/AvailableDatatypes";
 import FormGeneric from "components/Form/FormGeneric";
 import Grid from "components/Grid/Grid";
@@ -177,6 +178,12 @@ export function getRouter(Galaxy) {
                     {
                         path: "datatypes",
                         component: AvailableDatatypes,
+                    },
+                    {
+                        path: "display_applications/:datasetId/:appName/:linkName/:userId/:appAction/:actionParam",
+                        component: DisplayApplication,
+                        props: true,
+                        redirect: redirectAnon(),
                     },
                     {
                         path: "histories/import",

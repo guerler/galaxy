@@ -56,7 +56,7 @@ class DisplayApplicationLink:
         return trans.app.legacy_url_for(
             mapper=trans.app.legacy_mapper,
             controller="dataset",
-            action="display_application",
+            action="display_applications",
             dataset_id=dataset_hash,
             user_id=user_hash,
             app_name=quote_plus(self.display_application.id),

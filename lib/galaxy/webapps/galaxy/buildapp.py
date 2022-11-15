@@ -804,7 +804,7 @@ def populate_api_routes(webapp, app):
         "/api/display_applications/create_link",
         controller="display_applications",
         action="create_link",
-        conditions=dict(method=["POST"]),
+        conditions=dict(method=["GET"]),
     )
 
     webapp.mapper.connect(

@@ -47,7 +47,6 @@ class DisplayApplicationsController(BaseGalaxyAPIController):
         return self.manager.reload(ids)
 
     @expose_api
-    @require_admin
     def create_link(self,
         trans,
         dataset_id=None,

@@ -17,7 +17,12 @@ const props = defineProps({
     },
 });
 async function getCreateLink() {
-    const buildUrl = `/api/display_applications/create_link?dataset_id=${ props.datasetId }&app_name=${ props.appName }&link_name=${ props.linkName }`;
+    const params = new URLSearchParams({
+        app_name: props.appName,
+        dataset_id: props.datasetId,
+        link_name: props.linkName,
+    });
+    const buildUrl = `/api/display_applications/create_link?${params.toString()}`;
     const data = await urlData({ url: buildUrl });
     console.log(data);
 }

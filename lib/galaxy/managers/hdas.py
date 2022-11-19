@@ -13,7 +13,6 @@ from typing import (
     List,
     Optional,
 )
-
 from sqlalchemy.orm.session import object_session
 
 from urllib.parse import quote_plus
@@ -482,7 +481,6 @@ class HDASerializer(  # datasets._UnflattenedMetadataDatasetAssociationSerialize
         hda = item
         display_apps: List[Dict[str, Any]] = []
         for display_app in hda.get_display_applications(trans).values():
-
             app_links = []
             for link_app in display_app.links.values():
                 app_links.append(

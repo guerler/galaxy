@@ -691,8 +691,6 @@ class DatasetInterface(BaseUIController, UsesAnnotations, UsesItemRatings, UsesE
         # Decode application name and link name
         if self._can_access_dataset(trans, data, additional_roles=user_roles):
             msg = []
-            preparable_steps = []
-            refresh = False
             display_app = trans.app.datatypes_registry.display_applications.get(app_name)
             if not display_app:
                 log.debug("Unknown display application has been requested: %s", app_name)
@@ -727,7 +725,6 @@ class DatasetInterface(BaseUIController, UsesAnnotations, UsesItemRatings, UsesE
                         "info",
                     )
                 )
-                refresh = True
             else:
                 # We have permissions, dataset is not deleted and is in OK state, allow access
                 if display_link.display_ready():
@@ -775,34 +772,8 @@ class DatasetInterface(BaseUIController, UsesAnnotations, UsesItemRatings, UsesE
                     else:
                         msg.append((f"Invalid action provided: {app_action}", "error"))
                 else:
-                    if app_action is None:
-                        if trans.history != data.history:
-                            msg.append(
-                                (
-                                    "You must import this dataset into your current history before you can view it at the desired display application.",
-                                    "error",
-                                )
-                            )
-                        else:
-                            refresh = True
-                            msg.append(
-                                (
-                                    "Launching this display application required additional datasets to be generated, you can view the status of these jobs below. ",
-                                    "info",
-                                )
-                            )
-                            if not display_link.preparing_display():
-                                display_link.prepare_display()
-                            preparable_steps = display_link.get_prepare_steps()
-                    else:
-                        raise Exception(f"Attempted a view action ({app_action}) on a non-ready display application")
-            return trans.fill_template_mako(
-                "dataset/display_application/display.mako",
-                msg=msg,
-                display_link=display_link,
-                refresh=refresh,
-                preparable_steps=preparable_steps,
-            )
+                    raise Exception(f"Attempted a view action ({app_action}) on a non-ready display application")
+            return dict(msg=msg)
         return trans.show_error_message(
             "You do not have permission to view this dataset at an external display application."
         )

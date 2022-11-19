@@ -49,29 +49,27 @@ class DisplayApplicationsController(BaseGalaxyAPIController):
     @expose_api
     def create_link(self,
         trans,
-        dataset_id=None,
-        user_id=None,
         app_name=None,
+        dataset_id=None,
         link_name=None,
-        app_action=None,
-        action_param=None,
-        action_param_extra=None,
+        user_id=None,
         **kwd):
         """
         POST /api/display_applications/create_link
 
-        Reloads the list of display applications.
+        Creates a link for display applications.
 
-        :param  ids:  list containing ids of display to be reloaded
-        :type   ids:  list
+        :param  app_name:  display application name
+        :type   app_name:  string
+        :param  dataset_id:  encoded dataset_id
+        :type   dataset_id:  string
+        :param  link_name:  link name
+        :type   link_name:  string
         """
-        return dict(
-            link="YOUR NEW LINK",
-            user_id=user_id,
-            dataset_id=dataset_id,
-            action_param=action_param,
-            action_param_extra=action_param_extra,
-            app_action=app_action,
-            link_name=link_name,
+        return self.manager.create_link(
+            trans,
             app_name=app_name,
+            dataset_id=dataset_id,
+            link_name=link_name,
+            **kwd,
         )

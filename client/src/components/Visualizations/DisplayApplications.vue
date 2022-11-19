@@ -9,8 +9,8 @@ const props = defineProps({
     },
 });
 function getUrl(link) {
-    return safePath(`/display_applications/${ props.datasetId }/${ link.app_name }/${ link.link_name }`);
-};
+    return safePath(`/display_applications/${link.dataset_id}/${link.app_name}/${link.link_name}`);
+}
 </script>
 <template>
     <div>

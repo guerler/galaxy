@@ -385,6 +385,22 @@ body {
     }
 }
 
+.masthead-vertical {
+    display: flex;
+    flex-flow: column;
+    background: $brand-light;
+    a {
+        position: relative;
+        cursor: pointer;
+        text-decoration: none;
+        color: $brand-dark;
+        width: $masthead-height;
+    }
+    height: 100%;
+    width: $masthead-height;
+    overflow: auto;
+}
+
 // State colors
 
 $galaxy-state-border: (

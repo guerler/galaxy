@@ -1,12 +1,10 @@
 <script setup>
-import { UploadButton } from "components/Upload";
 import { BNavbar, BNavbarBrand, BNavbarNav } from "bootstrap-vue";
 import MastheadItem from "./MastheadItem";
 import { loadWebhookMenuItems } from "./_webhooks";
 import QuotaMeter from "./QuotaMeter";
 import { safePath } from "utils/redirect";
 import { getActiveTab } from "./utilities";
-import ToolBox from "components/Panels/ProviderAwareToolBox";
 import { getGalaxyInstance } from "app";
 import { watch, computed, ref } from "vue";
 import { defineEmits, defineProps, onMounted } from "vue";
@@ -50,9 +48,7 @@ const props = defineProps({
 
 /* refs */
 const activeTab = ref(props.initialActiveTab);
-const searchTab = ref({ id: "tool-search", icon: "fa-search", text: "search" });
 const extensionTabs = ref([]);
-const searchToggle = ref(false);
 const windowToggle = ref(false);
 
 /* computed */
@@ -68,9 +64,6 @@ const toolBoxProperties = computed(() => {
 function setActiveTab() {
     const currentRoute = route.path;
     activeTab.value = getActiveTab(currentRoute, props.tabs) || activeTab.value;
-}
-function onSearchToggle() {
-    searchToggle.value = !searchToggle.value;
 }
 function onWindowToggle() {
     windowToggle.value = !windowToggle.value;
@@ -100,9 +93,6 @@ onMounted(() => {
                     <img v-if="logoSrcSecondary" alt="logo" :src="safePath(logoSrcSecondary)" />
                 </b-button>
             </b-navbar-brand>
-            <masthead-item :tab="searchTab" :toggle="searchToggle" @click="onSearchToggle" />
-            <tool-box v-bind="toolBoxProperties" />
-            <upload-button />
             <b-nav-item v-if="brand" class="navbar-brand-title" disabled>
                 {{ brand }}
             </b-nav-item>

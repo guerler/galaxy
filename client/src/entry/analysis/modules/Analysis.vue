@@ -1,5 +1,6 @@
 <template>
-    <div id="columns">
+    <div id="columns" class="d-flex justify-content-between">
+        <VerticalMasthead />
         <div id="center">
             <div class="center-container">
                 <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
@@ -15,11 +16,13 @@
 import HistoryIndex from "components/History/Index";
 import SidePanel from "components/Panels/SidePanel";
 import CenterFrame from "./CenterFrame";
+import VerticalMasthead from "components/Masthead/Vertical";
 
 export default {
     components: {
         CenterFrame,
         SidePanel,
+        VerticalMasthead,
     },
     data() {
         return {

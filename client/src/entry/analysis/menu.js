@@ -22,6 +22,7 @@ export function fetchMenu(options = {}) {
     menu.push({
         id: "workflow",
         title: _l("Workflow"),
+        icon: "fa-sitemap",
         tooltip: _l("Chain tools into workflows"),
         disabled: !Galaxy.user.id,
         url: "/workflows/list",
@@ -34,6 +35,7 @@ export function fetchMenu(options = {}) {
         menu.push({
             id: "visualization",
             title: _l("Visualize"),
+            icon: "fa-bar-chart",
             tooltip: _l("Visualize datasets"),
             disabled: !Galaxy.user.id,
             url: "/visualizations",
@@ -49,6 +51,7 @@ export function fetchMenu(options = {}) {
         // hidden though.
         menu.push({
             title: _l("Data Libraries"),
+            icon: "fa-share-alt",
             url: "/libraries",
             id: "libraries",
         });
@@ -56,6 +59,7 @@ export function fetchMenu(options = {}) {
         menu.push({
             id: "shared",
             title: _l("Shared Data"),
+            icon: "fa-share-alt",
             url: "javascript:void(0)",
             tooltip: _l("Access published resources"),
             menu: [
@@ -91,6 +95,7 @@ export function fetchMenu(options = {}) {
         menu.push({
             id: "admin",
             title: _l("Admin"),
+            icon: "fa-gear",
             url: "/admin",
             tooltip: _l("Administer this Galaxy"),
             cls: "admin-only",
@@ -104,6 +109,7 @@ export function fetchMenu(options = {}) {
     const helpTab = {
         id: "help",
         title: _l("Help"),
+        icon: "fa-life-ring",
         url: "javascript:void(0)",
         tooltip: _l("Support, contact, and community"),
         menu: [
@@ -167,6 +173,7 @@ export function fetchMenu(options = {}) {
             userTab = {
                 id: "user",
                 title: _l("Login or Register"),
+                icon: "fa-user-circle-o",
                 cls: "loggedout-only",
                 url: "/login",
                 tooltip: _l("Log in or register a new account"),
@@ -176,6 +183,7 @@ export function fetchMenu(options = {}) {
             userTab = {
                 id: "user",
                 title: _l("Login"),
+                icon: "fa-user-circle-o",
                 cls: "loggedout-only",
                 tooltip: _l("Login"),
                 url: "/login",
@@ -186,6 +194,7 @@ export function fetchMenu(options = {}) {
         userTab = {
             id: "user",
             title: _l("User"),
+            icon: "fa-user-circle-o",
             cls: "loggedin-only",
             url: "javascript:void(0)",
             tooltip: _l("Account and saved data"),

@@ -96,6 +96,7 @@ function open(tab, event) {
     </b-nav-item>
     <b-nav-item-dropdown
         v-else
+        no-caret
         :id="tab.id"
         ref="dropdown"
         v-b-tooltip.hover.bottom

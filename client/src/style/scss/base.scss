@@ -329,39 +329,33 @@ body {
     @extend .p-0;
     @extend .mb-0;
     background-color: $brand-masthead;
-    height: $masthead-height;
-    .navbar-nav {
-        height: $masthead-height;
-        > li {
-            // This allows the background color to fill the full height of the
-            // masthead, while still keeping the contents centered (using flex)
-            min-height: 100%;
-            display: flex;
-            align-items: center;
-            &.active {
-                background: darken($brand-masthead, 10%);
+    width: $masthead-height;
+    .nav-item {
+        width: $masthead-height;
+        // This allows the background color to fill the full height of the
+        // masthead, while still keeping the contents centered (using flex)
+        &.active {
+            background: darken($brand-masthead, 10%);
+        }
+        .nav-link {
+            position: relative;
+            cursor: pointer;
+            text-decoration: none;
+            color: $brand-masthead-text;
+            &:hover {
+                color: $brand-masthead-text-hover;
             }
-            .nav-link {
-                position: relative;
-                cursor: pointer;
-                text-decoration: none;
-                color: $brand-masthead-text;
-                &:hover {
-                    color: $brand-masthead-text-hover;
+            &.nav-icon {
+                .nav-note {
+                    @extend .font-weight-bold;
+                    @extend .position-absolute;
+                    left: 1.8rem;
+                    top: 1.5rem;
+                    font-size: 0.5rem;
                 }
-                &.nav-icon {
-                    font-size: 1.3em;
-                    .nav-note {
-                        @extend .font-weight-bold;
-                        @extend .position-absolute;
-                        left: 1.9rem;
-                        top: 1.9rem;
-                        font-size: 0.6rem;
-                    }
-                }
-                &.toggle {
-                    color: $brand-masthead-text-hover;
-                }
+            }
+            &.toggle {
+                color: $brand-masthead-text-hover;
             }
         }
     }
@@ -373,7 +367,7 @@ body {
             img {
                 display: inline;
                 border: none;
-                height: 2.22rem;
+                height: 2rem;
             }
         }
     }

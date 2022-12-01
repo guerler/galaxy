@@ -78,24 +78,26 @@ onMounted(() => {
 </script>
 
 <template>
-    <b-nav vertical id="masthead" role="navigation" aria-label="Main">
-        <b-navbar-brand id="analysis" :href="safePath(logoUrl)" aria-label="homepage">
-            <b-button v-b-tooltip.hover variant="link" size="sm" title="Home">
-                <img alt="logo" :src="safePath(logoSrc)" />
-                <img v-if="logoSrcSecondary" alt="logo" :src="safePath(logoSrcSecondary)" />
-            </b-button>
-        </b-navbar-brand>
-        <b-nav-item v-if="brand" class="navbar-brand-title" disabled>
-            {{ brand }}
-        </b-nav-item>
-        <masthead-item
-            v-for="(tab, idx) in allTabs"
-            v-show="tab.hidden !== true"
-            :key="`tab-${idx}`"
-            :tab="tab"
-            :active-tab="activeTab"
-            @open-url="emit('open-url', $event)" />
-        <masthead-item v-if="windowTab" :tab="windowTab" :toggle="windowToggle" @click="onWindowToggle" />
-        <quota-meter />
-    </b-nav>
+    <div>
+        <b-nav vertical id="masthead" role="navigation" aria-label="Main">
+            <b-navbar-brand id="analysis" :href="safePath(logoUrl)" aria-label="homepage">
+                <b-button v-b-tooltip.hover variant="link" size="sm" title="Home">
+                    <img alt="logo" :src="safePath(logoSrc)" />
+                    <img v-if="logoSrcSecondary" alt="logo" :src="safePath(logoSrcSecondary)" />
+                </b-button>
+            </b-navbar-brand>
+            <b-nav-item v-if="brand" class="navbar-brand-title" disabled>
+                {{ brand }}
+            </b-nav-item>
+            <masthead-item
+                v-for="(tab, idx) in allTabs"
+                v-show="tab.hidden !== true"
+                :key="`tab-${idx}`"
+                :tab="tab"
+                :active-tab="activeTab"
+                @open-url="emit('open-url', $event)" />
+            <masthead-item v-if="windowTab" :tab="windowTab" :toggle="windowToggle" @click="onWindowToggle" />
+            <quota-meter />
+        </b-nav>
+    </div>
 </template>

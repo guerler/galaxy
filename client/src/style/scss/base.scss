@@ -106,10 +106,7 @@ body {
 
 #everything {
     @extend .d-flex;
-    @extend .flex-column;
-    @extend .full-content;
-    top: 0px;
-    left: 0px;
+    @extend .justify-content-between;
 }
 
 #columns {

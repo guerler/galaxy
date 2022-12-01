@@ -1,6 +1,6 @@
 <template>
     <current-user>
-        <div class="quota-meter d-flex align-items-center">
+        <div class="quota-meter">
             <b-link v-if="!hasQuota" v-b-tooltip.hover.left to="/storage" class="ml-auto quota-text" :title="title">
                 {{ usingString + " " + totalUsageString }}
             </b-link>
@@ -81,9 +81,6 @@ export default {
 
 .quota-meter {
     position: relative;
-    right: 0.8rem;
-    width: 100px;
-    height: 100%;
 
     .quota-progress {
         width: 100%;

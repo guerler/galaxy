@@ -1,10 +1,5 @@
 <template>
     <div id="columns">
-        <SidePanel
-            v-if="showPanels"
-            side="left"
-            :current-panel="getToolBox()"
-            :current-panel-properties="toolBoxProperties" />
         <div id="center">
             <div class="center-container">
                 <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />

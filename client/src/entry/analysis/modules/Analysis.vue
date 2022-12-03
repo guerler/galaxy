@@ -1,13 +1,13 @@
 <template>
     <div id="columns" class="d-flex">
-        <component :is="getToolBox()" v-bind="toolBoxProperties" />
-        <div class="overflow-auto">
+        <component :is="getToolBox()" v-bind="toolBoxProperties" style="flex: 1" />
+        <div class="overflow-auto" style="flex-basis: 50%">
             <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
             <div v-show="!showCenter" class="center-panel" style="display: block">
                 <router-view :key="$route.fullPath" class="h-100" />
             </div>
         </div>
-        <component :is="getHistoryIndex()" v-bind="{}" />
+        <component :is="getHistoryIndex()" v-bind="{}" style="flex: 1" />
     </div>
 </template>
 <script>

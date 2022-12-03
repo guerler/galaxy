@@ -3,9 +3,7 @@
         <ToolBox v-bind="toolBoxProperties" class="left-column" />
         <div class="center-column overflow-auto p-3">
             <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
-            <div v-show="!showCenter" class="center-panel" style="display: block">
-                <router-view :key="$route.fullPath" class="h-100" />
-            </div>
+            <router-view v-show="!showCenter" class="h-100" :key="$route.fullPath" />
         </div>
         <HistoryIndex class="right-column" />
     </div>

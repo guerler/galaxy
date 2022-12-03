@@ -1,13 +1,13 @@
 <template>
     <div id="columns" class="d-flex">
-        <component :is="getToolBox()" v-bind="toolBoxProperties" style="flex: 1" />
+        <ToolBox v-bind="toolBoxProperties" style="flex: 1" />
         <div class="overflow-auto" style="flex-basis: 50%">
             <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
             <div v-show="!showCenter" class="center-panel" style="display: block">
                 <router-view :key="$route.fullPath" class="h-100" />
             </div>
         </div>
-        <component :is="getHistoryIndex()" v-bind="{}" style="flex: 1" />
+        <HistoryIndex style="flex: 1" />
     </div>
 </template>
 <script>
@@ -21,6 +21,8 @@ export default {
     components: {
         CenterFrame,
         SidePanel,
+        ToolBox,
+        HistoryIndex,
     },
     data() {
         return {
@@ -51,12 +53,6 @@ export default {
         this.$router.app.$off("router-push", this.hideCenter);
     },
     methods: {
-        getHistoryIndex() {
-            return HistoryIndex;
-        },
-        getToolBox() {
-            return ToolBox;
-        },
         hideCenter() {
             this.showCenter = false;
         },

@@ -1,13 +1,13 @@
 <template>
     <div id="columns" class="d-flex">
-        <ToolBox v-bind="toolBoxProperties" style="flex: 1" />
-        <div class="overflow-auto" style="flex-basis: 50%">
+        <ToolBox v-bind="toolBoxProperties" class="left-column" />
+        <div class="center-column overflow-auto p-3">
             <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
             <div v-show="!showCenter" class="center-panel" style="display: block">
                 <router-view :key="$route.fullPath" class="h-100" />
             </div>
         </div>
-        <HistoryIndex style="flex: 1" />
+        <HistoryIndex class="right-column" />
     </div>
 </template>
 <script>
@@ -62,3 +62,14 @@ export default {
     },
 };
 </script>
+<style scoped>
+.left-column {
+    flex: 1;
+}
+.center-column {
+    flex-basis: 50%;
+}
+.right-column {
+    flex: 1;
+}
+</style>

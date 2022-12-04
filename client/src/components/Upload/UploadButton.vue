@@ -6,7 +6,7 @@
         :title="title | localize"
         class="upload-button"
         @click="showUploadDialog">
-        <div class="progress">
+        <div class="progress px-1">
             <div
                 class="progress-bar progress-bar-notransition"
                 :class="`progress-bar-${status}`"

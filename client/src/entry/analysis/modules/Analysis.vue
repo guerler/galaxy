@@ -38,8 +38,6 @@ function onLoad() {
     showCenter.value = true;
 }
 function onSearchToggle() {
-    console.log("here");
-    console.log(searchToggle.value);
     searchToggle.value = !searchToggle.value;
 }
 
@@ -74,15 +72,17 @@ onUnmounted(() => {
     </div>
 </template>
 <style scoped>
+@import "theme/blue.scss";
 .nav-item {
     cursor: pointer;
     text-decoration: none;
     list-style-type: none;
 }
 .side-bar {
-    width: 3rem;
-    min-width: 3rem;
-    max-width: 3rem;
+    width: 2.8rem;
+    min-width: 2.8rem;
+    max-width: 2.8rem;
+    background: $panel-bg-color;
 }
 .side-column {
     min-width: 18rem;

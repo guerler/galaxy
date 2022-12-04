@@ -54,13 +54,13 @@ onUnmounted(() => {
 </script>
 <template>
     <div id="columns" class="d-flex">
-        <div style="side-bar">
+        <b-nav vertical class="side-bar">
             <b-nav-item @click="onSearchToggle">
                 <template>
                     <span class="fa fa-search" />
                 </template>
             </b-nav-item>
-        </div>
+        </b-nav>
         <div v-show="searchToggle">
             <ToolBox v-bind="toolBoxProperties" class="side-column" />
         </div>

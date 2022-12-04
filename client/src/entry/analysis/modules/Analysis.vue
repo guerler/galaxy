@@ -5,6 +5,7 @@ import HistoryIndex from "components/History/Index";
 import MastheadItem from "components/Masthead/MastheadItem";
 import ToolBox from "components/Panels/ProviderAwareToolBox";
 import SidePanel from "components/Panels/SidePanel";
+import { UploadButton } from "components/Upload";
 import { useRoute, useRouter } from "vue-router/composables";
 import { computed, ref, onMounted, onUnmounted } from "vue";
 
@@ -60,6 +61,7 @@ onUnmounted(() => {
                     <span class="fa fa-search" />
                 </template>
             </b-nav-item>
+            <upload-button />
         </b-nav>
         <div v-show="searchToggle">
             <ToolBox v-bind="toolBoxProperties" class="side-column" />

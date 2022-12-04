@@ -53,8 +53,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div id="columns" class="d-flex">
-        <b-nav vertical class="side-bar">
-            <b-nav-item @click="onSearchToggle">
+        <b-nav vertical class="side-bar pt-1">
+            <b-nav-item v-b-tooltip.hover.right class="my-1" title="Search Tools and Workflows" @click="onSearchToggle">
                 <template>
                     <span class="fa fa-search" />
                 </template>

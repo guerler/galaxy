@@ -1,14 +1,14 @@
 <template>
     <b-nav-item
         id="tool-panel-upload-button"
-        v-b-tooltip.hover.bottom
+        v-b-tooltip.hover.right
         :aria-label="title | localize"
         :title="title | localize"
         class="upload-button"
         @click="showUploadDialog">
         <div class="progress px-1">
             <div
-                class="progress-bar progress-bar-notransition"
+                class="progress-bar progress-bar-notransition rounded"
                 :class="`progress-bar-${status}`"
                 :style="{
                     width: `${percentage}%`,

@@ -2,9 +2,7 @@
 import { getGalaxyInstance } from "app";
 import CenterFrame from "./CenterFrame";
 import HistoryIndex from "components/History/Index";
-import MastheadItem from "components/Masthead/MastheadItem";
 import ToolBox from "components/Panels/ProviderAwareToolBox";
-import SidePanel from "components/Panels/SidePanel";
 import { UploadButton } from "components/Upload";
 import { useRoute, useRouter } from "vue-router/composables";
 import { computed, ref, onMounted, onUnmounted } from "vue";
@@ -12,7 +10,6 @@ import { computed, ref, onMounted, onUnmounted } from "vue";
 const route = useRoute();
 const router = useRouter();
 const showCenter = ref(false);
-const searchTab = ref({ id: "tool-search", icon: "fa-search" });
 const searchToggle = ref(false);
 
 // computed
@@ -53,22 +50,27 @@ onUnmounted(() => {
 </script>
 <template>
     <div id="columns" class="d-flex">
-        <b-nav vertical class="side-bar pt-1">
-            <b-nav-item v-b-tooltip.hover.right class="my-1" title="Search Tools and Workflows" @click="onSearchToggle">
+        <b-nav v-if="showPanels" vertical class="side-bar pt-1">
+            <b-nav-item
+                id="tool-search"
+                v-b-tooltip.hover.right
+                class="my-1"
+                :title="'Search Tools and Workflows' | l"
+                @click="onSearchToggle">
                 <template>
                     <span class="fa fa-search" />
                 </template>
             </b-nav-item>
             <upload-button />
         </b-nav>
-        <div v-show="searchToggle">
+        <div v-if="showPanels" v-show="searchToggle">
             <ToolBox v-bind="toolBoxProperties" class="side-column" />
         </div>
         <div class="center-column overflow-auto p-3 w-100">
             <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
-            <router-view v-show="!showCenter" class="h-100" :key="$route.fullPath" />
+            <router-view v-show="!showCenter" :key="$route.fullPath" class="h-100" />
         </div>
-        <HistoryIndex class="side-column" />
+        <HistoryIndex v-if="showPanels" class="side-column" />
     </div>
 </template>
 <style scoped>

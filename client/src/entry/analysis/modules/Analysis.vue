@@ -64,13 +64,13 @@ onUnmounted(() => {
             <upload-button />
         </b-nav>
         <div v-if="showPanels" v-show="searchToggle">
-            <ToolBox v-bind="toolBoxProperties" class="side-column" />
+            <ToolBox v-bind="toolBoxProperties" class="left-column" />
         </div>
         <div class="center-column overflow-auto p-3 w-100">
             <CenterFrame v-show="showCenter" id="galaxy_main" @load="onLoad" />
             <router-view v-show="!showCenter" :key="$route.fullPath" class="h-100" />
         </div>
-        <HistoryIndex v-if="showPanels" class="side-column" />
+        <HistoryIndex v-if="showPanels" class="right-column" />
     </div>
 </template>
 <style scoped>
@@ -80,15 +80,20 @@ onUnmounted(() => {
     text-decoration: none;
     list-style-type: none;
 }
+.left-column {
+    min-width: 15.2rem;
+    max-width: 15.2rem;
+    width: 15.2rem;
+}
+.right-column {
+    min-width: 18rem;
+    max-width: 18rem;
+    width: 18rem;
+}
 .side-bar {
     width: 2.8rem;
     min-width: 2.8rem;
     max-width: 2.8rem;
     background: $panel-bg-color;
-}
-.side-column {
-    min-width: 18rem;
-    max-width: 18rem;
-    width: 18rem;
 }
 </style>

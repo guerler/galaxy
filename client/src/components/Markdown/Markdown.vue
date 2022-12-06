@@ -93,6 +93,7 @@ import BootstrapVue from "bootstrap-vue";
 import store from "store";
 import MarkdownIt from "markdown-it";
 import markdownItRegexp from "markdown-it-regexp";
+import markdownItCollapsible from "markdown-it-collapsible";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faDownload, faEdit } from "@fortawesome/free-solid-svg-icons";
@@ -124,6 +125,7 @@ const mdNewline = markdownItRegexp(/<br>/, () => {
 
 const md = MarkdownIt();
 md.use(mdNewline);
+md.use(markdownItCollapsible);
 
 Vue.use(BootstrapVue);
 

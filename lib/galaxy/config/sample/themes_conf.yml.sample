@@ -30,18 +30,6 @@ lightblue:
 pride:
   masthead:
       color: >
-        linear-gradient(120deg,
-          #3c476d 0px 130px,
-          #fdda0f 131px 139px,
-          #fff 140px 148px,
-          #f4b0c9 149px 157px,
-          #7ccee6 158px 166px,
-          #93540c 167px 175px,
-          #000 176px 184px,
-          transparent 185px),
-        linear-gradient(270deg,
-          #3c476d 0px 110px,
-          #3c476d00 110px),
         linear-gradient(180deg,
           #FE0000 16.66%,
           #FD8C00 16.66% 33.32%,
@@ -54,10 +42,15 @@ pride:
         hover: gold
         active: white
       link:
-        color: "#3c476d"
-        hover: "#323a53"
-        active: "#6170a6"
+        color: >
+          rgba(60, 71, 109, 0.9)
+        hover: >
+          rgba(50, 58, 83, 0.9)
+        active: >
+          rgba(97, 112, 166, 0.9)
       logo:
+        color: >
+          rgba(60, 71, 109, 0.9)
         img: "/static/favicon.svg"
         img-secondary: null
 

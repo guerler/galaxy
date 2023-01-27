@@ -95,14 +95,14 @@ onMounted(() => {
         <b-navbar-nav>
             <b-navbar-brand
                 v-b-tooltip.hover
-                class="ml-2 mr-1"
+                class="ml-2 mr-2"
                 title="Home"
                 aria-label="homepage"
                 :href="withPrefix(logoUrl)">
                 <img alt="logo" :src="withPrefix(logoSrc)" />
                 <img v-if="logoSrcSecondary" alt="logo" :src="withPrefix(logoSrcSecondary)" />
             </b-navbar-brand>
-            <span v-if="brand" class="navbar-text">
+            <span v-if="brand" class="navbar-text px-2">
                 {{ brand }}
             </span>
         </b-navbar-nav>
@@ -197,7 +197,7 @@ onMounted(() => {
         font-family: Verdana, sans-serif;
         font-size: 1rem;
         line-height: 2rem;
-        color: var(--masthead-text-color);
+        color: var(--masthead-link-color);
     }
 }
 </style>

@@ -30,6 +30,9 @@ lightblue:
 pride:
   masthead:
       color: >
+        linear-gradient(90deg,
+          #3c476d 0px 130px,
+          transparent 200px),
         linear-gradient(180deg,
           #FE0000 16.66%,
           #FD8C00 16.66% 33.32%,
@@ -49,8 +52,6 @@ pride:
         active: >
           rgba(97, 112, 166, 0.9)
       logo:
-        color: >
-          rgba(60, 71, 109, 0.9)
         img: "/static/favicon.svg"
         img-secondary: null
 

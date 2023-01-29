@@ -193,6 +193,7 @@ onMounted(() => {
         }
     }
     .navbar-text {
+        text-shadow: 1px 1px 2px #25537b, 0 0 1em #25537b, 0 0 0.3em #25537b;
         font-weight: bold;
         font-family: Verdana, sans-serif;
         font-size: 1rem;

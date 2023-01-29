@@ -30,27 +30,23 @@ lightblue:
 pride:
   masthead:
       color: >
-        linear-gradient(90deg,
-          #3c476d 0px 130px,
-          transparent 200px),
-        linear-gradient(180deg,
-          #FE0000 16.66%,
-          #FD8C00 16.66% 33.32%,
-          #FFE500 33.32% 49.98%,
-          #119F0B 49.98% 66.64%,
-          #0644B3 66.64% 83.3%,
-          #C22EDC 83.3%)
+        conic-gradient(at 1.4% 1.5rem, #0000 221.25deg, white 222deg 318deg, #0000 318.25deg),
+        conic-gradient(at 2.3% 1.5rem, #0000 221.25deg, #ffa6b9 222deg 318deg, #0000 318.25deg),
+        conic-gradient(at 3.2% 1.5rem, #0000 221.25deg, #00d2ff 222deg 318deg, #0000 318.25deg),
+        conic-gradient(at 4.1% 1.5rem, #0000 221.25deg, #753000 222deg 318deg, #0000 318.25deg),
+        conic-gradient(at 5.0% 1.5rem, #0000 221.25deg, black 222deg 318deg, #0000 318.25deg),
+        linear-gradient(red 0 16.66%, orange 0 33.33%, yellow 0 50%, green 0 66.66%, blue 0 83.33%, indigo 0)
       text:
         color: white
         hover: gold
         active: white
       link:
         color: >
-          rgba(60, 71, 109, 0.9)
+          rgba(60, 71, 109, 0.8)
         hover: >
-          rgba(50, 58, 83, 0.9)
+          rgba(50, 58, 83, 0.8)
         active: >
-          rgba(97, 112, 166, 0.9)
+          rgba(97, 112, 166, 0.8)
       logo:
         img: "/static/favicon.svg"
         img-secondary: null

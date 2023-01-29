@@ -1,4 +1,4 @@
-/** Renders the default uploader rows */
+/* Renders the default uploader rows
 import $ from "jquery";
 import _ from "underscore";
 import Backbone from "backbone";
@@ -125,14 +125,14 @@ export default UploadBoxRow.extend({
         this._refreshFileSize();
     },
 
-    /** Remove view */
+    // Remove view
     remove: function () {
         this.select_genome.remove();
         this.select_extension.remove();
         Backbone.View.prototype.remove.apply(this);
     },
 
-    /** Render type */
+    // Render type
     _refreshType: function () {
         var options = this.model.attributes;
         this.$title.val(_.escape(options.file_name));
@@ -155,17 +155,17 @@ export default UploadBoxRow.extend({
         }
     },
 
-    /** Update extension */
+    // Update extension
     _refreshExtension: function () {
         this.select_extension.value(this.model.get("extension"));
     },
 
-    /** Update genome */
+    // Update genome
     _refreshGenome: function () {
         this.select_genome.value(this.model.get("genome"));
     },
 
-    /** Refresh status */
+    // Refresh status
     _refreshStatus: function () {
         var status = this.model.get("status");
         this.$symbol.removeClass().addClass("upload-symbol").addClass(this.status_classes[status]);
@@ -185,7 +185,7 @@ export default UploadBoxRow.extend({
         this._renderStatusType(status);
     },
 
-    /** Make extension popover */
+    // Make extension popover
     _makeUploadExtensionsPopover: function (e) {
         this.upload_extension = new UploadExtension({
             $el: $(e.target),
@@ -194,8 +194,14 @@ export default UploadBoxRow.extend({
             list: this.list_extensions,
         });
     },
-});
+});*/
 <script setup>
+const props = defineProps({
+    id: {
+        type: String,
+        default: null,
+    },
+});
 const model = ref({});
 
 // handle text editing event

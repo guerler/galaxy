@@ -133,6 +133,7 @@ export default {
             // Turn backbone upload model into row model and place in table,
             // render in next tick so table can respond first and dynamic
             // sizing works.
+            // TODO: Convert rows first
             var uploadRow = new this.rowUploadModel(this, { model: model });
             this.$uploadTable().find("tbody:first").append(uploadRow.$el);
             this._updateStateForCounters();

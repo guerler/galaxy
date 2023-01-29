@@ -195,7 +195,15 @@ export default UploadBoxRow.extend({
         });
     },
 });
+<script setup>
+const model = ref({});
 
+// handle text editing event
+function onTitleInput(newValue) {
+    model[file_name] = newValue;
+}
+
+</script>
 <template>
     <tr id="upload-row-${id}" class="upload-row">
         <td>

@@ -47,12 +47,12 @@ var ImportCollectionModal = Backbone.View.extend({
                         closing_events: true,
                         title: "Create History Collection from Datasets",
                         body: template({
-                            selected_datasets: checked_items.dataset_ids.length,
+                            selected_datasets: checked_items.length,
                             histories: this.histories.models,
                         }),
                         buttons: {
                             Continue: () => {
-                                this.showCollectionBuilder(checked_items.dataset_ids);
+                                this.showCollectionBuilder(checked_items);
                             },
                             Close: () => {
                                 Galaxy.modal.hide();

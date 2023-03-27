@@ -98,16 +98,54 @@ export function searchToolsByKeys(tools, keys, query) {
                 actualValue = tool[key] ? tool[key].toLowerCase() : "";
             }
             const queryLowerCase = query.trim().toLowerCase();
+            // do we care for exact matches && is it an exact match ?
+            const order = keys.exact && actualValue === queryLowerCase ? keys.exact : keys[key];
             if (actualValue.match(queryLowerCase)) {
-                // do we care for exact matches && is it an exact match ?
-                const order = keys.exact && actualValue === queryLowerCase ? keys.exact : keys[key];
                 returnedTools.push({ id: tool.id, order });
                 break;
+            }
+            else if (key !== "combined" && queryLowerCase.length >= 5 && dLDistance(queryLowerCase, actualValue)) {
+                returnedTools.push({ id: tool.id, order });
             }
         }
     }
     // sorting results by indexed order of keys
     return orderBy(returnedTools, ["order"], ["desc"]).map((tool) => tool.id);
+}
+
+export function dLDistance(query, value) {
+    const searchTerm = query;
+    const toolName = value;
+
+    // Initialize the matrix for the Damerau-Levenshtein distance algorithm
+    const matrix = [];
+    for (let i = 0; i <= searchTerm.length; i++) {
+        matrix[i] = [];
+        for (let j = 0; j <= toolName.length; j++) {
+            matrix[i][j] = 0;
+        }
+    }
+    for (let i = 1; i <= searchTerm.length; i++) {
+        matrix[i][0] = i;
+    }
+    for (let j = 1; j <= toolName.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    // Fill in the matrix using the Damerau-Levenshtein distance algorithm
+    for (let i = 1; i <= searchTerm.length; i++) {
+        for (let j = 1; j <= toolName.length; j++) {
+            const cost = searchTerm[i - 1] === toolName[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j - 1] + cost);
+            if (i > 1 && j > 1 && searchTerm[i - 1] === toolName[j - 2] && searchTerm[i - 2] === toolName[j - 1]) {
+                matrix[i][j] = Math.min(matrix[i][j], matrix[i - 2][j - 2] + cost);
+            }
+        }
+    }
+
+    // If the Damerau-Levenshtein distance is less than or equal to 2,
+    // consider the tool a match
+    return matrix[searchTerm.length][toolName.length] <= 1;
 }
 
 export function normalizeTools(tools) {

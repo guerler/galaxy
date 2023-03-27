@@ -218,7 +218,7 @@ class BaseInputTerminal extends Terminal {
     }
     attachable(terminal: BaseOutputTerminal): ConnectionAcceptable {
         // TODO: provide through Mixin
-        throw "Subclass needs to implement this";
+        throw Error("Subclass needs to implement this");
     }
     _getOutputStepsMapOver() {
         const connections = this._getOutputConnections();
@@ -560,7 +560,7 @@ export class InputCollectionTerminal extends BaseInputTerminal {
         return NULL_COLLECTION_TYPE_DESCRIPTION;
     }
     _effectiveCollectionTypes() {
-        return this.collectionTypes.map((t) => this.mapOver.append(t));
+        return this.collectionTypes.map((t) => this.localMapOver.append(t));
     }
     attachable(other: BaseOutputTerminal) {
         const otherCollectionType = this._otherCollectionType(other);
@@ -947,5 +947,5 @@ export function terminalFactory<T extends TerminalSourceAndInvalid>(
     if (isInvalidOutputArg(terminalSource)) {
         return new InvalidOutputTerminal(terminalSource) as TerminalOf<T>;
     }
-    throw `Could not build terminal for ${terminalSource}`;
+    throw Error(`Could not build terminal for ${terminalSource}`);
 }

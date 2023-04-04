@@ -130,12 +130,15 @@ export function searchToolsByKeys(tools, keys, query) {
 }
 
 export function dLDistance(query, toolName) {
-    const matchThreshold = 1;
+    // Max distance a query and tool name substring can be apart
+    const maxDistance = 1;
+    // Create an array of all toolName substrings that are query length or query length -1 
     const substrings = Array.from({ length: toolName.length - query.length + 1 }, (_, i) => toolName.substr(i, query.length));
     if (query.length > 1) {
         substrings.push(...Array.from({ length: toolName.length - query.length + 2 }, (_, i) => toolName.substr(i, query.length - 1)));
     }
-    return substrings.concat(toolName).some(substring => levenshteinDistance(query, substring, true) <= matchThreshold);
+    // check to see if any substings have a levenshtein distance less than the max distance and return True or False
+    return substrings.concat(toolName).some(substring => levenshteinDistance(query, substring, true) <= maxDistance);
 }
 
 export function normalizeTools(tools) {

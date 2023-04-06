@@ -27,6 +27,7 @@
                 :show-advanced.sync="showAdvanced"
                 :toolbox="toolbox"
                 :query="query"
+                :query-pending="queryPending"
                 @onQuery="onQuery"
                 @onResults="onResults" />
             <section v-if="!showAdvanced">

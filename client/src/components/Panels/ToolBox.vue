@@ -44,6 +44,15 @@
                 <div v-else-if="queryFinished" class="pb-2">
                     <b-badge class="alert-danger w-100">No results found!</b-badge>
                 </div>
+                <div v-if="closestTerm" class="pb-2">
+                    <b-badge class="alert-danger w-100">
+                        Did you mean:
+                        <i>
+                            <a href="javascript:void(0)" @click="onQuery(closestTerm)">{{ closestTerm }}</a>
+                        </i>
+                        ?
+                    </b-badge>
+                </div>
             </section>
         </div>
         <div v-if="!showAdvanced" class="unified-panel-body">
@@ -114,6 +123,7 @@ export default {
     },
     data() {
         return {
+            closestTerm: null,
             query: null,
             results: null,
             queryFilter: null,
@@ -170,8 +180,9 @@ export default {
             this.query = q;
             this.queryPending = true;
         },
-        onResults(results) {
+        onResults(results, closestTerm = null) {
             this.results = results;
+            this.closestTerm = closestTerm;
             this.queryFilter = this.hasResults ? this.query : null;
             this.setButtonText();
             this.queryPending = false;

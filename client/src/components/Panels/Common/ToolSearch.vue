@@ -45,7 +45,8 @@
 <script>
 import { getGalaxyInstance } from "app";
 import DelayedInput from "components/Common/DelayedInput";
-import { normalizeTools } from "../utilities.js";
+import { normalizeTools } from "components/Panels/utilities.js";
+import SearchWorker from "worker-loader!../toolSearch.worker.js";
 
 export default {
     name: "ToolSearch",
@@ -90,9 +91,6 @@ export default {
             searchWorker: null,
         };
     },
-    beforeDestroy() {
-        this.searchWorker.terminate();
-    },
     computed: {
         favoritesResults() {
             const Galaxy = getGalaxyInstance();
@@ -111,9 +109,9 @@ export default {
         },
     },
     mounted() {
-        this.searchWorker = new Worker(new URL("../toolSearch.worker.js", import.meta.url));
-        this.searchWorker.onmessage = (event) => {
-            const { type, payload, query, closestTerm } = event.data;
+        this.searchWorker = new SearchWorker();
+        this.searchWorker.onmessage = ({ data }) => {
+            const { type, payload, query, closestTerm } = data;
             if (type === "searchToolsByKeysResult" && query === this.query) {
                 this.$emit("onResults", payload, closestTerm);
             } else if (type === "clearFilterResult") {
@@ -122,6 +120,9 @@ export default {
                 this.$emit("onResults", this.favoritesResults);
             }
         };
+    },
+    beforeDestroy() {
+        this.searchWorker.terminate();
     },
     methods: {
         checkQuery(q) {

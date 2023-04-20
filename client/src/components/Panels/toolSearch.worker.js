@@ -4,9 +4,8 @@
 
 import { searchToolsByKeys } from "./utilities";
 
-// listen for messages from the main thread
-self.addEventListener("message", (event) => {
-    const { type, payload } = event.data;
+onmessage = function ({ data }) {
+    const { type, payload } = data;
     if (type === "searchToolsByKeys") {
         const { tools, keys, query } = payload;
         const { results, closestTerm } = searchToolsByKeys(tools, keys, query);
@@ -17,7 +16,4 @@ self.addEventListener("message", (event) => {
     } else if (type === "favoriteTools") {
         self.postMessage({ type: "favoriteToolsResult" });
     }
-});
-
-// TODO: add error event listener
-// self.addEventListener('error', (event) => {
+};

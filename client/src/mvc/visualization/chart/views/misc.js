@@ -3,7 +3,6 @@
  */
 import Backbone from "backbone";
 import $ from "jquery";
-import Modal from "mvc/ui/ui-modal";
 import _ from "underscore";
 
 /** Displays messages used e.g. in the tool form */
@@ -47,12 +46,6 @@ export var Message = Backbone.View.extend({
     },
     messageForDisplay: function () {
         return _.escape(this.model.get("message"));
-    },
-});
-
-export var UnescapedMessage = Message.extend({
-    messageForDisplay: function () {
-        return this.model.get("message");
     },
 });
 
@@ -123,6 +116,4 @@ export var Input = Backbone.View.extend({
 export default {
     Input: Input,
     Message: Message,
-    UnescapedMessage: UnescapedMessage,
-    Modal: Modal,
 };

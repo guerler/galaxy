@@ -1,7 +1,7 @@
 import { getGalaxyInstance } from "app";
 import Backbone from "backbone";
 import $ from "jquery";
-import Ui from "mvc/ui/ui-misc";
+import Ui from "mvc/visualization/chart/views/misc";
 import Modal from "mvc/ui/ui-modal";
 import Chart from "mvc/visualization/chart/components/model";
 import Editor from "mvc/visualization/chart/views/editor";

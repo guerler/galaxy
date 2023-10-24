@@ -3,7 +3,7 @@ import Backbone from "backbone";
 import $ from "jquery";
 import GridModel from "mvc/grid/grid-model";
 import Templates from "mvc/grid/grid-template";
-import PopupMenu from "mvc/ui/popup-menu";
+import PopupMenu from "mvc/grid/popup-menu";
 import { init_refresh_on_change } from "onload/globalInits/init_refresh_on_change";
 import slugify from "slugify";
 import LoadingIndicator from "ui/loading-indicator";

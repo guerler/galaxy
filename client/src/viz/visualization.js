@@ -3,7 +3,7 @@ import Backbone from "backbone";
 import $ from "jquery";
 import { Dataset } from "mvc/dataset/data";
 import GridView from "mvc/grid/grid-view";
-import Tabs from "mvc/ui/ui-tabs";
+import Tabs from "mvc/visualization/chart/views/tabs";
 import { getAppRoot } from "onload/loadConfig";
 import _ from "underscore";
 import config_mod from "utils/config";

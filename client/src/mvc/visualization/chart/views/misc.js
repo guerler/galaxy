@@ -3,7 +3,6 @@
  */
 import Backbone from "backbone";
 import $ from "jquery";
-import Buttons from "mvc/ui/ui-buttons";
 import Modal from "mvc/ui/ui-modal";
 import _ from "underscore";
 
@@ -121,17 +120,7 @@ export var Input = Backbone.View.extend({
     },
 });
 
-/* Make more Ui stuff directly available at this namespace (for backwards
- * compatibility).  We should eliminate this practice, though, and just require
- * what we need where we need it, allowing for better package optimization.
- */
-
-export const Button = Buttons.Button;
-export const ButtonMenu = Buttons.ButtonMenu;
-
 export default {
-    Button: Buttons.Button,
-    ButtonMenu: Buttons.ButtonMenu,
     Input: Input,
     Message: Message,
     UnescapedMessage: UnescapedMessage,

@@ -1,7 +1,7 @@
 /** This class creates a ui component which enables the dynamic creation of portlets */
 import Backbone from "backbone";
 import $ from "jquery";
-import Ui from "mvc/ui/ui-misc";
+import { Button } from "./buttons";
 import _ from "underscore";
 import _l from "utils/localization";
 import Utils from "utils/utils";
@@ -17,7 +17,7 @@ export var View = Backbone.View.extend({
             max: null,
             min: null,
         });
-        this.button_new = new Ui.Button({
+        this.button_new = new Button({
             icon: "fa-plus",
             title: `Insert ${this.options.title}`,
             tooltip: `Add new ${this.options.title} block`,
@@ -46,7 +46,7 @@ export var View = Backbone.View.extend({
             console.debug("form-repeat::add()", "Duplicate or invalid repeat block id.");
             return;
         }
-        var button_delete = new Ui.Button({
+        var button_delete = new Button({
             icon: "fa-trash-o",
             tooltip: _l("Delete this repeat block"),
             cls: "ui-button-icon-plain form-repeat-delete",

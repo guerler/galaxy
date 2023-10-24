@@ -1,19 +1,20 @@
 /** This class renders the chart menu options. */
 import Backbone from "backbone";
-import Ui from "mvc/ui/ui-misc";
+
+import { Button, ButtonMenu } from "./buttons";
 
 export default Backbone.View.extend({
     initialize: function (app) {
         this.app = app;
         this.model = new Backbone.Model({ visible: app.chart.requiresConfirmation });
-        this.execute_button = new Ui.Button({
+        this.execute_button = new Button({
             icon: "fa-check-square",
             tooltip: "Confirm",
             onclick: () => {
                 app.chart.trigger("redraw", true);
             },
         });
-        this.export_button = new Ui.ButtonMenu({
+        this.export_button = new ButtonMenu({
             icon: "fa-camera",
             tooltip: "Export",
         });
@@ -47,7 +48,7 @@ export default Backbone.View.extend({
                 });
             },
         });
-        this.left_button = new Ui.Button({
+        this.left_button = new Button({
             icon: "fa-angle-double-left",
             tooltip: "Show",
             onclick: () => {
@@ -55,7 +56,7 @@ export default Backbone.View.extend({
                 window.dispatchEvent(new Event("resize"));
             },
         });
-        this.right_button = new Ui.Button({
+        this.right_button = new Button({
             icon: "fa-angle-double-right",
             tooltip: "Hide",
             onclick: () => {
@@ -63,7 +64,7 @@ export default Backbone.View.extend({
                 window.dispatchEvent(new Event("resize"));
             },
         });
-        this.save_button = new Ui.Button({
+        this.save_button = new Button({
             icon: "fa-save",
             tooltip: "Save",
             onclick: () => {

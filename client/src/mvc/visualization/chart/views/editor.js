@@ -4,8 +4,8 @@
  */
 import Backbone from "backbone";
 import $ from "jquery";
-import Ui from "mvc/ui/ui-misc";
-import Tabs from "mvc/ui/ui-tabs";
+import Ui from "./misc";
+import Tabs from "./tabs";
 import Description from "mvc/visualization/chart/views/description";
 import Groups from "mvc/visualization/chart/views/groups";
 import Settings from "mvc/visualization/chart/views/settings";

@@ -4,7 +4,7 @@ import $ from "jquery";
 import Utils from "utils/utils";
 
 /** This renders the default button which is used e.g. at the bottom of the upload modal. */
-var Button = Backbone.View.extend({
+export const Button = Backbone.View.extend({
     initialize: function (options) {
         this.model =
             (options && options.model) ||
@@ -103,7 +103,7 @@ var Button = Backbone.View.extend({
 });
 
 /** This class creates a button with dropdown menu. */
-var ButtonMenu = Backbone.View.extend({
+export const ButtonMenu = Backbone.View.extend({
     $menu: null,
     initialize: function (options) {
         this.model =
@@ -208,8 +208,3 @@ var ButtonMenu = Backbone.View.extend({
         );
     },
 });
-
-export default {
-    Button: Button,
-    ButtonMenu: ButtonMenu,
-};

@@ -150,10 +150,6 @@ def build_command(
     if include_work_dir_outputs:
         __handle_work_dir_outputs(commands_builder, job_wrapper, runner, remote_command_params)
 
-    if include_metadata and job_wrapper.requires_setting_metadata:
-        commands_builder.append_command(f"cd '{working_directory}'")
-        __handle_metadata(commands_builder, job_wrapper, runner, remote_command_params)
-
     return commands_builder.build()
 
 
@@ -239,48 +235,6 @@ def __handle_work_dir_outputs(
     if work_dir_outputs:
         copy_commands = map(__copy_if_exists_command, work_dir_outputs)
         commands_builder.append_commands(copy_commands)
-
-
-def __handle_metadata(
-    commands_builder, job_wrapper: "MinimalJobWrapper", runner: "BaseJobRunner", remote_command_params
-):
-    # Append metadata setting commands, we don't want to overwrite metadata
-    # that was copied over in init_meta(), as per established behavior
-    metadata_kwds = remote_command_params.get("metadata_kwds", {})
-    exec_dir = metadata_kwds.get("exec_dir", abspath(getcwd()))
-    tmp_dir = metadata_kwds.get("tmp_dir", job_wrapper.working_directory)
-    dataset_files_path = metadata_kwds.get("dataset_files_path", runner.app.model.Dataset.file_path)
-    output_fnames = metadata_kwds.get("output_fnames", job_wrapper.job_io.get_output_fnames())
-    config_root = metadata_kwds.get("config_root", None)
-    config_file = metadata_kwds.get("config_file", None)
-    datatypes_config = metadata_kwds.get("datatypes_config", None)
-    compute_tmp_dir = metadata_kwds.get("compute_tmp_dir", None)
-    version_path = job_wrapper.job_io.version_path
-    resolve_metadata_dependencies = job_wrapper.commands_in_new_shell
-    metadata_command = (
-        job_wrapper.setup_external_metadata(
-            exec_dir=exec_dir,
-            tmp_dir=tmp_dir,
-            dataset_files_path=dataset_files_path,
-            output_fnames=output_fnames,
-            set_extension=False,
-            config_root=config_root,
-            config_file=config_file,
-            datatypes_config=datatypes_config,
-            compute_tmp_dir=compute_tmp_dir,
-            compute_version_path=version_path,
-            resolve_metadata_dependencies=resolve_metadata_dependencies,
-            use_bin=job_wrapper.use_metadata_binary,
-            kwds={"overwrite": False},
-        )
-        or ""
-    )
-    metadata_command = metadata_command.strip()
-    if metadata_command:
-        # Place Galaxy and its dependencies in environment for metadata regardless of tool.
-        if not job_wrapper.is_cwl_job:
-            commands_builder.append_command(SETUP_GALAXY_FOR_METADATA)
-        commands_builder.append_command(metadata_command)
 
 
 def __copy_if_exists_command(work_dir_output):

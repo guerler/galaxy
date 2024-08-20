@@ -52,7 +52,7 @@ type CopyDatasetParamsType = GalaxyApiPaths["/api/histories/{history_id}/content
 type CopyDatasetBodyType = components["schemas"]["CreateHistoryContentPayload"];
 
 export async function copyDataset(
-    datasetId: CopyDatasetBodyType["content"],
+    contentId: CopyDatasetBodyType["content"],
     historyId: CopyDatasetParamsType["path"]["history_id"],
     type: CopyDatasetParamsType["path"]["type"] = "dataset",
     source: CopyDatasetBodyType["source"] = "hda"
@@ -63,7 +63,7 @@ export async function copyDataset(
         },
         body: {
             source,
-            content: datasetId,
+            content: contentId,
             // TODO: Investigate. These should be optional, but the API requires explicit null values?
             type,
             copy_elements: null,

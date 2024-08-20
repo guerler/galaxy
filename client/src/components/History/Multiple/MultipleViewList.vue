@@ -90,8 +90,7 @@ async function onDrop(evt: any) {
         if (currentHistoryId) {
             // iterate over the data array and copy each item to the new history
             for (const item of historyItems) {
-                const dataSource = item.history_content_type === "dataset" ? "hda" : "hdca";
-                await copyContent(item.id, currentHistoryId, item.history_content_type, dataSource)
+                await copyContent(item.id, currentHistoryId, item.history_content_type)
                     .then(() => {
                         if (item.history_content_type === "dataset") {
                             datasetCount++;

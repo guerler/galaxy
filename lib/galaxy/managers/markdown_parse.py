@@ -65,6 +65,7 @@ VALID_ARGUMENTS: Dict[str, Union[List[str], DynamicArguments]] = {
     "tool_stderr": ["implicit_collection_jobs_id", "invocation_id", "job_id", "step"],
     "tool_stdout": ["implicit_collection_jobs_id", "invocation_id", "job_id", "step"],
     "visualization": DYNAMIC_ARGUMENTS,
+    "visualization_collection": ["history_dataset_collection_id"],
     "workflow_display": ["invocation_id", "workflow_checkpoint", "workflow_id"],
     "workflow_image": ["invocation_id", "workflow_checkpoint", "workflow_id", "size"],
     "workflow_license": ["invocation_id", "workflow_id"],

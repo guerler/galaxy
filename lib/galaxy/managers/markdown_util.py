@@ -261,6 +261,10 @@ class GalaxyInternalMarkdownDirectiveHandler(metaclass=abc.ABCMeta):
                         trans, object_id, check_ownership=False, check_accessible=True
                     )
                     rval = self.handle_invocation_time(line, invocation)
+            elif container == "visualization_collection":
+                if encoded_id is not None and object_type == "history_dataset_collection_id":
+                    hdca = collection_manager.get_dataset_collection_instance(trans, "history", encoded_id)
+                    rval = self.handle_dataset_collection_display(line, hdca)
             elif container == "visualization":
                 rval = self.handle_visualization(line)
             else:

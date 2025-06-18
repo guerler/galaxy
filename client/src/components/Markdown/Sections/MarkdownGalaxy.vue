@@ -235,6 +235,11 @@ watch(
                 :job-id="args.job_id"
                 :implicit-collection-jobs-id="args.implicit_collection_jobs_id"
                 :name="name" />
+            <VisualizationCollection
+                v-else-if="name == 'visualization_collection'"
+                :name="args.visualization_id"
+                :collection_id="args.history_dataset_collection_id"
+                :height="args.height && parseInt(args.height)" />
             <VisualizationWrapper
                 v-else-if="name == 'visualization'"
                 :name="args.visualization_id"

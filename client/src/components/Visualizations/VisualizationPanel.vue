@@ -15,8 +15,11 @@ import VisualizationHeader from "@/components/Visualizations/VisualizationHeader
 const router = useRouter();
 
 const props = defineProps<{
+    create?: boolean;
     datasetId?: string;
 }>();
+
+const emit = defineEmits(["onInsertVisualization"]);
 
 const plugins: Ref<Plugin[]> = ref([]);
 const query = ref("");
@@ -57,13 +60,16 @@ const filteredPlugins = computed(() => {
 });
 
 async function selectVisualization(plugin: Plugin) {
-    if (props.datasetId) {
-        router.push(`/visualizations/display?visualization=${plugin.name}&dataset_id=${props.datasetId}`, {
-            // @ts-ignore
-            title: plugin.name,
-        });
-    } else {
-        router.push(`/visualizations/create/${plugin.name}`);
+    emit("onInsertVisualization", plugin);
+    if (props.create) {
+        if (props.datasetId) {
+            router.push(`/visualizations/display?visualization=${plugin.name}&dataset_id=${props.datasetId}`, {
+                // @ts-ignore
+                title: plugin.name,
+            });
+        } else {
+            router.push(`/visualizations/create/${plugin.name}`);
+        }
     }
 }
 

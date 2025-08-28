@@ -353,7 +353,7 @@ defineExpose({
             :reactive-width.sync="sidePanelWidth">
             <ToolPanel v-if="isActiveSideBar('tools')" />
             <InvocationsPanel v-else-if="isActiveSideBar('invocation')" />
-            <VisualizationPanel v-else-if="isActiveSideBar('visualizations')" />
+            <VisualizationPanel v-else-if="isActiveSideBar('visualizations')" create />
             <MultiviewPanel v-else-if="isActiveSideBar('multiview')" />
             <NotificationsPanel v-else-if="isActiveSideBar('notifications')" />
             <UserToolPanel v-if="isActiveSideBar('user-defined-tools')" in-panel />

@@ -1,7 +1,7 @@
 <template>
     <div>
         <DisplayApplications v-if="datasetId" :dataset-id="datasetId" />
-        <VisualizationPanel :dataset-id="datasetId" />
+        <VisualizationPanel :dataset-id="datasetId" create />
     </div>
 </template>
 

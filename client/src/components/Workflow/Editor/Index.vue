@@ -108,6 +108,9 @@
                     :in-workflow-editor="true"
                     in-panel
                     @onInsertTool="onInsertTool" />
+                <VisualizationPanel
+                    v-if="isActiveSideBar('workflow-editor-visualizations')"
+                    @onInsertVisualization="onInsertVisualization" />
             </template>
         </ActivityBar>
         <template v-if="reportActive">
@@ -266,6 +269,7 @@ import ToolPanel from "@/components/Panels/ToolPanel.vue";
 import UserToolPanel from "@/components/Panels/UserToolPanel.vue";
 import WorkflowPanel from "@/components/Panels/WorkflowPanel.vue";
 import UndoRedoStack from "@/components/UndoRedo/UndoRedoStack.vue";
+import VisualizationPanel from "@/components/Visualizations/VisualizationPanel.vue";
 
 library.add(faArrowLeft, faArrowRight, faHistory);
 
@@ -289,6 +293,7 @@ export default {
         InputPanel,
         UserToolPanel,
         SearchPanel,
+        VisualizationPanel,
     },
     props: {
         workflowId: {
@@ -829,6 +834,10 @@ export default {
         },
         onInsertWorkflow(workflow_id, workflow_name) {
             this._insertStep(workflow_id, workflow_name, "subworkflow");
+        },
+        onInsertVisualization(plugin) {
+            console.log(plugin);
+            //this._insertStep(workflow_id, workflow_name, "subworkflow");
         },
         copyIntoWorkflow(id) {
             // Load workflow definition

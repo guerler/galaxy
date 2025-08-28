@@ -14,7 +14,7 @@ import {
     faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 import { watchImmediate } from "@vueuse/core";
-import { faDiagramNext, faSearch } from "font-awesome-6";
+import { faChartBar, faDiagramNext, faSearch } from "font-awesome-6";
 import { computed, type Ref } from "vue";
 
 import { useActivityStore } from "@/stores/activityStore";
@@ -63,6 +63,16 @@ export const workflowEditorActivities = [
         description: "Browse other workflows and add them as sub-workflows.",
         tooltip: "Search workflows to use in your workflow",
         icon: faSitemap,
+        panel: true,
+        visible: true,
+        optional: true,
+    },
+    {
+        title: "Visualization",
+        id: "workflow-editor-visualizations",
+        description: "Insert visualization into your workflow.",
+        tooltip: "Search visualizations to use in your workflow",
+        icon: faChartBar,
         panel: true,
         visible: true,
         optional: true,

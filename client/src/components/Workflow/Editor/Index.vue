@@ -837,7 +837,7 @@ export default {
         },
         onInsertVisualization(plugin) {
             console.log(plugin);
-            //this._insertStep(workflow_id, workflow_name, "subworkflow");
+            this._insertStep(plugin.id, plugin.name, "visualization");
         },
         copyIntoWorkflow(id) {
             // Load workflow definition

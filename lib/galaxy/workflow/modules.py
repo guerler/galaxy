@@ -2613,6 +2613,67 @@ class ToolModule(WorkflowModule):
         return list(replacement_parameters)
 
 
+class VisualizationModule(WorkflowModule):
+    """Initially this module will unconditionally pause a workflow - will aim
+    to allow conditional pausing later on.
+    """
+
+    type = "visualization"
+    name = "Pause for dataset review"
+
+    def get_all_inputs(self, data_only=False, connectable_only=False):
+        input = dict(
+            name="input",
+            label="Dataset for Review",
+            multiple=False,
+            extensions="input",
+            input_type="dataset",
+        )
+        return [input] if not data_only else []
+
+    def get_all_outputs(self, data_only=False):
+        return [dict(name="output", label="Reviewed Dataset", extensions=["input"])]
+
+    def get_runtime_state(self):
+        state = DefaultToolState()
+        state.inputs = {}
+        return state
+
+    def execute(
+        self, trans, progress: "WorkflowProgress", invocation_step, use_cached_job: bool = False
+    ) -> Optional[bool]:
+        step = invocation_step.workflow_step
+        progress.mark_step_outputs_delayed(step, why="executing pause step")
+        return None
+
+    def recover_mapping(self, invocation_step, progress):
+        if invocation_step:
+            step = invocation_step.workflow_step
+            action = invocation_step.action
+            if action:
+                connection = step.input_connections_by_name["input"][0]
+                replacement = progress.replacement_for_connection(connection)
+                progress.set_step_outputs(invocation_step, {"output": replacement})
+                return
+            elif action is False:
+                raise CancelWorkflowEvaluation(
+                    why=InvocationCancellationReviewFailed(
+                        reason=CancelReason.cancelled_on_review, workflow_step_id=step.id
+                    )
+                )
+        delayed_why = "workflow paused at this step waiting for review"
+        raise DelayedWorkflowEvaluation(why=delayed_why)
+
+    def do_invocation_step_action(self, step, action):
+        """Update or set the workflow invocation state action - generic
+        extension point meant to allows users to interact with interactive
+        workflow modules. The action object returned from this method will
+        be attached to the WorkflowInvocationStep and be available the next
+        time the workflow scheduler visits the workflow.
+        """
+        return bool(action)
+
+
 class WorkflowModuleFactory:
     def __init__(self, module_types: dict[str, type[WorkflowModule]]):
         self.module_types = module_types
@@ -2643,6 +2704,7 @@ module_types = dict(
     pause=PauseModule,
     tool=ToolModule,
     subworkflow=SubWorkflowModule,
+    visualization=VisualizationModule,
 )
 module_factory = WorkflowModuleFactory(module_types)
 

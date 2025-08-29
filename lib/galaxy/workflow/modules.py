@@ -33,6 +33,7 @@ from galaxy.model import (
     Job,
     PostJobAction,
     Workflow,
+    WorkflowInvocation,
     WorkflowInvocationStep,
     WorkflowStep,
     WorkflowStepConnection,
@@ -2656,6 +2657,13 @@ class VisualizationModule(WorkflowModule):
     def get_name(self):
         return "ok"
         #return self.plugin.name
+
+    def execute(
+        self, trans, progress: "WorkflowProgress", invocation_step, use_cached_job: bool = False
+    ) -> Optional[bool]:
+        step = invocation_step.workflow_step
+        # TODO: set the state to success/ready?!
+        return True
 
 
 class WorkflowModuleFactory:

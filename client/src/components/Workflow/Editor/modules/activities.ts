@@ -1,5 +1,6 @@
 import { faSave as farSave } from "@fortawesome/free-regular-svg-icons";
 import {
+    faChartBar,
     faDownload,
     faEdit,
     faHistory,
@@ -14,7 +15,7 @@ import {
     faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 import { watchImmediate } from "@vueuse/core";
-import { faChartBar, faDiagramNext, faSearch } from "font-awesome-6";
+import { faDiagramNext, faSearch } from "font-awesome-6";
 import { computed, type Ref } from "vue";
 
 import { useActivityStore } from "@/stores/activityStore";

@@ -24,6 +24,7 @@ from galaxy.schema.schema import (
     StoredWorkflowSummary,
     SubworkflowStep,
     ToolStep,
+    VisualizationStep,
     WorkflowInput,
 )
 
@@ -238,6 +239,7 @@ class StoredWorkflowDetailed(StoredWorkflowSummary):
                 InputParameterStep,
                 PauseStep,
                 ToolStep,
+                VisualizationStep,
                 SubworkflowStep,
             ],
             Field(discriminator="type"),

@@ -2526,6 +2526,10 @@ class ToolStep(WorkflowStepBase):
     type: Literal["tool"]
 
 
+class VisualizationStep(WorkflowStepBase):
+    type: Literal["visualization"]
+
+
 class SubworkflowStep(WorkflowStepBase):
     type: Literal["subworkflow"]
     workflow_id: EncodedDatabaseIdField = Field(

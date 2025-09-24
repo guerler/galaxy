@@ -79,6 +79,7 @@ class FastAPIToolData:
         "/api/tool_data/{table_name}",
         summary="Get details of a given data table",
         response_description="A description of the given data table and its content",
+        public=True,
     )
     async def show(self, table_name: str = ToolDataTableName) -> ToolDataDetails:
         """Get details of a given tool data table."""
@@ -98,6 +99,7 @@ class FastAPIToolData:
         "/api/tool_data/{table_name}/fields/{field_name}",
         summary="Get information about a particular field in a tool data table",
         response_description="Information about a data table field",
+        public=True,
     )
     async def show_field(
         self,
@@ -112,6 +114,7 @@ class FastAPIToolData:
         summary="Get information about a particular field in a tool data table",
         response_description="Information about a data table field",
         response_class=GalaxyFileResponse,
+        public=True,
     )
     def download_field_file(
         self,

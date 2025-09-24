@@ -24,7 +24,7 @@ class TestToolDataApi(ApiTestCase):
         assert "testalpha" in [operator.itemgetter("name")(_) for _ in index]
 
     def test_show(self):
-        show_response = self._get("tool_data/testalpha", admin=True)
+        show_response = self._get("tool_data/testalpha")
         self._assert_status_code_is(show_response, 200)
         print(show_response.content)
         data_table = show_response.json()
@@ -35,7 +35,7 @@ class TestToolDataApi(ApiTestCase):
         assert first_entry[2].endswith("test/functional/tool-data/data1/entry.txt")
 
     def test_show_field(self):
-        show_field_response = self._get("tool_data/testalpha/fields/data1", admin=True)
+        show_field_response = self._get("tool_data/testalpha/fields/data1")
         self._assert_status_code_is(show_field_response, 200)
         field = show_field_response.json()
         self._assert_has_keys(field, "files", "name", "fields", "fingerprint", "base_dir")
@@ -43,7 +43,7 @@ class TestToolDataApi(ApiTestCase):
         assert len(files) == 2, f"Length of files [{files}] was not 2."
 
     def test_download_field_file(self):
-        show_field_response = self._get("tool_data/testalpha/fields/data1/files/entry.txt", admin=True)
+        show_field_response = self._get("tool_data/testalpha/fields/data1/files/entry.txt")
         self._assert_status_code_is(show_field_response, 200)
         content = show_field_response.text
         assert content == "This is data 1.", content

@@ -79,7 +79,6 @@ class FastAPIToolData:
         "/api/tool_data/{table_name}",
         summary="Get details of a given data table",
         response_description="A description of the given data table and its content",
-        require_admin=True,
     )
     async def show(self, table_name: str = ToolDataTableName) -> ToolDataDetails:
         """Get details of a given tool data table."""
@@ -99,14 +98,13 @@ class FastAPIToolData:
         "/api/tool_data/{table_name}/fields/{field_name}",
         summary="Get information about a particular field in a tool data table",
         response_description="Information about a data table field",
-        require_admin=True,
     )
     async def show_field(
         self,
         table_name: str = ToolDataTableName,
         field_name: str = ToolDataTableFieldName,
     ) -> ToolDataField:
-        """Reloads a data table and return its details."""
+        """Displays information about a data table field."""
         return self.tool_data_manager.show_field(table_name, field_name)
 
     @router.get(
@@ -114,7 +112,6 @@ class FastAPIToolData:
         summary="Get information about a particular field in a tool data table",
         response_description="Information about a data table field",
         response_class=GalaxyFileResponse,
-        require_admin=True,
     )
     def download_field_file(
         self,

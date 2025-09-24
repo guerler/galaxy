@@ -4609,7 +4609,7 @@ export interface paths {
         };
         /**
          * Get information about a particular field in a tool data table
-         * @description Reloads a data table and return its details.
+         * @description Displays information about a data table field.
          */
         get: operations["show_field_api_tool_data__table_name__fields__field_name__get"];
         put?: never;
@@ -37685,10 +37685,7 @@ export interface operations {
     show_api_tool_data__table_name__get: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description The user ID that will be used to effectively make this API call. Only admins and designated users can make API calls on behalf of other users. */
-                "run-as"?: string | null;
-            };
+            header?: never;
             path: {
                 /** @description The name of the tool data table */
                 table_name: string;
@@ -37777,10 +37774,7 @@ export interface operations {
     show_field_api_tool_data__table_name__fields__field_name__get: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description The user ID that will be used to effectively make this API call. Only admins and designated users can make API calls on behalf of other users. */
-                "run-as"?: string | null;
-            };
+            header?: never;
             path: {
                 /** @description The name of the tool data table */
                 table_name: string;
@@ -37823,10 +37817,7 @@ export interface operations {
     download_field_file_api_tool_data__table_name__fields__field_name__files__file_name__get: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description The user ID that will be used to effectively make this API call. Only admins and designated users can make API calls on behalf of other users. */
-                "run-as"?: string | null;
-            };
+            header?: never;
             path: {
                 /** @description The name of the tool data table */
                 table_name: string;

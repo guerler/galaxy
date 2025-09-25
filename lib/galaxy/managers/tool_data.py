@@ -48,14 +48,11 @@ class ToolDataManager:
         """Return all tool data tables."""
         return self._app.tool_data_tables.index()
 
-    def show(self, trans: ProvidesUserContext, table_name: str) -> ToolDataDetails:
+    def show(self, table_name: str) -> ToolDataDetails:
         """Get details of a given data table"""
         data_table = self._data_table(table_name)
-        if table_name in PUBLIC_TABLES or trans.user_is_admin:
-            element_view = data_table.to_dict(view="element")
-            return ToolDataDetails.model_construct(**element_view)
-        else:
-            raise exceptions.AdminRequiredException(f"Only administrators can access '{table_name}'.")
+        element_view = data_table.to_dict(view="element")
+        return ToolDataDetails.model_construct(**element_view)
 
     def show_field(self, table_name: str, field_name: str) -> ToolDataField:
         """Get information about a particular field in a tool data table"""
@@ -78,7 +75,7 @@ class ToolDataManager:
                 raise exceptions.ObjectNotFound("No such path in data table field.")
             return full_path.absolute()
         else:
-            raise exceptions.AdminRequiredException(f"Only administrators can access '{table_name}'.")
+            raise exceptions.AdminRequiredException(f"Only administrators can download files from '{table_name}'.")
 
     def delete(self, table_name: str, values: Optional[str] = None) -> ToolDataDetails:
         """Removes an item from a data table"""
@@ -113,9 +110,7 @@ class ToolDataManager:
 
     def _reload_data_table(self, name: str) -> ToolDataDetails:
         self._app.queue_worker.send_control_task("reload_tool_data_tables", noop_self=True, kwargs={"table_name": name})
-        data_table = self._data_table(name)
-        element_view = data_table.to_dict(view="element")
-        return ToolDataDetails.model_construct(**element_view)
+        return self.show(name)
 
 
 class ToolDataImportManager:

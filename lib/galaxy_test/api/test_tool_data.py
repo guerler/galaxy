@@ -34,14 +34,6 @@ class TestToolDataApi(ApiTestCase):
         assert first_entry[1] == "data1name"
         assert first_entry[2].endswith("test/functional/tool-data/data1/entry.txt")
 
-    def test_show_anon(self):
-        show_response = self._get("tool_data/fasta_indexes/")
-        self._assert_status_code_is(show_response, 200)
-
-    def test_show_anon_raises_403(self):
-        show_response = self._get("tool_data/testalpha")
-        self._assert_status_code_is(show_response, 403)
-
     def test_show_field(self):
         show_field_response = self._get("tool_data/testalpha/fields/data1", admin=True)
         self._assert_status_code_is(show_field_response, 200)

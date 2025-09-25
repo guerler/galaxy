@@ -83,11 +83,9 @@ class FastAPIToolData:
         response_description="A description of the given data table and its content",
         public=True,
     )
-    async def show(
-        self, trans: ProvidesUserContext = DependsOnTrans, table_name: str = ToolDataTableName
-    ) -> ToolDataDetails:
+    async def show(self, table_name: str = ToolDataTableName) -> ToolDataDetails:
         """Get details of a given tool data table."""
-        return self.tool_data_manager.show(trans, table_name)
+        return self.tool_data_manager.show(table_name)
 
     @router.get(
         "/api/tool_data/{table_name}/reload",

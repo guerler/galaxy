@@ -37685,10 +37685,7 @@ export interface operations {
     show_api_tool_data__table_name__get: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description The user ID that will be used to effectively make this API call. Only admins and designated users can make API calls on behalf of other users. */
-                "run-as"?: string | null;
-            };
+            header?: never;
             path: {
                 /** @description The name of the tool data table */
                 table_name: string;

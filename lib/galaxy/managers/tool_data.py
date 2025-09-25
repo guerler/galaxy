@@ -7,6 +7,7 @@ from typing import (
 from galaxy import exceptions
 from galaxy.files import ConfiguredFileSources
 from galaxy.files.uris import stream_url_to_file
+from galaxy.managers.context import ProvidesUserContext
 from galaxy.model import DatasetInstance
 from galaxy.structured_app import (
     MinimalManagerApp,
@@ -27,6 +28,9 @@ from galaxy.tools.data import (
     ToolDataTable,
 )
 
+# Tables that are accessible without admin rights
+PUBLIC_TABLES = ["fasta_indexes", "twobit"]
+
 
 class ToolDataManager:
     """
@@ -44,11 +48,14 @@ class ToolDataManager:
         """Return all tool data tables."""
         return self._app.tool_data_tables.index()
 
-    def show(self, table_name: str) -> ToolDataDetails:
+    def show(self, trans: ProvidesUserContext, table_name: str) -> ToolDataDetails:
         """Get details of a given data table"""
-        data_table = self._data_table(table_name)
-        element_view = data_table.to_dict(view="element")
-        return ToolDataDetails.model_construct(**element_view)
+        if table_name in PUBLIC_TABLES or trans.user_is_admin:
+            data_table = self._data_table(table_name)
+            element_view = data_table.to_dict(view="element")
+            return ToolDataDetails.model_construct(**element_view)
+        else:
+            raise exceptions.AdminRequiredException(f"Only administrators can access {table_name}.")
 
     def show_field(self, table_name: str, field_name: str) -> ToolDataField:
         """Get information about a partiular field in a tool data table"""
@@ -61,14 +68,17 @@ class ToolDataManager:
         data_table.reload_from_files()
         return self._reload_data_table(table_name)
 
-    def get_field_file_path(self, table_name: str, field_name: str, file_name: str) -> Path:
+    def get_field_file_path(self, trans: ProvidesUserContext, table_name: str, field_name: str, file_name: str) -> Path:
         """Get the absolute path to a given file name in the table field"""
-        field_value = self._data_table_field(table_name, field_name)
-        base_dir = Path(field_value.get_base_dir())
-        full_path = base_dir / file_name
-        if str(full_path) not in field_value.get_files():
-            raise exceptions.ObjectNotFound("No such path in data table field.")
-        return full_path.absolute()
+        if table_name in PUBLIC_TABLES or trans.user_is_admin:
+            field_value = self._data_table_field(table_name, field_name)
+            base_dir = Path(field_value.get_base_dir())
+            full_path = base_dir / file_name
+            if str(full_path) not in field_value.get_files():
+                raise exceptions.ObjectNotFound("No such path in data table field.")
+            return full_path.absolute()
+        else:
+            raise exceptions.AdminRequiredException(f"Only administrators can access {table_name}.")
 
     def delete(self, table_name: str, values: Optional[str] = None) -> ToolDataDetails:
         """Removes an item from a data table"""
@@ -103,7 +113,9 @@ class ToolDataManager:
 
     def _reload_data_table(self, name: str) -> ToolDataDetails:
         self._app.queue_worker.send_control_task("reload_tool_data_tables", noop_self=True, kwargs={"table_name": name})
-        return self.show(name)
+        data_table = self._data_table(name)
+        element_view = data_table.to_dict(view="element")
+        return ToolDataDetails.model_construct(**element_view)
 
 
 class ToolDataImportManager:

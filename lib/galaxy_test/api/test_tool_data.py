@@ -24,7 +24,7 @@ class TestToolDataApi(ApiTestCase):
         assert "testalpha" in [operator.itemgetter("name")(_) for _ in index]
 
     def test_show(self):
-        show_response = self._get("tool_data/testalpha")
+        show_response = self._get("tool_data/testalpha", admin=True)
         self._assert_status_code_is(show_response, 200)
         print(show_response.content)
         data_table = show_response.json()
@@ -43,7 +43,7 @@ class TestToolDataApi(ApiTestCase):
         assert len(files) == 2, f"Length of files [{files}] was not 2."
 
     def test_download_field_file(self):
-        show_field_response = self._get("tool_data/testalpha/fields/data1/files/entry.txt")
+        show_field_response = self._get("tool_data/testalpha/fields/data1/files/entry.txt", admin=True)
         self._assert_status_code_is(show_field_response, 200)
         content = show_field_response.text
         assert content == "This is data 1.", content
@@ -68,7 +68,7 @@ class TestToolDataApi(ApiTestCase):
         self._assert_status_code_is(show_response, 404)
 
     def test_download_field_unknown_file_raises_404(self):
-        show_field_response = self._get("tool_data/testalpha/fields/data1/files/unknown.txt")
+        show_field_response = self._get("tool_data/testalpha/fields/data1/files/unknown.txt", admin=True)
         self._assert_status_code_is(show_field_response, 404)
 
     def test_delete_without_payload_raises_400(self):

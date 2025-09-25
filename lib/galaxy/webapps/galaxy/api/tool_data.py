@@ -10,6 +10,7 @@ from pydantic import (
 )
 
 from galaxy.celery.tasks import import_data_bundle
+from galaxy.managers.context import ProvidesUserContext
 from galaxy.managers.tool_data import ToolDataManager
 from galaxy.schema.schema import (
     AsyncTaskResultSummary,
@@ -25,6 +26,7 @@ from galaxy.webapps.base.api import GalaxyFileResponse
 from galaxy.webapps.galaxy.services.base import async_task_summary
 from . import (
     depends,
+    DependsOnTrans,
     Router,
 )
 
@@ -81,9 +83,11 @@ class FastAPIToolData:
         response_description="A description of the given data table and its content",
         public=True,
     )
-    async def show(self, table_name: str = ToolDataTableName) -> ToolDataDetails:
+    async def show(
+        self, trans: ProvidesUserContext = DependsOnTrans, table_name: str = ToolDataTableName
+    ) -> ToolDataDetails:
         """Get details of a given tool data table."""
-        return self.tool_data_manager.show(table_name)
+        return self.tool_data_manager.show(trans, table_name)
 
     @router.get(
         "/api/tool_data/{table_name}/reload",
@@ -118,6 +122,7 @@ class FastAPIToolData:
     )
     def download_field_file(
         self,
+        trans: ProvidesUserContext = DependsOnTrans,
         table_name: str = ToolDataTableName,
         field_name: str = ToolDataTableFieldName,
         file_name: str = Path(
@@ -127,7 +132,7 @@ class FastAPIToolData:
         ),
     ):
         """Download a file associated with the data table field."""
-        path = self.tool_data_manager.get_field_file_path(table_name, field_name, file_name)
+        path = self.tool_data_manager.get_field_file_path(trans, table_name, field_name, file_name)
         return GalaxyFileResponse(str(path))
 
     @router.delete(

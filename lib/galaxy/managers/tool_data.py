@@ -58,7 +58,7 @@ class ToolDataManager:
             raise exceptions.AdminRequiredException(f"Only administrators can access '{table_name}'.")
 
     def show_field(self, table_name: str, field_name: str) -> ToolDataField:
-        """Get information about a partiular field in a tool data table"""
+        """Get information about a particular field in a tool data table"""
         field = self._data_table_field(table_name, field_name)
         return ToolDataField.model_construct(**field.to_dict())
 

@@ -99,7 +99,7 @@ class FastAPIToolData:
         "/api/tool_data/{table_name}/fields/{field_name}",
         summary="Get information about a particular field in a tool data table",
         response_description="Information about a data table field",
-        public=True,
+        require_admin=True,
     )
     async def show_field(
         self,

@@ -35,7 +35,7 @@ class TestToolDataApi(ApiTestCase):
         assert first_entry[2].endswith("test/functional/tool-data/data1/entry.txt")
 
     def test_show_field(self):
-        show_field_response = self._get("tool_data/testalpha/fields/data1")
+        show_field_response = self._get("tool_data/testalpha/fields/data1", admin=True)
         self._assert_status_code_is(show_field_response, 200)
         field = show_field_response.json()
         self._assert_has_keys(field, "files", "name", "fields", "fingerprint", "base_dir")
@@ -68,7 +68,7 @@ class TestToolDataApi(ApiTestCase):
         self._assert_status_code_is(show_response, 404)
 
     def test_download_field_unknown_file_raises_404(self):
-        show_field_response = self._get("tool_data/testalpha/fields/data1/files/unknown.txt", admin=True)
+        show_field_response = self._get("tool_data/testalpha/fields/data1/files/unknown.txt")
         self._assert_status_code_is(show_field_response, 404)
 
     def test_delete_without_payload_raises_400(self):

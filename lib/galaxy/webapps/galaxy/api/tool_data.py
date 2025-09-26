@@ -45,6 +45,18 @@ ToolDataTableFieldName = Path(
     description="The name of the tool data table field",
 )
 
+ToolDataTableFieldFileName = Path(
+    ...,
+    title="File name",
+    description="The name of a file associated with this data table field",
+)
+
+ToolDataTableFieldFileExtension = Path(
+    ...,
+    title="Field file type",
+    description="The file type of the data table fields file",
+)
+
 
 class ImportToolDataBundle(BaseModel):
     source: ImportToolDataBundleSource = Field(..., discriminator="src")
@@ -79,13 +91,15 @@ class FastAPIToolData:
 
     @router.get(
         "/api/tool_data/{table_name}",
-        summary="Get details of a given data table",
-        response_description="A description of the given data table and its content",
+        summary="Get details of a given data table.",
+        response_description="A description of the given data table and its content.",
         public=True,
     )
-    async def show(self, table_name: str = ToolDataTableName) -> ToolDataDetails:
+    async def show(
+        self, trans: ProvidesUserContext = DependsOnTrans, table_name: str = ToolDataTableName
+    ) -> ToolDataDetails:
         """Get details of a given tool data table."""
-        return self.tool_data_manager.show(table_name)
+        return self.tool_data_manager.show(trans, table_name)
 
     @router.get(
         "/api/tool_data/{table_name}/reload",
@@ -113,21 +127,17 @@ class FastAPIToolData:
 
     @router.get(
         "/api/tool_data/{table_name}/fields/{field_name}/files/{file_name}",
-        summary="Get information about a particular field in a tool data table",
-        response_description="Information about a data table field",
+        summary="Get files associated with a particular field in a tool data table",
+        response_description="Request file associated with tool data table entry",
         response_class=GalaxyFileResponse,
-        public=True,
+        require_admin=True,
     )
-    def download_field_file(
+    def download_fields_file(
         self,
         trans: ProvidesUserContext = DependsOnTrans,
         table_name: str = ToolDataTableName,
         field_name: str = ToolDataTableFieldName,
-        file_name: str = Path(
-            ...,  # Mark this field as required
-            title="File name",
-            description="The name of a file associated with this data table field",
-        ),
+        file_name: str = ToolDataTableFieldFileName
     ):
         """Download a file associated with the data table field."""
         path = self.tool_data_manager.get_field_file_path(trans, table_name, field_name, file_name)

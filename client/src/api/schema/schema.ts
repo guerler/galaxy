@@ -4584,7 +4584,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get details of a given data table
+         * Get details of a given data table.
          * @description Get details of a given tool data table.
          */
         get: operations["show_api_tool_data__table_name__get"];
@@ -4628,10 +4628,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get information about a particular field in a tool data table
+         * Get files associated with a particular field in a tool data table
          * @description Download a file associated with the data table field.
          */
-        get: operations["download_field_file_api_tool_data__table_name__fields__field_name__files__file_name__get"];
+        get: operations["download_fields_file_api_tool_data__table_name__fields__field_name__files__file_name__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -37685,7 +37685,10 @@ export interface operations {
     show_api_tool_data__table_name__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The user ID that will be used to effectively make this API call. Only admins and designated users can make API calls on behalf of other users. */
+                "run-as"?: string | null;
+            };
             path: {
                 /** @description The name of the tool data table */
                 table_name: string;
@@ -37694,7 +37697,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description A description of the given data table and its content */
+            /** @description A description of the given data table and its content. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -37817,7 +37820,7 @@ export interface operations {
             };
         };
     };
-    download_field_file_api_tool_data__table_name__fields__field_name__files__file_name__get: {
+    download_fields_file_api_tool_data__table_name__fields__field_name__files__file_name__get: {
         parameters: {
             query?: never;
             header?: {
@@ -37836,7 +37839,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Information about a data table field */
+            /** @description Request file associated with tool data table entry */
             200: {
                 headers: {
                     [name: string]: unknown;

@@ -48,10 +48,20 @@ class ToolDataManager:
         """Return all tool data tables."""
         return self._app.tool_data_tables.index()
 
-    def show(self, table_name: str) -> ToolDataDetails:
+    def show(self, trans: ProvidesUserContext, table_name: str) -> ToolDataDetails:
         """Get details of a given data table"""
         data_table = self._data_table(table_name)
         element_view = data_table.to_dict(view="element")
+        if not trans.user_is_admin:
+            path_index = element_view["columns"].index("path") if "path" in element_view["columns"] else None
+            if path_index is not None:
+                element_view["fields"] = [
+                    [
+                        os.path.basename(field[path_index]) if i == path_index else field[i]
+                        for i in range(len(field))
+                    ]
+                    for field in element_view["fields"]
+                ]
         return ToolDataDetails.model_construct(**element_view)
 
     def show_field(self, table_name: str, field_name: str) -> ToolDataField:
@@ -65,17 +75,16 @@ class ToolDataManager:
         data_table.reload_from_files()
         return self._reload_data_table(table_name)
 
-    def get_field_file_path(self, trans: ProvidesUserContext, table_name: str, field_name: str, file_name: str) -> Path:
+    def get_field_file_path(self, trans, table_name: str, field_name: str, file_name: str) -> Path:
         """Get the absolute path to a given file name in the table field"""
         field_value = self._data_table_field(table_name, field_name)
-        if table_name in PUBLIC_TABLES or trans.user_is_admin:
-            base_dir = Path(field_value.get_base_dir())
-            full_path = base_dir / file_name
-            if str(full_path) not in field_value.get_files():
-                raise exceptions.ObjectNotFound("No such path in data table field.")
-            return full_path.absolute()
-        else:
+        if table_name not in PUBLIC_TABLES and not trans.user_is_admin:
             raise exceptions.AdminRequiredException(f"Only administrators can download files from '{table_name}'.")
+        base_dir = Path(field_value.get_base_dir())
+        full_path = base_dir / file_name
+        if str(full_path) not in field_value.get_files():
+            raise exceptions.ObjectNotFound("No such path in data table field.")
+        return full_path.absolute()
 
     def delete(self, table_name: str, values: Optional[str] = None) -> ToolDataDetails:
         """Removes an item from a data table"""

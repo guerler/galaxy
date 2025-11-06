@@ -82,12 +82,11 @@ onMounted(async () => {
 </script>
 
 <template>
-    <BBadge
+    <div
         v-b-tooltip.hover.top.noninteractive
-        class="history-datasets d-flex flex-gapx-1 flex-gapy-1 align-items-center outline-badge cursor-pointer font-size-small"
-        pill
+        class="history-datasets d-flex flex-gapx-1 flex-gapy-1 align-items-center cursor-pointer font-size-small"
         :title="`View history storage overview`"
-        variant="light"
+        
         :to="`/storage/history/${historyId}`">
         <FontAwesomeIcon v-if="loading" :icon="faSpinner" fixed-width spin />
         <template v-else>
@@ -127,7 +126,7 @@ onMounted(async () => {
                 {{ contentsActive.hidden }}
             </span>
         </template>
-    </BBadge>
+    </div>
 </template>
 
 <style lang="scss" scoped>

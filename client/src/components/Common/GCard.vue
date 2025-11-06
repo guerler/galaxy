@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { faStar as farStar } from "@fortawesome/free-regular-svg-icons";
-import { faCaretDown, faEdit, faPen, faSpinner, faStar, type IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faCaretDown, faEdit, faEllipsisH, faPen, faSpinner, faStar, type IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { BBadge, BButton, BButtonGroup, BDropdown, BDropdownItem, BFormCheckbox, BLink } from "bootstrap-vue";
 import { computed, ref } from "vue";
@@ -343,7 +343,6 @@ function onKeyDown(event: KeyboardEvent) {
                                             :id="getElementId(props.id, 'title')"
                                             bold
                                             inline
-                                            class="d-block"
                                             :size="props.titleSize">
                                             <FontAwesomeIcon
                                                 v-if="props.titleIcon?.icon"
@@ -417,8 +416,9 @@ function onKeyDown(event: KeyboardEvent) {
                         </div>
 
                         <div class="align-items-start d-flex flex-row-reverse flex-wrap gap-1">
+
                             <div>
-                                <slot v-if="props.showBookmark" name="bookmark">
+                                <slot v-if="!props.showBookmark" name="bookmark">
                                     <BButton
                                         v-if="!bookmarkLoading"
                                         :id="
@@ -445,119 +445,82 @@ function onKeyDown(event: KeyboardEvent) {
                                         <FontAwesomeIcon :icon="faSpinner" spin fixed-width />
                                     </BButton>
                                 </slot>
-
-                                <slot name="extra-actions">
-                                    <BDropdown
-                                        v-if="
-                                            props.extraActions?.length &&
-                                            props.extraActions.some((ea) => ea.visible ?? true)
-                                        "
-                                        :id="getElementId(props.id, 'extra-actions')"
-                                        v-b-tooltip.hover.noninteractive
-                                        right
-                                        no-caret
-                                        title="More options"
-                                        toggle-class="inline-icon-button"
-                                        variant="link"
-                                        @show="() => emit('dropdown', true)"
-                                        @hide="() => emit('dropdown', false)">
-                                        <template v-slot:button-content>
-                                            <FontAwesomeIcon :icon="faCaretDown" fixed-width />
-                                        </template>
-
-                                        <template v-for="ea in props.extraActions">
-                                            <BDropdownItem
-                                                v-if="ea.visible ?? true"
-                                                :id="getActionId(props.id, ea.id)"
-                                                :key="ea.id"
-                                                :disabled="ea.disabled"
-                                                :variant="ea.variant || 'link'"
-                                                :to="ea.to"
-                                                :href="ea.href"
-                                                :title="ea.title"
-                                                :size="ea.size || 'sm'"
-                                                :target="ea.externalLink ? '_blank' : undefined"
-                                                @click="ea.handler && ea.handler()">
-                                                <FontAwesomeIcon v-if="ea.icon" :icon="ea.icon" fixed-width />
-                                                {{ localize(ea.label) }}
-                                            </BDropdownItem>
-                                        </template>
-                                    </BDropdown>
-                                </slot>
                             </div>
 
-                            <div class="d-flex flex-gapx-1" style="margin-top: 1px">
-                                <div
-                                    :id="getElementId(props.id, 'badges')"
-                                    class="align-items-center align-self-baseline d-flex flex-gapx-1">
-                                    <slot name="badges">
-                                        <template v-for="badge in props.badges">
-                                            <BBadge
-                                                v-if="badge.visible ?? true"
-                                                :id="getBadgeId(props.id, badge.id)"
-                                                :key="badge.id"
-                                                v-b-tooltip.hover.top.noninteractive
-                                                :pill="badge.type !== 'badge'"
-                                                :class="{
-                                                    'outline-badge': badge.variant?.includes('outline'),
-                                                    'cursor-pointer': badge.handler,
-                                                    [String(badge.class)]: badge.class,
-                                                }"
-                                                :title="localize(badge.title)"
-                                                :variant="badge.variant || 'secondary'"
-                                                :to="badge.to"
-                                                :href="badge.href"
-                                                @click.stop="badge.handler">
-                                                <FontAwesomeIcon
-                                                    v-if="badge.icon"
-                                                    :icon="badge.icon"
-                                                    fixed-width
-                                                    :spin="badge.spin" />
-                                                {{ localize(badge.label) }}
-                                            </BBadge>
-                                        </template>
-                                    </slot>
-                                </div>
-
-                                <div :id="getElementId(props.id, 'indicators')" class="align-self-baseline">
-                                    <slot name="indicators">
-                                        <template v-for="indicator in props.indicators">
-                                            <BButton
-                                                v-if="(indicator.visible ?? true) && !indicator.disabled"
-                                                :id="getIndicatorId(props.id, indicator.id)"
-                                                :key="`${indicator.id}-button`"
-                                                v-b-tooltip.hover.noninteractive
-                                                class="inline-icon-button"
-                                                :title="localize(indicator.title)"
-                                                :variant="indicator.variant || 'outline-secondary'"
-                                                :size="indicator.size || 'sm'"
-                                                :to="indicator.to"
-                                                :href="indicator.href"
-                                                :disabled="indicator.disabled"
-                                                :target="indicator.externalLink ? '_blank' : undefined"
-                                                @click.stop="indicator.handler">
-                                                <FontAwesomeIcon
-                                                    v-if="indicator.icon"
-                                                    :icon="indicator.icon"
-                                                    fixed-width />
-                                                {{ localize(indicator.label) }}
-                                            </BButton>
+                            <div :id="getElementId(props.id, 'indicators')" class="align-self-baseline">
+                                <slot name="indicators">
+                                    <template v-for="indicator in props.indicators">
+                                        <BButton
+                                            v-if="(indicator.visible ?? true) && !indicator.disabled"
+                                            :id="getIndicatorId(props.id, indicator.id)"
+                                            :key="`${indicator.id}-button`"
+                                            v-b-tooltip.hover.noninteractive
+                                            class="inline-icon-button"
+                                            :title="localize(indicator.title)"
+                                            :variant="indicator.variant || 'outline-secondary'"
+                                            :size="indicator.size || 'sm'"
+                                            :to="indicator.to"
+                                            :href="indicator.href"
+                                            :disabled="indicator.disabled"
+                                            :target="indicator.externalLink ? '_blank' : undefined"
+                                            @click.stop="indicator.handler">
                                             <FontAwesomeIcon
-                                                v-else-if="(indicator.visible ?? true) && indicator.disabled"
-                                                :id="getIndicatorId(props.id, indicator.id)"
-                                                :key="`${indicator.id}-icon`"
-                                                v-b-tooltip.hover.noninteractive
-                                                :title="localize(indicator.title)"
+                                                v-if="indicator.icon"
                                                 :icon="indicator.icon"
-                                                :size="indicator.size || 'sm'"
                                                 fixed-width />
-                                        </template>
-                                    </slot>
-                                </div>
+                                            {{ localize(indicator.label) }}
+                                        </BButton>
+                                        <FontAwesomeIcon
+                                            v-else-if="(indicator.visible ?? true) && indicator.disabled"
+                                            :id="getIndicatorId(props.id, indicator.id)"
+                                            :key="`${indicator.id}-icon`"
+                                            v-b-tooltip.hover.noninteractive
+                                            :title="localize(indicator.title)"
+                                            :icon="indicator.icon"
+                                            :size="indicator.size || 'sm'"
+                                            fixed-width />
+                                    </template>
+                                </slot>
                             </div>
                         </div>
                     </div>
 
+                    <div class="d-flex flex-gapx-1" style="margin-top: 1px">
+                        <div
+                            :id="getElementId(props.id, 'badges')"
+                            class="align-items-center align-self-baseline d-flex flex-gapx-1">
+                            <slot name="badges">
+                                <template v-for="badge in props.badges">
+                                    <BBadge
+                                        v-if="badge.visible ?? true"
+                                        :id="getBadgeId(props.id, badge.id)"
+                                        :key="badge.id"
+                                        v-b-tooltip.hover.top.noninteractive
+                                        :pill="badge.type !== 'badge'"
+                                        :class="{
+                                            'outline-badge': badge.variant?.includes('outline'),
+                                            'cursor-pointer': badge.handler,
+                                            [String(badge.class)]: badge.class,
+                                        }"
+                                        :title="localize(badge.title)"
+                                        :variant="badge.variant || 'secondary'"
+                                        :to="badge.to"
+                                        :href="badge.href"
+                                        @click.stop="badge.handler">
+                                        <FontAwesomeIcon
+                                            v-if="badge.icon"
+                                            :icon="badge.icon"
+                                            fixed-width
+                                            :spin="badge.spin" />
+                                        {{ localize(badge.label) }}
+                                    </BBadge>
+                                </template>
+                            </slot>
+                        </div>
+
+                        
+                    </div>
+                    
                     <div :id="getElementId(props.id, 'description')" class="g-card-description">
                         <slot name="description">
                             <template v-if="props.description">
@@ -670,6 +633,43 @@ function onKeyDown(event: KeyboardEvent) {
                                             </BButton>
                                         </template>
                                     </template>
+                                </slot>
+                                <slot name="extra-actions">
+                                    <BDropdown
+                                        v-if="
+                                            props.extraActions?.length &&
+                                            props.extraActions.some((ea) => ea.visible ?? true)
+                                        "
+                                        :id="getElementId(props.id, 'extra-actions')"
+                                        v-b-tooltip.hover.noninteractive
+                                        right
+                                        no-caret
+                                        title="More options"
+                                        variant="outline-primary"
+                                        @show="() => emit('dropdown', true)"
+                                        @hide="() => emit('dropdown', false)">
+                                        <template v-slot:button-content>
+                                            <FontAwesomeIcon :icon="faCaretDown" fixed-width />
+                                        </template>
+
+                                        <template v-for="ea in props.extraActions">
+                                            <BDropdownItem
+                                                v-if="ea.visible ?? true"
+                                                :id="getActionId(props.id, ea.id)"
+                                                :key="ea.id"
+                                                :disabled="ea.disabled"
+                                                :variant="ea.variant || 'link'"
+                                                :to="ea.to"
+                                                :href="ea.href"
+                                                :title="ea.title"
+                                                :size="ea.size || 'sm'"
+                                                :target="ea.externalLink ? '_blank' : undefined"
+                                                @click="ea.handler && ea.handler()">
+                                                <FontAwesomeIcon v-if="ea.icon" :icon="ea.icon" fixed-width />
+                                                {{ localize(ea.label) }}
+                                            </BDropdownItem>
+                                        </template>
+                                    </BDropdown>
                                 </slot>
                             </div>
                         </div>

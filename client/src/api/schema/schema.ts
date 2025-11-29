@@ -8241,9 +8241,7 @@ export interface components {
             /** Session Csrf Token */
             session_csrf_token?: string | null;
             /** User */
-            user: {
-                [key: string]: unknown;
-            };
+            user: components["schemas"]["AnonUserModel"] | components["schemas"]["DetailedUserModel"];
         };
         /**
          * ConvertedDatasetsMap

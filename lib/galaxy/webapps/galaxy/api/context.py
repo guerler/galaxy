@@ -2,6 +2,7 @@ import logging
 from typing import (
     Any,
     Optional,
+    Union,
 )
 
 from galaxy import web
@@ -9,7 +10,11 @@ from galaxy.managers.configuration import ConfigurationManager
 from galaxy.managers.context import ProvidesUserContext
 from galaxy.managers.users import CurrentUserSerializer
 from galaxy.schema import SerializationParams
-from galaxy.schema.schema import Model
+from galaxy.schema.schema import (
+    AnonUserModel,
+    DetailedUserModel,
+    Model,
+)
 from galaxy.webapps.galaxy.api import (
     depends,
     DependsOnTrans,
@@ -25,7 +30,7 @@ class ContextResponse(Model):
     root: str
     config: dict[str, Any]
     session_csrf_token: Optional[str] = None
-    user: dict[str, Any]
+    user: Union[AnonUserModel, DetailedUserModel]
 
 
 @router.cbv

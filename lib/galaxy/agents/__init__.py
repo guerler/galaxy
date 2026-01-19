@@ -15,6 +15,10 @@ from .error_analysis import ErrorAnalysisAgent
 from .orchestrator import WorkflowOrchestratorAgent
 from .registry import AgentRegistry
 from .router import QueryRouterAgent
+from .visualization_context import (
+    format_visualization_context,
+    get_visualization_summaries,
+)
 
 __all__ = [
     "AgentType",
@@ -25,6 +29,8 @@ __all__ = [
     "ErrorAnalysisAgent",
     "CustomToolAgent",
     "WorkflowOrchestratorAgent",
+    "format_visualization_context",
+    "get_visualization_summaries",
 ]
 
 # Global agent registry instance

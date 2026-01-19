@@ -293,11 +293,22 @@ class BaseGalaxyAgent(ABC):
         """Prepare the full prompt including context."""
         prompt_parts = [query]
 
-        # Add context if available
         if context:
+            # Handle visualizations specially - extract before processing other context
+            visualizations = context.pop("visualizations", None)
+
+            # Add remaining context
             context_str = "\n".join([f"{k}: {v}" for k, v in context.items() if v])
             if context_str:
                 prompt_parts.insert(0, f"Context:\n{context_str}\n")
+
+            # Add visualization context
+            if visualizations:
+                from galaxy.agents.visualization_context import format_visualization_context
+
+                viz_context = format_visualization_context(visualizations)
+                if viz_context:
+                    prompt_parts.insert(0, viz_context)
 
         return "\n".join(prompt_parts)
 

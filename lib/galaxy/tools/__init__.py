@@ -14,6 +14,7 @@ from collections.abc import (
     MutableMapping,
     Sequence,
 )
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import (
     Any,
@@ -516,6 +517,7 @@ class ToolBox(AbstractToolBox):
     ) -> None:
         self._reload_count = 0
         self.tool_location_fetcher = ToolLocationFetcher()
+        self._preloaded_tool_sources: dict[str, ToolSource] = {}
         # This is here to deal with the old default value, which doesn't make
         # sense in an "installed Galaxy" world.
         # FIXME: ./
@@ -600,11 +602,53 @@ class ToolBox(AbstractToolBox):
         # Deprecated method, TODO - eliminate calls to this in test/.
         return self._tools_by_id
 
+    def _preload_tools_parallel(self, config_filenames: list[str]) -> None:
+        """Parse tool XML in parallel to populate cache before serial processing.
+
+        This overrides the base implementation to perform actual parallel parsing
+        using get_tool_source, which is a pure function (no side effects).
+        """
+        tool_paths = self._collect_tool_paths_for_preload(config_filenames)
+        if not tool_paths:
+            return
+
+        num_workers = getattr(self.app.config, "parallel_tool_loading_workers", 4)
+        log.debug(f"Parsing {len(tool_paths)} tool XML files in parallel with {num_workers} workers")
+
+        enable_beta_formats = getattr(self.app.config, "enable_beta_tool_formats", False)
+
+        def parse_tool_source(tool_path: str) -> Optional[ToolSource]:
+            """Parse a single tool XML file. Pure function, no side effects."""
+            try:
+                return get_tool_source(
+                    tool_path,
+                    enable_beta_formats=enable_beta_formats,
+                    tool_location_fetcher=self.tool_location_fetcher,
+                )
+            except Exception:
+                log.debug(f"Error parsing tool XML: {tool_path}", exc_info=True)
+                return None
+
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            results = list(executor.map(parse_tool_source, tool_paths))
+
+        # Store successfully parsed sources keyed by realpath for consistent lookup
+        for tool_path, tool_source in zip(tool_paths, results):
+            if tool_source is not None:
+                self._preloaded_tool_sources[os.path.realpath(tool_path)] = tool_source
+
+        log.debug(f"Pre-parsed {len(self._preloaded_tool_sources)} tool sources")
+
     def create_tool(self, config_file: StrPath, **kwds) -> "Tool":
         tool_source = self.get_expanded_tool_source(config_file)
         return self._create_tool_from_source(tool_source, config_file=config_file, **kwds)
 
     def get_expanded_tool_source(self, config_file: StrPath) -> ToolSource:
+        # Check if this tool source was pre-parsed during parallel loading
+        config_file_real = os.path.realpath(config_file)
+        if config_file_real in self._preloaded_tool_sources:
+            return self._preloaded_tool_sources.pop(config_file_real)
+
         try:
             return get_tool_source(
                 config_file,

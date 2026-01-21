@@ -3914,6 +3914,25 @@ mapping:
           order in the UI.  If false, the order of tools in the toolbox will be
           preserved as they are loaded from the tool config files.
 
+      parallel_tool_loading:
+        type: bool
+        default: false
+        required: false
+        desc: |
+          If true, tool XML files will be parsed in parallel during Galaxy startup.
+          This can reduce startup time for instances with many tools by parallelizing
+          the XML reading and macro expansion phase. Set to false if you experience
+          issues with tool loading.
+
+      parallel_tool_loading_workers:
+        type: int
+        default: 4
+        required: false
+        desc: |
+          Number of worker threads to use for parallel tool XML parsing.
+          Only used if parallel_tool_loading is true. Higher values may
+          improve startup time but will use more memory during parsing.
+
       tool_filters:
         type: str
         required: false

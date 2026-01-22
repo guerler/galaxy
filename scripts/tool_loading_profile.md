@@ -33,6 +33,24 @@ Cache state was verified by comparing I/O latency:
 | Avg per tool | 206.8ms |
 | Avg I/O latency | 114.7ms/read |
 
+### Parallel 4 workers (Cold Cache) - Default configuration
+
+| Metric | Value |
+|--------|-------|
+| Tools loaded | 8,869 |
+| **Wall clock** | **8:45 (525s)** |
+| Cumulative I/O time | 1984s |
+| Avg I/O latency | 125.1ms/read |
+
+### Parallel 8 workers (Cold Cache)
+
+| Metric | Value |
+|--------|-------|
+| Tools loaded | 8,869 |
+| **Wall clock** | **4:49 (289s)** |
+| Cumulative I/O time | 2118s |
+| Avg I/O latency | 133.6ms/read |
+
 ### Parallel 16 workers (Cold Cache)
 
 | Metric | Value |
@@ -42,16 +60,18 @@ Cache state was verified by comparing I/O latency:
 | Cumulative I/O time | 2072s |
 | Avg I/O latency | 130.7ms/read |
 
-*Note: Cumulative I/O time (2072s) exceeds sequential (1826s) due to thread scheduling overhead and concurrent cache population. Wall clock time is the relevant metric for user-facing performance.*
+*Note: Cumulative I/O time exceeds sequential due to thread scheduling overhead and concurrent cache population. Wall clock time is the relevant metric for user-facing performance.*
 
 ### Comparison
 
 | Configuration | Wall Clock | Speedup |
 |---------------|------------|---------|
 | Sequential (cold) | 30:54 | 1x |
-| Parallel 16w (cold) | 2:17 | **13.4x** |
+| Parallel 4w (cold) | 8:45 | 3.5x |
+| Parallel 8w (cold) | 4:49 | 6.3x |
+| Parallel 16w (cold) | 2:17 | 13.4x |
 
-**Key finding:** Sequential loading on cold CVMFS cache takes **~31 minutes**, reproducing the reported 40-minute issue. Parallel loading (16 workers) reduces this to **~2.3 minutes**, a **13x speedup**.
+**Key finding:** Sequential loading on cold CVMFS cache takes **~31 minutes**, reproducing the reported 40-minute issue. Parallel loading reduces this to **~9 minutes with 4 workers** (3.5x), **~5 minutes with 8 workers** (6.3x), or **~2 minutes with 16 workers** (13x).
 
 ### Slowest Tools (Sequential Cold Cache)
 

@@ -104,3 +104,47 @@ class TestParallelToolLoading(BaseToolBoxTestCase):
 
         parallel_tool_ids = self._load_tools_parallel()
         assert "valid_tool" in parallel_tool_ids
+
+    def test_parallel_loading_clears_cache(self):
+        """Verify pre-loaded tool sources cache is cleared after loading completes."""
+        tool_ids = [f"cache_tool_{i}" for i in range(3)]
+        for tool_id in tool_ids:
+            self._create_tool_file(tool_id)
+
+        tool_refs = "\n".join(f'<tool file="{tool_id}.xml" />' for tool_id in tool_ids)
+        self._add_config(f"""<toolbox tool_path="{self.test_directory}">
+    {tool_refs}
+</toolbox>""")
+
+        self.app.config.parallel_tool_loading = True
+        self.app.config.parallel_tool_loading_workers = 2
+        toolbox = self.toolbox
+
+        # Cache should be empty after loading completes
+        assert len(toolbox._preloaded_tool_sources) == 0
+
+    def test_parallel_loading_with_nested_sections(self):
+        """Verify tools in nested sections load correctly (via on-demand parsing)."""
+        tool_ids = ["nested_tool_1", "nested_tool_2", "outer_tool"]
+        for tool_id in tool_ids:
+            self._create_tool_file(tool_id)
+
+        # Nested sections are not traversed by pre-loading, but tools should still load
+        self._add_config(f"""<toolbox tool_path="{self.test_directory}">
+    <section id="outer" name="Outer Section">
+        <section id="inner" name="Inner Section">
+            <tool file="nested_tool_1.xml" />
+            <tool file="nested_tool_2.xml" />
+        </section>
+    </section>
+    <tool file="outer_tool.xml" />
+</toolbox>""")
+
+        serial_tool_ids = self._load_tools_serial()
+        self._reset_toolbox()
+        parallel_tool_ids = self._load_tools_parallel()
+
+        # All tools should load regardless of nesting depth
+        assert serial_tool_ids == parallel_tool_ids
+        for tool_id in tool_ids:
+            assert tool_id in parallel_tool_ids

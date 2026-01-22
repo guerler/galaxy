@@ -303,10 +303,10 @@ class AbstractToolBox(ManagesIntegratedToolPanelMixin):
             directory_config_files = [config_file for config_file in directory_contents if config_file.endswith(".xml")]
             config_filenames.extend(directory_config_files)
 
-        # Pre-load tools in parallel if enabled
+        # Pre-parse tool XML sources in parallel if enabled
         parallel_tool_loading = getattr(self.app.config, "parallel_tool_loading", False)
         if parallel_tool_loading:
-            self._preload_tools_parallel(config_filenames)
+            self._preload_tool_sources_parallel(config_filenames)
 
         for config_filename in config_filenames:
             if not self.can_load_config_file(config_filename):
@@ -324,17 +324,27 @@ class AbstractToolBox(ManagesIntegratedToolPanelMixin):
                     raise
             except Exception:
                 log.exception("Error loading tools defined in config %s", config_filename)
+
+        # Clear pre-loaded tool sources cache to free memory
+        self._clear_preloaded_tool_sources()
+
         log.debug("Reading tools from config files finished %s", execution_timer)
 
-    def _preload_tools_parallel(self, config_filenames: List[str]) -> None:
-        """No-op. Subclasses may override to pre-parse tool XML in parallel."""
-        return
+    def _preload_tool_sources_parallel(self, config_filenames: List[str]) -> None:
+        """No-op. Subclasses may override to pre-parse tool XML sources in parallel."""
+        pass
+
+    def _clear_preloaded_tool_sources(self) -> None:
+        """No-op. Subclasses may override to clear pre-loaded tool sources cache."""
+        pass
 
     def _collect_tool_paths_for_preload(self, config_filenames: List[str]) -> List[str]:
-        """Collect tool file paths from config files for parallel pre-parsing.
+        """Best-effort collection of tool file paths for parallel pre-parsing.
 
-        Note: Only collects tools at the top level and one level deep in sections.
-        Nested sections are not traversed.
+        This method collects tool paths from top-level tools and tools one level
+        deep in sections. Deeply nested sections are not traversed. This is
+        intentional - tools not collected here will still be parsed on-demand
+        during normal loading. This is an optimization, not a complete enumeration.
         """
         tool_paths: List[str] = []
         for config_filename in config_filenames:

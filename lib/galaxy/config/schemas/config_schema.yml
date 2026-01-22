@@ -3919,19 +3919,21 @@ mapping:
         default: false
         required: false
         desc: |
-          If true, tool XML files will be parsed in parallel during Galaxy startup.
-          This can reduce startup time for instances with many tools by parallelizing
-          the XML reading and macro expansion phase. Set to false if you experience
-          issues with tool loading.
+          If true, tool XML source files will be parsed in parallel during Galaxy startup.
+          This pre-parses tool XML and expands macros before the serial tool loading phase,
+          reducing I/O latency on slow filesystems (e.g., CVMFS with cold cache). This does
+          not parallelize Tool object creation, only XML source parsing. Set to false if
+          you experience issues with tool loading.
 
       parallel_tool_loading_workers:
         type: int
         default: 4
         required: false
         desc: |
-          Number of worker threads to use for parallel tool XML parsing.
-          Only used if parallel_tool_loading is true. Higher values may
-          improve startup time but will use more memory during parsing.
+          Number of worker threads to use for parallel tool XML source parsing.
+          Only used if parallel_tool_loading is true. Higher values (8-16) may
+          improve startup time on high-latency filesystems but provide diminishing
+          returns on local disk. Default of 4 is a safe choice for most deployments.
 
       tool_filters:
         type: str

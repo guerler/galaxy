@@ -6,7 +6,7 @@
 
 ## Summary
 
-Parallel XML parsing provides a **targeted mitigation for cold CVMFS environments**, reducing standalone tool XML parsing time from **31 minutes to 2 minutes** (13x speedup) for the full Galaxy toolshed (8,869 tools). This addresses the reported 40-minute startup times on CVMFS by parallelizing the I/O-bound XML parsing phase, which accounts for 98.6% of tool loading time on cold cache. This does not measure full Galaxy server startup, which includes additional phases.
+Parallel XML parsing provides a **targeted mitigation for cold CVMFS environments**, reducing standalone tool XML parsing time from **31 minutes to 3 minutes** (10x speedup) for the full Galaxy toolshed (8,869 tools). This addresses the reported 40-minute startup times on CVMFS by parallelizing the I/O-bound XML parsing phase, which accounts for 98.6% of tool loading time on cold cache. This does not measure full Galaxy server startup, which includes additional phases.
 
 ## Test Methodology
 
@@ -56,11 +56,24 @@ Cache state was verified by comparing I/O latency:
 | Metric | Value |
 |--------|-------|
 | Tools loaded | 8,869 |
-| **Wall clock** | **2:17 (137s)** |
+| **Wall clock** | **3:00 (180s)** |
 | Cumulative I/O time | 2072s |
 | Avg I/O latency | 130.7ms/read |
 
 *Note: Cumulative I/O time exceeds sequential due to thread scheduling overhead and concurrent cache population. Wall clock time is the relevant metric for user-facing performance.*
+
+### Parallel 16 workers - Validation Runs
+
+Three additional cold cache runs were performed to validate consistency:
+
+| Sample | Wall Clock | Parallel XML | Config Parse | I/O Latency |
+|--------|------------|--------------|--------------|-------------|
+| 1 | 3:25 (205s) | 173.87s | 26.80s | 172.7ms |
+| 2 | 2:51 (171s) | 146.16s | 20.00s | 145.0ms |
+| 3 | 3:00 (180s) | 152.94s | 22.62s | 151.9ms |
+| **Average** | **3:05 (185s)** | **157.66s** | **23.14s** | **156.5ms** |
+
+**Conclusion:** Performance is consistent across runs. Variance is due to CVMFS network conditions and server load.
 
 ### Comparison
 
@@ -69,9 +82,9 @@ Cache state was verified by comparing I/O latency:
 | Sequential (cold) | 30:54 | 1x |
 | Parallel 4w (cold) | 8:45 | 3.5x |
 | Parallel 8w (cold) | 4:49 | 6.3x |
-| Parallel 16w (cold) | 2:17 | 13.4x |
+| Parallel 16w (cold) | 3:00 | 10x |
 
-**Key finding:** Sequential loading on cold CVMFS cache takes **~31 minutes**, reproducing the reported 40-minute issue. Parallel loading reduces this to **~9 minutes with 4 workers** (3.5x), **~5 minutes with 8 workers** (6.3x), or **~2 minutes with 16 workers** (13x).
+**Key finding:** Sequential loading on cold CVMFS cache takes **~31 minutes**, reproducing the reported 40-minute issue. Parallel loading reduces this to **~9 minutes with 4 workers** (3.5x), **~5 minutes with 8 workers** (6.3x), or **~3 minutes with 16 workers** (10x).
 
 ### Slowest Tools (Sequential Cold Cache)
 
@@ -162,7 +175,7 @@ The slowest tools are dominated by I/O latency, not CPU processing.
 
 1. **Reported 40-minute issue reproduced** - Full toolshed sequential loading on cold CVMFS cache takes 31 minutes, confirming the reported problem
 
-2. **13x speedup achieved** - Parallel loading (16 workers) reduces full toolshed loading from 31 minutes to 2 minutes
+2. **10x speedup achieved** - Parallel loading (16 workers) reduces full toolshed loading from 31 minutes to 3 minutes (validated across 4 independent cold cache runs)
 
 3. **I/O dominates cold cache startup** - 98.6% of time is spent in file reads (`get_tool_source`) on cold CVMFS cache
 

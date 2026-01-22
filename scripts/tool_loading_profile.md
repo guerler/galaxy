@@ -6,7 +6,7 @@
 
 ## Summary
 
-Parallel XML parsing provides a **targeted mitigation for cold CVMFS environments**, converting pathological startup from tens of minutes to minutes for the I/O-bound portion of tool loading. This is not a complete solution for all startup scenarios but addresses the specific bottleneck where I/O latency dominates.
+Parallel XML parsing provides a **targeted mitigation for cold CVMFS environments**, reducing standalone tool XML parsing time from **31 minutes to 2 minutes** (13x speedup) for the full Galaxy toolshed (8,869 tools). This addresses the reported 40-minute startup times on CVMFS by parallelizing the I/O-bound XML parsing phase, which accounts for 98.6% of tool loading time on cold cache. This does not measure full Galaxy server startup, which includes additional phases.
 
 ## Test Methodology
 
@@ -23,15 +23,47 @@ Cache state was verified by comparing I/O latency:
 
 ## Full Toolshed Test (8869 tools)
 
+### Sequential (Cold Cache) - Reproduces the 40-minute issue
+
 | Metric | Value |
 |--------|-------|
 | Tools loaded | 8,869 |
-| Wall clock | 2:17 (137s) |
-| Parallel workers | 16 |
-| Cumulative I/O time | 2072s (~34.5 minutes) |
+| **Wall clock** | **30:54 (1834s)** |
+| get_tool_source (I/O) | 1826.48s (98.6%) |
+| Avg per tool | 206.8ms |
+| Avg I/O latency | 114.7ms/read |
+
+### Parallel 16 workers (Cold Cache)
+
+| Metric | Value |
+|--------|-------|
+| Tools loaded | 8,869 |
+| **Wall clock** | **2:17 (137s)** |
+| Cumulative I/O time | 2072s |
 | Avg I/O latency | 130.7ms/read |
 
-**Key finding:** Sequential loading would require ~35 minutes of I/O. Parallel loading (16 workers) completes in ~2.3 minutes wall clock. This bridges the gap to the reported 40-minute loading times.
+*Note: Cumulative I/O time (2072s) exceeds sequential (1826s) due to thread scheduling overhead and concurrent cache population. Wall clock time is the relevant metric for user-facing performance.*
+
+### Comparison
+
+| Configuration | Wall Clock | Speedup |
+|---------------|------------|---------|
+| Sequential (cold) | 30:54 | 1x |
+| Parallel 16w (cold) | 2:17 | **13.4x** |
+
+**Key finding:** Sequential loading on cold CVMFS cache takes **~31 minutes**, reproducing the reported 40-minute issue. Parallel loading (16 workers) reduces this to **~2.3 minutes**, a **13x speedup**.
+
+### Slowest Tools (Sequential Cold Cache)
+
+| Tool | Load Time | Bottleneck |
+|------|-----------|------------|
+| multiqc | 5151ms | get_tool_source |
+| multiqc | 4128ms | get_tool_source |
+| multiqc | 3009ms | get_tool_source |
+| segalign | 2386ms | get_tool_source |
+| gtdbtk_classify_wf | 1542ms | get_tool_source |
+
+The slowest tools are dominated by I/O latency, not CPU processing.
 
 ## Worker Scaling Analysis
 
@@ -52,7 +84,7 @@ Cache state was verified by comparing I/O latency:
 | 8 | 0.99s | thread overhead |
 | 16 | 1.02s | diminishing returns |
 
-**Recommendation:** Default to 4 workers. On warm cache, additional workers add overhead. On cold cache, higher worker counts (8-16) provide benefit but 4 is a safe, portable default.
+**Recommendation:** Default to 4 workers (configurable via `parallel_tool_loading_workers`). On warm cache, additional workers add overhead. On cold cache, higher worker counts (8-16) provide benefit, but 4 is a safe, portable default that avoids regression in any scenario.
 
 ## Baseline Results (100 tools)
 
@@ -78,16 +110,28 @@ Cache state was verified by comparing I/O latency:
 
 **Effective parallelization (cold):** 281s cumulative I/O completed in 17.84s wall clock = 15.7x
 
-## Phase Breakdown (Cold Cache, 100 tools)
+## Phase Breakdown
 
-### Sequential
+### Full Toolshed Sequential (8869 tools, Cold Cache)
+
+| Phase | Time | Percentage |
+|-------|------|------------|
+| get_tool_source (I/O) | 1826.48s | **98.6%** |
+| parse_tool_configs | 18.93s | 1.0% |
+| pydantic_models | 3.96s | 0.2% |
+| parse_tests | 1.72s | 0.1% |
+| Other phases | < 2s | < 0.1% |
+
+### Baseline (100 tools, Cold Cache)
+
+**Sequential:**
 | Phase | Time | Percentage |
 |-------|------|------------|
 | get_tool_source (I/O) | 25.02s | 70.8% |
 | parse_tool_configs | 10.22s | 28.9% |
 | pydantic_models | 0.05s | 0.1% |
 
-### Parallel (4 workers)
+**Parallel (4 workers):**
 | Phase | Time | Percentage |
 |-------|------|------------|
 | parse_tool_configs | 15.10s | 69.9% |
@@ -96,15 +140,17 @@ Cache state was verified by comparing I/O latency:
 
 ## Conclusions
 
-1. **I/O dominates cold cache startup** - 70-97% of time is spent in file reads on cold CVMFS cache
+1. **Reported 40-minute issue reproduced** - Full toolshed sequential loading on cold CVMFS cache takes 31 minutes, confirming the reported problem
 
-2. **Parallel loading provides 6-15x I/O speedup** depending on worker count and cache state
+2. **13x speedup achieved** - Parallel loading (16 workers) reduces full toolshed loading from 31 minutes to 2 minutes
 
-3. **4 workers is the safe default** - provides good speedup on cold cache without overhead on warm cache
+3. **I/O dominates cold cache startup** - 98.6% of time is spent in file reads (`get_tool_source`) on cold CVMFS cache
 
-4. **This is a targeted mitigation, not a complete solution** - addresses I/O-bound portion only; does not optimize tool panel construction, dependency resolution, or database interactions
+4. **4 workers is the safe default** - provides good speedup on cold cache without overhead on warm cache; 16 workers recommended for large deployments
 
 5. **No regression on warm cache** - parallel loading adds negligible overhead (~0.1s) when I/O is fast
+
+6. **This is a targeted mitigation, not a complete solution** - addresses I/O-bound XML parsing only; does not optimize tool panel construction, dependency resolution, or database interactions
 
 ## Limitations
 

@@ -38,6 +38,7 @@ from galaxy.managers.histories import (
     HistoryManager,
     HistorySerializer,
 )
+from galaxy.managers.history_graphs import HistoryGraphManager
 from galaxy.managers.users import UserManager
 from galaxy.model import HistoryDatasetAssociation
 from galaxy.model.scoped_session import galaxy_scoped_session
@@ -48,6 +49,7 @@ from galaxy.schema import (
 )
 from galaxy.schema.fields import DecodedDatabaseIdField
 from galaxy.schema.history import HistoryIndexQueryPayload
+from galaxy.schema.history_graphs import HistoryGraph
 from galaxy.schema.schema import (
     AnyArchivedHistoryView,
     AnyHistoryView,
@@ -122,6 +124,7 @@ class HistoriesService(ServiceBase, ConsumesModelStores, ServesExportStores):
         filters: HistoryFilters,
         short_term_storage_allocator: ShortTermStorageAllocator,
         notification_service: NotificationService,
+        history_graph_manager: HistoryGraphManager,
     ):
         super().__init__(security)
         self.manager = manager
@@ -133,6 +136,7 @@ class HistoriesService(ServiceBase, ConsumesModelStores, ServesExportStores):
         self.filters = filters
         self.shareable_service = ShareableHistoryService(self.manager, self.serializer, notification_service)
         self.short_term_storage_allocator = short_term_storage_allocator
+        self.history_graph_manager = history_graph_manager
 
     def index(
         self,
@@ -544,6 +548,25 @@ class HistoriesService(ServiceBase, ConsumesModelStores, ServesExportStores):
         history = self.manager.get_accessible(history_id, trans.user, current_history=trans.history)
         tool_requests = history.tool_requests
         return [tool_request_to_model(tr) for tr in tool_requests]
+
+    def get_history_graph(
+        self,
+        trans: ProvidesHistoryContext,
+        history_id: DecodedDatabaseIdField,
+        depth: Optional[int] = None,
+    ) -> HistoryGraph:
+        """Return the structural lineage graph of datasets and jobs in the history.
+
+        Args:
+            trans: The transaction context.
+            history_id: The encoded history ID.
+            depth: Optional depth limit for graph traversal.
+
+        Returns:
+            HistoryGraph containing nodes and edges representing the lineage.
+        """
+        history = self.manager.get_accessible(history_id, trans.user, current_history=trans.history)
+        return self.history_graph_manager.build_graph(history, depth=depth)
 
     def citations(self, trans: ProvidesHistoryContext, history_id: DecodedDatabaseIdField):
         """

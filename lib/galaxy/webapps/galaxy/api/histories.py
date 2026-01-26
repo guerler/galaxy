@@ -41,6 +41,7 @@ from galaxy.schema.history import (
     HistoryIndexQueryPayload,
     HistorySortByEnum,
 )
+from galaxy.schema.history_graphs import HistoryGraph
 from galaxy.schema.schema import (
     AnyArchivedHistoryView,
     AnyHistoryView,
@@ -384,6 +385,27 @@ class FastAPIHistories:
         trans: ProvidesHistoryContext = DependsOnTrans,
     ) -> list[ToolRequestModel]:
         return self.service.tool_requests(trans, history_id)
+
+    @router.get(
+        "/api/histories/{history_id}/graph",
+        summary="Return the structural lineage graph of datasets and jobs in the history.",
+    )
+    def graph(
+        self,
+        history_id: HistoryIDPathParam,
+        trans: ProvidesHistoryContext = DependsOnTrans,
+        depth: Optional[int] = Query(
+            default=None,
+            title="Depth",
+            description="Optional depth limit for graph traversal (reserved for future use).",
+        ),
+    ) -> HistoryGraph:
+        """Returns a graph representing the structural lineage of datasets and jobs in the history.
+
+        The graph contains nodes for datasets (HDA), dataset collections (HDCA), and jobs,
+        with edges representing input/output relationships between them.
+        """
+        return self.service.get_history_graph(trans, history_id, depth=depth)
 
     @router.post(
         "/api/histories",

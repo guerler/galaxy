@@ -1142,3 +1142,58 @@ class TestArchivingHistoriesWithoutExportRecord(ApiTestCase, BaseHistories):
         histories = self.dataset_populator.get_histories()
         for history in histories:
             assert history["id"] != history_id
+
+    def test_graph_empty_history(self):
+        history_id = self.dataset_populator.new_history()
+        graph_response = self._get(f"histories/{history_id}/graph")
+        self._assert_status_code_is(graph_response, 200)
+        graph = graph_response.json()
+        assert "nodes" in graph
+        assert "edges" in graph
+        assert len(graph["nodes"]) == 0
+        assert len(graph["edges"]) == 0
+
+    def test_graph_with_dataset(self):
+        history_id = self.dataset_populator.new_history()
+        self.dataset_populator.new_dataset(history_id, content="test content", wait=True)
+        graph_response = self._get(f"histories/{history_id}/graph")
+        self._assert_status_code_is(graph_response, 200)
+        graph = graph_response.json()
+        assert "nodes" in graph
+        assert "edges" in graph
+        # Should have at least the dataset node
+        dataset_nodes = [n for n in graph["nodes"] if n["type"] == "hda"]
+        assert len(dataset_nodes) >= 1
+        # Verify node structure
+        node = dataset_nodes[0]
+        assert "id" in node
+        assert "hid" in node
+        assert "name" in node
+        assert "state" in node
+        assert "extension" in node
+
+    @skip_without_tool("cat1")
+    def test_graph_with_tool_run(self):
+        history_id = self.dataset_populator.new_history()
+        hda1 = self.dataset_populator.new_dataset(history_id, content="line 1\nline 2", wait=True)
+        inputs = {"input1": {"src": "hda", "id": hda1["id"]}}
+        self.dataset_populator.run_tool("cat1", inputs, history_id)
+        self.dataset_populator.wait_for_history(history_id, assert_ok=True)
+        graph_response = self._get(f"histories/{history_id}/graph")
+        self._assert_status_code_is(graph_response, 200)
+        graph = graph_response.json()
+        # Should have dataset nodes and job nodes
+        dataset_nodes = [n for n in graph["nodes"] if n["type"] == "hda"]
+        job_nodes = [n for n in graph["nodes"] if n["type"] == "job"]
+        assert len(dataset_nodes) >= 2  # input + output
+        assert len(job_nodes) >= 1  # cat1 job
+        # Should have edges connecting them
+        assert len(graph["edges"]) >= 2  # input_to + output_of
+        # Verify edge structure
+        edge = graph["edges"][0]
+        assert "source_id" in edge
+        assert "source_type" in edge
+        assert "target_id" in edge
+        assert "target_type" in edge
+        assert "relationship" in edge
+        assert edge["relationship"] in ["input_to", "output_of"]

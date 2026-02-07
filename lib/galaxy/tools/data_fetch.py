@@ -608,7 +608,7 @@ def get_file_sources(working_directory, file_sources_as_dict=None):
     if file_sources_as_dict is not None:
         file_sources = ConfiguredFileSources.from_dict(file_sources_as_dict)
     if file_sources is None:
-        ConfiguredFileSources.from_dict(None)
+        file_sources = ConfiguredFileSources.from_dict(None)
     return file_sources
 
 

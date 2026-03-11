@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { faExternalLinkAlt, faMagic, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDoubleDown, faExternalLinkAlt, faMagic, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { BSkeleton } from "bootstrap-vue";
 import { nextTick, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router/composables";
 
 import { GalaxyApi } from "@/api";
 import { getGalaxyInstance } from "@/app";
 import { type AgentResponse, useAgentActions } from "@/composables/agentActions";
 import { useMarkdown } from "@/composables/markdown";
+import { useActivityStore } from "@/stores/activityStore";
 import { errorMessageAsString } from "@/utils/simple-error";
 
 import { getAgentIcon } from "./ChatGXY/agentTypes";
@@ -22,12 +24,17 @@ const props = withDefaults(
     defineProps<{
         exchangeId?: string;
         compact?: boolean;
+        panel?: boolean;
     }>(),
     {
         exchangeId: undefined,
         compact: false,
+        panel: false,
     },
 );
+
+const router = useRouter();
+const activityStore = useActivityStore("default");
 
 const query = ref("");
 const messages = ref<ChatMessage[]>([]);
@@ -326,11 +333,19 @@ function popOutToScratchbook() {
     const url = `${path}?compact=true`;
     Galaxy.frame.add({ title: "ChatGXY", url });
 }
+
+function dockToBottomPanel() {
+    if (currentChatId.value) {
+        activityStore.currentChatExchangeId = currentChatId.value;
+    }
+    activityStore.chatPanelOpen = true;
+    router.push("/");
+}
 </script>
 
 <template>
-    <div class="chatgxy-container" :class="{ 'chatgxy-compact': compact }">
-        <div v-if="!compact" class="chatgxy-header">
+    <div class="chatgxy-container" :class="{ 'chatgxy-compact': compact, 'chatgxy-panel': panel }">
+        <div v-if="!compact && !panel" class="chatgxy-header">
             <Heading h2 :icon="faMagic" size="lg">
                 <span>ChatGXY</span>
             </Heading>
@@ -345,6 +360,12 @@ function popOutToScratchbook() {
                     title="Delete this conversation"
                     @click="deleteCurrentChat">
                     <FontAwesomeIcon :icon="faTrash" fixed-width />
+                </button>
+                <button
+                    class="btn btn-sm btn-outline-primary"
+                    title="Dock to bottom panel"
+                    @click="dockToBottomPanel">
+                    <FontAwesomeIcon :icon="faAngleDoubleDown" fixed-width />
                 </button>
                 <button
                     class="btn btn-sm btn-outline-primary"
@@ -408,6 +429,11 @@ function popOutToScratchbook() {
     .chatgxy-footer {
         padding: 0.5rem 0.75rem;
     }
+}
+
+.chatgxy-panel {
+    height: 100%;
+    border-radius: 0;
 }
 
 .chatgxy-header {

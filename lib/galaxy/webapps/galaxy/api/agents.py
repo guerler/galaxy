@@ -5,6 +5,7 @@ import time
 from functools import partial
 from typing import (
     Any,
+    Literal,
     Optional,
 )
 
@@ -216,6 +217,53 @@ class AgentAPI:
         except Exception as e:
             log.exception(f"Error in custom tool creation: {e}")
             raise ConfigurationError(f"Custom tool creation failed: {str(e)}")
+
+    @router.post("/api/ai/agents/history-summary", unstable=True)
+    async def history_summary(
+        self,
+        history_id: str = Body(..., description="Encoded id of the history to summarize"),
+        seed: Optional[str] = Body(None, description="Optional encoded item id to anchor the graph around"),
+        direction: Literal["backward", "forward", "both"] = Body(
+            "both", description="Graph traversal direction relative to the seed"
+        ),
+        depth: int = Body(5, ge=1, le=20, description="Max BFS hops from the seed"),
+        limit: int = Body(200, ge=1, le=2000, description="Max nodes in the graph"),
+        trans: ProvidesUserContext = DependsOnTrans,
+        user: User = DependsOnUser,
+    ) -> AgentResponse:
+        """Produce a narrative summary of a history's analysis lineage.
+
+        Calls the history agent with a focused prompt that directs it to
+        fetch the lineage via ``get_history_graph`` and synthesize a
+        concise narrative. Truncation is reported in the agent's response
+        when the graph is capped.
+        """
+        seed_clause = f", seed='{seed}'" if seed else ""
+        query = (
+            f"Summarize the analysis in Galaxy history {history_id}. "
+            f"Call get_history_graph(history_id='{history_id}'{seed_clause}, "
+            f"direction='{direction}', depth={depth}, limit={limit}) to fetch the lineage, "
+            "then write a concise narrative covering inputs, processing steps, tools used, "
+            "and outputs. If the response's truncated.item_count_capped is true, note that "
+            "the summary covers only the most recent items."
+        )
+        try:
+            return await self.agent_service.execute_agent(
+                agent_type="history",
+                query=query,
+                trans=trans,
+                user=user,
+                context={
+                    "history_id": history_id,
+                    "seed": seed,
+                    "direction": direction,
+                    "depth": depth,
+                    "limit": limit,
+                },
+            )
+        except Exception as e:
+            log.exception(f"Error in history summary: {e}")
+            raise ConfigurationError(f"History summary failed: {str(e)}")
 
     def _get_agent_specialties(self, agent_type: str) -> list:
         """Get specialties for an agent type."""

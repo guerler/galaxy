@@ -7,6 +7,7 @@ Delegates to the Galaxy service layer for validation, permission checks, and pag
 import logging
 from typing import (
     Any,
+    Literal,
     Optional,
 )
 
@@ -368,6 +369,29 @@ class AgentOperationsManager:
                 "has_previous": has_previous,
             },
         }
+
+    def get_history_graph(
+        self,
+        history_id: str,
+        seed: Optional[str] = None,
+        direction: Literal["backward", "forward", "both"] = "both",
+        depth: int = 5,
+        limit: int = 200,
+        include_deleted: bool = False,
+        seed_scope: Optional[str] = None,
+    ) -> dict[str, Any]:
+        decoded_history_id = self.trans.security.decode_id(history_id)
+        response = self.histories_service.graph(
+            trans=self.trans,
+            history_id=decoded_history_id,
+            limit=limit,
+            include_deleted=include_deleted,
+            seed=seed,
+            direction=direction,
+            depth=depth,
+            seed_scope=seed_scope,
+        )
+        return response.model_dump()
 
     def get_dataset_details(self, dataset_id: str) -> dict[str, Any]:
         decoded_dataset_id = self.trans.security.decode_id(dataset_id)

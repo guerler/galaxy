@@ -59,6 +59,11 @@ EDGE_TYPE_RANK = {"dataset_input": 0, "dataset_output": 1, "collection_input": 2
 NODE_SRC: dict[str, str] = {"dataset": "hda", "collection": "hdca", "tool_request": "tool_request"}
 MAX_LIMIT = 1000
 
+# Tool ids that represent infrastructure operations (uploads, metadata setting,
+# etc.) rather than user-level lineage steps. Jobs with these tool_ids are
+# excluded from producer lookups so they do not appear as nodes or edges.
+SYNTHETIC_TOOL_IDS: tuple[str, ...] = ("__DATA_FETCH__",)
+
 
 class HistoryGraphManager:
     def __init__(self, app: MinimalManagerApp):
@@ -320,7 +325,7 @@ class HistoryGraphBuilder:
                 JobToOutputDatasetAssociation.dataset_id.in_(dataset_ids),
                 Job.tool_request_id.isnot(None),
                 Job.tool_id.isnot(None),
-                Job.tool_id != "__DATA_FETCH__",
+                Job.tool_id.notin_(SYNTHETIC_TOOL_IDS),
             )
         )
         candidates: dict[int, dict[int, str]] = {}  # hda_id -> {tr_id: tool_id}
@@ -354,7 +359,7 @@ class HistoryGraphBuilder:
                 JobToOutputDatasetCollectionAssociation.dataset_collection_id.in_(collection_ids),
                 Job.tool_request_id.isnot(None),
                 Job.tool_id.isnot(None),
-                Job.tool_id != "__DATA_FETCH__",
+                Job.tool_id.notin_(SYNTHETIC_TOOL_IDS),
             )
         )
         candidates: dict[int, dict[int, str]] = {}

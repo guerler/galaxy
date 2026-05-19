@@ -147,7 +147,7 @@ class HistoryAgent(BaseGalaxyAgent):
                 direction: "backward" (how was the seed produced), "forward" (what was
                     the seed used for), or "both". Only meaningful when seed is set.
                 depth: max BFS hops from the seed (default 5).
-                limit: max items to include (default 200, max 2000).
+                limit: max items to include (default 200, max 1000).
 
             Tips:
                 - For "summarize my analysis" or "write a methods section", call with

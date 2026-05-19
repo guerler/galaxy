@@ -2,13 +2,16 @@
 import { faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { BAlert } from "bootstrap-vue";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { GalaxyApi } from "@/api";
+import { useMarkdown } from "@/composables/markdown";
 
 import GButton from "@/components/BaseComponents/GButton.vue";
 import Heading from "@/components/Common/Heading.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
+
+const { renderMarkdown } = useMarkdown({ openLinksInNewPage: true });
 
 interface Props {
     historyId: string;
@@ -49,6 +52,8 @@ async function fetchSummary() {
     }
 }
 
+const summaryHtml = computed(() => (summary.value ? renderMarkdown(summary.value) : ""));
+
 onMounted(() => {
     fetchSummary();
 });
@@ -64,7 +69,7 @@ onMounted(() => {
         </div>
         <LoadingSpan v-if="loading" message="Generating summary" />
         <BAlert v-else-if="errorMsg" variant="danger" show>{{ errorMsg }}</BAlert>
-        <div v-else-if="summary" class="summary-text">{{ summary }}</div>
+        <div v-else-if="summary" class="summary-markdown" v-html="summaryHtml" />
     </div>
 </template>
 
@@ -73,9 +78,20 @@ onMounted(() => {
     padding: 0.5rem;
 }
 
-.summary-text {
-    white-space: pre-wrap;
+.summary-markdown {
     font-size: 0.9rem;
     line-height: 1.4;
+
+    :deep(p) {
+        margin-bottom: 0.5rem;
+    }
+    :deep(ul),
+    :deep(ol) {
+        margin-bottom: 0.5rem;
+        padding-left: 1.25rem;
+    }
+    :deep(code) {
+        font-size: 0.85em;
+    }
 }
 </style>

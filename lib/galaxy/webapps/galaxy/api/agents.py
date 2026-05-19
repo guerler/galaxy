@@ -221,13 +221,17 @@ class AgentAPI:
     @router.post("/api/ai/agents/history-summary", unstable=True)
     async def history_summary(
         self,
-        history_id: str = Body(..., description="Encoded id of the history to summarize"),
-        seed: Optional[str] = Body(None, description="Optional encoded item id to anchor the graph around"),
-        direction: Literal["backward", "forward", "both"] = Body(
-            "both", description="Graph traversal direction relative to the seed"
+        history_id: DecodedDatabaseIdField = Body(..., description="ID of the history to summarize."),
+        seed: Optional[str] = Body(
+            None,
+            description="Optional encoded item id (`d<encoded_id>`, `c<encoded_id>`, or `r<encoded_id>`) to anchor the graph around.",
+            pattern=r"^[dcr].+$",
         ),
-        depth: int = Body(5, ge=1, le=20, description="Max BFS hops from the seed"),
-        limit: int = Body(200, ge=1, le=2000, description="Max nodes in the graph"),
+        direction: Literal["backward", "forward", "both"] = Body(
+            "both", description="Graph traversal direction relative to the seed."
+        ),
+        depth: int = Body(5, ge=1, le=20, description="Max BFS hops from the seed."),
+        limit: int = Body(200, ge=1, le=1000, description="Max nodes in the graph."),
         trans: ProvidesUserContext = DependsOnTrans,
         user: User = DependsOnUser,
     ) -> AgentResponse:
@@ -238,10 +242,11 @@ class AgentAPI:
         concise narrative. Truncation is reported in the agent's response
         when the graph is capped.
         """
+        encoded_history_id = trans.security.encode_id(history_id)
         seed_clause = f", seed='{seed}'" if seed else ""
         query = (
-            f"Summarize the analysis in Galaxy history {history_id}. "
-            f"Call get_history_graph(history_id='{history_id}'{seed_clause}, "
+            f"Summarize the analysis in Galaxy history {encoded_history_id}. "
+            f"Call get_history_graph(history_id='{encoded_history_id}'{seed_clause}, "
             f"direction='{direction}', depth={depth}, limit={limit}) to fetch the lineage, "
             "then write a concise narrative covering inputs, processing steps, tools used, "
             "and outputs. If the response's truncated.item_count_capped is true, note that "
@@ -254,7 +259,7 @@ class AgentAPI:
                 trans=trans,
                 user=user,
                 context={
-                    "history_id": history_id,
+                    "history_id": encoded_history_id,
                     "seed": seed,
                     "direction": direction,
                     "depth": depth,

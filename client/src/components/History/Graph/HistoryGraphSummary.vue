@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
+import { faSyncAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { BAlert } from "bootstrap-vue";
 import { computed, onMounted, ref } from "vue";
@@ -64,7 +64,7 @@ onMounted(() => {
         <div class="d-flex justify-content-between align-items-center mb-2">
             <Heading h2 inline bold size="text">Summary</Heading>
             <GButton tooltip title="Regenerate summary" size="small" :disabled="loading" @click="fetchSummary">
-                <FontAwesomeIcon :icon="faArrowsRotate" fixed-width />
+                <FontAwesomeIcon :icon="faSyncAlt" fixed-width />
             </GButton>
         </div>
         <LoadingSpan v-if="loading" message="Generating summary" />

@@ -10,8 +10,8 @@ import { useHistoryStore } from "@/stores/historyStore";
 import { useHistoryGraphData } from "./useHistoryGraphData";
 import { useHistoryGraphLayout } from "./useHistoryGraphLayout";
 
+import HistoryGraphDetails from "./HistoryGraphDetails.vue";
 import HistoryGraphMinimap from "./HistoryGraphMinimap.vue";
-import HistoryGraphSidePanel from "./HistoryGraphSidePanel.vue";
 import GButton from "@/components/BaseComponents/GButton.vue";
 import GButtonGroup from "@/components/BaseComponents/GButtonGroup.vue";
 import Heading from "@/components/Common/Heading.vue";
@@ -101,7 +101,7 @@ const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped
                     :edge-style="edgeStyle"
                     :minimap-component="HistoryGraphMinimap"
                     @nodeSelected="onNodeSelected" />
-                <HistoryGraphSidePanel :history-id="historyId" :selected-node="selectedNode" :seed="seedNodeId" />
+                <HistoryGraphDetails v-if="selectedNode" :history-id="historyId" :node="selectedNode" />
             </div>
             <div v-if="isTruncated" class="history-graph-truncation">
                 Showing a partial graph. Not all connections are visible.

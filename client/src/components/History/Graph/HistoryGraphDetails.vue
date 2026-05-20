@@ -63,7 +63,7 @@ watch(
 </script>
 
 <template>
-    <div class="history-graph-details border-left bg-white">
+    <div class="history-graph-details">
         <div class="details-body">
             <!-- Dataset or Collection -->
             <div v-if="itemSrc && itemId" :key="itemId" class="p-2">
@@ -85,9 +85,6 @@ watch(
 
 <style lang="scss" scoped>
 .history-graph-details {
-    flex-shrink: 0;
-    width: 320px;
     height: 100%;
-    overflow-y: auto;
 }
 </style>

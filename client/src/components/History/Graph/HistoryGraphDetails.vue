@@ -4,6 +4,7 @@ import { computed, ref, watch } from "vue";
 
 import { GalaxyApi } from "@/api";
 import type { GraphNode } from "@/components/Graph/types";
+import { useMarkdown } from "@/composables/markdown";
 
 import Heading from "@/components/Common/Heading.vue";
 import GenericHistoryItem from "@/components/History/Content/GenericItem.vue";
@@ -11,10 +12,13 @@ import JobInformation from "@/components/JobInformation/JobInformation.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
 
 interface Props {
+    historyId: string;
     node: GraphNode;
 }
 
 const props = defineProps<Props>();
+
+const { renderMarkdown } = useMarkdown({ openLinksInNewPage: true });
 
 const nodeSrc = computed(() => (props.node?.data?.src as string) ?? null);
 const itemId = computed(() => (props.node?.data?.itemId as string) ?? null);
@@ -60,6 +64,60 @@ watch(
     },
     { immediate: true },
 );
+
+// AI narrative — per-node "how was this made" summary.
+// Cached for the component's lifetime so re-clicking a node doesn't re-fetch.
+const narrativeCache = new Map<string, string>();
+const narrativeLoading = ref(false);
+const narrativeError = ref<string | null>(null);
+const narrative = ref<string | null>(null);
+
+watch(
+    () => {
+        const data = props.node?.data;
+        const src = (data?.src as string) ?? null;
+        const id = (data?.itemId as string) ?? null;
+        return src && id ? { src, id } : null;
+    },
+    async (seed) => {
+        narrative.value = null;
+        narrativeError.value = null;
+        if (!seed) {
+            return;
+        }
+        const cacheKey = `${seed.src}:${seed.id}`;
+        const cached = narrativeCache.get(cacheKey);
+        if (cached !== undefined) {
+            narrative.value = cached;
+            return;
+        }
+        narrativeLoading.value = true;
+        try {
+            const { data, error } = await GalaxyApi().POST("/api/ai/agents/history-summary", {
+                body: {
+                    history_id: props.historyId,
+                    seed_src: seed.src,
+                    seed_id: seed.id,
+                    direction: "backward",
+                },
+            });
+            if (error) {
+                narrativeError.value = error.err_msg ?? "Failed to fetch narrative.";
+            } else {
+                const text = data?.content ?? "";
+                narrativeCache.set(cacheKey, text);
+                narrative.value = text;
+            }
+        } catch (e) {
+            narrativeError.value = e instanceof Error ? e.message : "Failed to fetch narrative.";
+        } finally {
+            narrativeLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
+
+const narrativeHtml = computed(() => (narrative.value ? renderMarkdown(narrative.value) : ""));
 </script>
 
 <template>
@@ -79,6 +137,14 @@ watch(
                 <BAlert v-else-if="jobError" variant="info" show class="mb-0">{{ jobError }}</BAlert>
                 <JobInformation v-else-if="jobId" :job-id="jobId" :include-times="true" />
             </div>
+
+            <!-- AI narrative for the selected node -->
+            <div class="p-2 narrative-section">
+                <Heading h2 separator inline size="sm">Provenance</Heading>
+                <LoadingSpan v-if="narrativeLoading" message="Generating provenance narrative" />
+                <BAlert v-else-if="narrativeError" variant="info" show class="mb-0">{{ narrativeError }}</BAlert>
+                <div v-else-if="narrative" class="narrative-text" v-html="narrativeHtml" />
+            </div>
         </div>
     </div>
 </template>
@@ -89,5 +155,26 @@ watch(
     width: 320px;
     height: 100%;
     overflow-y: auto;
+}
+
+.narrative-section {
+    margin-top: 0.5rem;
+}
+
+.narrative-text {
+    font-size: 0.9rem;
+    line-height: 1.4;
+
+    :deep(p) {
+        margin-bottom: 0.5rem;
+    }
+    :deep(ul),
+    :deep(ol) {
+        margin-bottom: 0.5rem;
+        padding-left: 1.25rem;
+    }
+    :deep(code) {
+        font-size: 0.85em;
+    }
 }
 </style>

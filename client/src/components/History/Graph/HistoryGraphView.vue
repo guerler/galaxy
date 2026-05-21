@@ -101,7 +101,7 @@ const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped
                     :edge-style="edgeStyle"
                     :minimap-component="HistoryGraphMinimap"
                     @nodeSelected="onNodeSelected" />
-                <HistoryGraphDetails v-if="selectedNode" :node="selectedNode" />
+                <HistoryGraphDetails v-if="selectedNode" :history-id="historyId" :node="selectedNode" />
             </div>
             <div v-if="isTruncated" class="history-graph-truncation">
                 Showing a partial graph. Not all connections are visible.

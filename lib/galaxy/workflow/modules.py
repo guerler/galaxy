@@ -41,7 +41,6 @@ from galaxy.model import (
     Job,
     PostJobAction,
     ToolRequest,
-    ToolSource as ToolSourceModel,
     Workflow,
     WorkflowInvocationStep,
     WorkflowStep,

@@ -1406,11 +1406,6 @@ class ToolSource(Base, Dictifiable, RepresentById):
     hash: Mapped[Optional[str]] = mapped_column(Unicode(255))
     source: Mapped[dict] = mapped_column(JSONType)
     source_class: Mapped[str] = mapped_column(TrimmedString(255))
-    tool_id: Mapped[Optional[str]] = mapped_column(Unicode(255), index=True)
-    tool_version: Mapped[Optional[str]] = mapped_column(Unicode(255))
-    dynamic_tool_id: Mapped[Optional[int]] = mapped_column(ForeignKey("dynamic_tool.id"), index=True)
-
-    dynamic_tool: Mapped[Optional["DynamicTool"]] = relationship()
 
 
 class ToolRequest(Base, Dictifiable, RepresentById):
@@ -2969,34 +2964,6 @@ class ImplicitCollectionJobs(Base, Serializable):
             .where(ImplicitCollectionJobsJobAssociation.implicit_collection_jobs_id == self.id)
         )
         return session.execute(stmt)
-
-    @property
-    def structured_request_ids(self) -> set[int]:
-        """Distinct ToolRequest ids across constituent jobs (the tool-request
-        source of structured request state; the WorkflowInvocationStep source
-        is resolved separately by the workflow_request_state resolver)."""
-        return {row.tool_request_id for row in self.get_job_attributes(["tool_request_id"]) if row.tool_request_id}
-
-    @property
-    def has_ambiguous_structured_request(self) -> bool:
-        return len(self.structured_request_ids) > 1
-
-    @property
-    def structured_request(self) -> Optional["ToolRequest"]:
-        """The single ToolRequest backing this ICJ, if one exists
-        unambiguously. None when zero or ambiguous - the caller may still
-        resolve a WorkflowInvocationStep source before degrading to legacy
-        state, so this does not predict the final fallback."""
-        structured_request_ids = self.structured_request_ids
-        if len(structured_request_ids) == 1:
-            return required_object_session(self).get(ToolRequest, next(iter(structured_request_ids)))
-        if len(structured_request_ids) > 1:
-            log.warning(
-                "ImplicitCollectionJobs %s spans multiple tool requests %s; no single tool-request structured state",
-                self.id,
-                sorted(structured_request_ids),
-            )
-        return None
 
     @property
     def representative_job(self) -> "Job":

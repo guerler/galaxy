@@ -472,8 +472,6 @@ class HistoryGraphBuilder:
                 result.add((ref_type, ref_id))
         return result
 
-    # ── Workflow-step producer lookup ──
-
     # ── Collection element walk ──
 
     def _collection_element_edges(self, hdca_ids: set[int]) -> set[tuple[int, int]]:

@@ -5,7 +5,6 @@ import time
 from functools import partial
 from typing import (
     Any,
-    Literal,
     Optional,
 )
 
@@ -222,39 +221,40 @@ class AgentAPI:
     async def history_summary(
         self,
         history_id: str = Body(..., description="Encoded id of the history to summarize."),
-        seed_src: Optional[Literal["hda", "hdca", "tool_request"]] = Body(
-            None,
-            description="Optional node src to anchor the graph around. Provide with seed_id.",
-        ),
-        seed_id: Optional[str] = Body(
-            None,
-            description="Optional encoded node id paired with seed_src.",
-        ),
-        direction: Literal["backward", "forward", "both"] = Body(
-            "both", description="Graph traversal direction relative to the seed."
-        ),
-        depth: int = Body(5, ge=1, le=20, description="Max BFS hops from the seed."),
-        limit: int = Body(200, ge=1, le=1000, description="Max nodes in the graph."),
         trans: ProvidesUserContext = DependsOnTrans,
         user: User = DependsOnUser,
     ) -> AgentResponse:
-        """Produce a narrative summary of a history's analysis lineage.
+        """Produce a comprehensive markdown report for a history's analysis.
 
-        Calls the history agent with a focused prompt that directs it to
-        fetch the lineage via ``get_history_graph`` and synthesize a
-        concise narrative. Truncation is reported in the agent's response
-        when the graph is capped.
+        The history agent fetches the full lineage via ``get_history_graph``
+        and synthesizes a multi-section report (Summary, Data Inputs,
+        Analysis Pipeline, Tools and Parameters, Outputs, Notes). Suitable
+        for inclusion in a history notebook or methods section.
         """
-        seed_clause = (
-            f", seed_src='{seed_src}', seed_id='{seed_id}'" if seed_src and seed_id else ""
-        )
         query = (
-            f"Summarize the analysis in Galaxy history {history_id}. "
-            f"Call get_history_graph(history_id='{history_id}'{seed_clause}, "
-            f"direction='{direction}', depth={depth}, limit={limit}) to fetch the lineage, "
-            "then write a concise narrative covering inputs, processing steps, tools used, "
-            "and outputs. If the response's truncated.item_count_capped is true, note that "
-            "the summary covers only the most recent items."
+            f"Generate a comprehensive analysis report for Galaxy history {history_id}.\n\n"
+            f"Call get_history_graph(history_id='{history_id}') with no seed for the "
+            "full history overview. If the response's truncated.item_count_capped is "
+            "true, note that in the Notes section.\n\n"
+            "Produce a markdown report with these sections (use ## headings):\n\n"
+            "## Summary\n"
+            "Two or three sentences: what kind of analysis, key inputs/outputs, key tools.\n\n"
+            "## Data Inputs\n"
+            "List input files and collections with their formats.\n\n"
+            "## Analysis Pipeline\n"
+            "Narrative description of the processing steps in past tense, scientific style.\n\n"
+            "## Tools and Parameters\n"
+            "For each tool: name, version when known, what it does in this workflow, "
+            "and any key parameters or settings.\n\n"
+            "## Outputs\n"
+            "Final output files and collections with formats.\n\n"
+            "## Notes\n"
+            "Observations: caveats, truncation, anything notable. Omit if nothing to add.\n\n"
+            "Style rules:\n"
+            "- Past tense, third person, scientific.\n"
+            "- Include tool versions only when available; omit placeholder text otherwise.\n"
+            "- Exclude internal Galaxy tools (__DATA_FETCH__, __SET_METADATA__, etc.).\n"
+            "- Do not hallucinate tool names, parameters, or versions."
         )
         try:
             return await self.agent_service.execute_agent(
@@ -262,14 +262,7 @@ class AgentAPI:
                 query=query,
                 trans=trans,
                 user=user,
-                context={
-                    "history_id": history_id,
-                    "seed_src": seed_src,
-                    "seed_id": seed_id,
-                    "direction": direction,
-                    "depth": depth,
-                    "limit": limit,
-                },
+                context={"history_id": history_id},
             )
         except Exception as e:
             log.exception(f"Error in history summary: {e}")

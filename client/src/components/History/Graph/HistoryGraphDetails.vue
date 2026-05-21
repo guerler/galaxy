@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { BAlert } from "bootstrap-vue";
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import { GalaxyApi } from "@/api";
 import type { GraphNode } from "@/components/Graph/types";
@@ -13,7 +13,7 @@ import LoadingSpan from "@/components/LoadingSpan.vue";
 
 interface Props {
     historyId: string;
-    node: GraphNode;
+    node: GraphNode | null;
 }
 
 const props = defineProps<Props>();
@@ -65,85 +65,60 @@ watch(
     { immediate: true },
 );
 
-// AI narrative — per-node "how was this made" summary.
-// Cached for the component's lifetime so re-clicking a node doesn't re-fetch.
-const narrativeCache = new Map<string, string>();
-const narrativeLoading = ref(false);
-const narrativeError = ref<string | null>(null);
-const narrative = ref<string | null>(null);
+// Comprehensive history-wide analysis report. Generated once per panel
+// mount, shown regardless of which node (if any) is selected.
+const reportLoading = ref(false);
+const reportError = ref<string | null>(null);
+const report = ref<string | null>(null);
 
-watch(
-    () => {
-        const data = props.node?.data;
-        const src = (data?.src as string) ?? null;
-        const id = (data?.itemId as string) ?? null;
-        return src && id ? { src, id } : null;
-    },
-    async (seed) => {
-        narrative.value = null;
-        narrativeError.value = null;
-        if (!seed) {
-            return;
+async function loadReport() {
+    reportLoading.value = true;
+    reportError.value = null;
+    try {
+        const { data, error } = await GalaxyApi().POST("/api/ai/agents/history-summary", {
+            body: { history_id: props.historyId },
+        });
+        if (error) {
+            reportError.value = error.err_msg ?? "Failed to generate report.";
+        } else {
+            report.value = data?.content ?? "";
         }
-        const cacheKey = `${seed.src}:${seed.id}`;
-        const cached = narrativeCache.get(cacheKey);
-        if (cached !== undefined) {
-            narrative.value = cached;
-            return;
-        }
-        narrativeLoading.value = true;
-        try {
-            const { data, error } = await GalaxyApi().POST("/api/ai/agents/history-summary", {
-                body: {
-                    history_id: props.historyId,
-                    seed_src: seed.src,
-                    seed_id: seed.id,
-                    direction: "backward",
-                },
-            });
-            if (error) {
-                narrativeError.value = error.err_msg ?? "Failed to fetch narrative.";
-            } else {
-                const text = data?.content ?? "";
-                narrativeCache.set(cacheKey, text);
-                narrative.value = text;
-            }
-        } catch (e) {
-            narrativeError.value = e instanceof Error ? e.message : "Failed to fetch narrative.";
-        } finally {
-            narrativeLoading.value = false;
-        }
-    },
-    { immediate: true },
-);
+    } catch (e) {
+        reportError.value = e instanceof Error ? e.message : "Failed to generate report.";
+    } finally {
+        reportLoading.value = false;
+    }
+}
 
-const narrativeHtml = computed(() => (narrative.value ? renderMarkdown(narrative.value) : ""));
+onMounted(loadReport);
+
+const reportHtml = computed(() => (report.value ? renderMarkdown(report.value) : ""));
 </script>
 
 <template>
     <div class="history-graph-details border-left bg-white">
         <div class="details-body">
-            <!-- Dataset or Collection -->
+            <!-- Comprehensive analysis report (history-wide; same regardless of selection) -->
+            <div class="p-2 report-section">
+                <Heading h1 separator inline size="md">Analysis Report</Heading>
+                <LoadingSpan v-if="reportLoading" message="Generating analysis report" />
+                <BAlert v-else-if="reportError" variant="info" show class="mb-0">{{ reportError }}</BAlert>
+                <div v-else-if="report" class="report-text" v-html="reportHtml" />
+            </div>
+
+            <!-- Node-specific details when a node is selected -->
             <div v-if="itemSrc && itemId" :key="itemId" class="p-2">
-                <Heading h1 separator inline size="md">
+                <Heading h2 separator inline size="sm">
                     {{ nodeSrc === "hda" ? "Dataset Information" : "Collection Information" }}
                 </Heading>
                 <GenericHistoryItem :item-id="itemId" :item-src="itemSrc" />
             </div>
 
-            <!-- Tool request / Job details -->
             <div v-else-if="nodeSrc === 'tool_request'" class="p-2">
+                <Heading h2 separator inline size="sm">Job Information</Heading>
                 <LoadingSpan v-if="jobLoading" message="Loading job details" />
                 <BAlert v-else-if="jobError" variant="info" show class="mb-0">{{ jobError }}</BAlert>
                 <JobInformation v-else-if="jobId" :job-id="jobId" :include-times="true" />
-            </div>
-
-            <!-- AI narrative for the selected node -->
-            <div class="p-2 narrative-section">
-                <Heading h2 separator inline size="sm">Provenance</Heading>
-                <LoadingSpan v-if="narrativeLoading" message="Generating provenance narrative" />
-                <BAlert v-else-if="narrativeError" variant="info" show class="mb-0">{{ narrativeError }}</BAlert>
-                <div v-else-if="narrative" class="narrative-text" v-html="narrativeHtml" />
             </div>
         </div>
     </div>
@@ -152,19 +127,25 @@ const narrativeHtml = computed(() => (narrative.value ? renderMarkdown(narrative
 <style lang="scss" scoped>
 .history-graph-details {
     flex-shrink: 0;
-    width: 320px;
+    width: 360px;
     height: 100%;
     overflow-y: auto;
 }
 
-.narrative-section {
-    margin-top: 0.5rem;
+.report-section {
+    margin-bottom: 0.5rem;
 }
 
-.narrative-text {
+.report-text {
     font-size: 0.9rem;
     line-height: 1.4;
 
+    :deep(h2) {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-top: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
     :deep(p) {
         margin-bottom: 0.5rem;
     }

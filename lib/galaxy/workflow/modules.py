@@ -3,7 +3,6 @@ Modules used in building workflows
 """
 
 import enum
-import hashlib
 import json
 import logging
 import math
@@ -22,7 +21,6 @@ from typing import (
     Union,
 )
 
-from sqlalchemy import select
 from typing_extensions import TypedDict
 
 from galaxy import (
@@ -36,6 +34,7 @@ from galaxy.exceptions import (
 from galaxy.job_execution.actions.post import ActionBox
 from galaxy.job_execution.compute_environment import ComputeEnvironment
 from galaxy.managers.credentials import _build_user_credentials_query
+from galaxy.managers.tool_source import get_or_create_tool_source
 from galaxy.model import (
     DatasetInstance,
     HistoryDatasetCollectionAssociation,
@@ -2434,7 +2433,7 @@ def _capture_workflow_tool_request_state(
     if request_internal is None:
         return None, None, None
 
-    tool_source = _get_or_create_tool_source(trans, tool)
+    tool_source = get_or_create_tool_source(trans.sa_session, tool)
     tool_request = ToolRequest()
     tool_request.request = request_internal.input_state
     tool_request.tool_source = tool_source
@@ -2447,32 +2446,6 @@ def _capture_workflow_tool_request_state(
     trans.sa_session.flush()
     _log_workflow_tool_request_state(trans, tool, step, collection_info, request_state)
     return validated_template, validated_combinations, tool_request
-
-
-def _get_or_create_tool_source(trans, tool) -> "ToolSourceModel":
-    """Return a ToolSource row matching the tool's persisted XML, creating
-    one only when no equivalent row exists. Same tool/version reused across
-    workflows or workflow steps shares one row."""
-    source_str = tool.tool_source.to_string()
-    source_class = type(tool.tool_source).__name__
-    content_hash = hashlib.sha256(source_str.encode("utf-8")).hexdigest()
-    existing = trans.sa_session.scalars(
-        select(ToolSourceModel)
-        .where(
-            ToolSourceModel.hash == content_hash,
-            ToolSourceModel.source_class == source_class,
-        )
-        .limit(1)
-    ).first()
-    if existing is not None:
-        return existing
-    tool_source = ToolSourceModel(
-        source=source_str,
-        source_class=source_class,
-        hash=content_hash,
-    )
-    trans.sa_session.add(tool_source)
-    return tool_source
 
 
 def _log_workflow_tool_request_state(

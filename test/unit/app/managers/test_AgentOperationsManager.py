@@ -234,7 +234,8 @@ class TestAgentOperationsManagerWithMockedServices(BaseTestCase):
         ):
             result = self.agent_ops.get_history_graph(
                 history_id="hist-encoded",
-                seed="d-abc",
+                seed_src="hda",
+                seed_id="abc",
                 direction="backward",
                 depth=3,
                 limit=100,
@@ -243,7 +244,8 @@ class TestAgentOperationsManagerWithMockedServices(BaseTestCase):
         mock_service.graph.assert_called_once()
         call_kwargs = mock_service.graph.call_args.kwargs
         assert call_kwargs["history_id"] == 42
-        assert call_kwargs["seed"] == "d-abc"
+        assert call_kwargs["seed_src"] == "hda"
+        assert call_kwargs["seed_id"] == "abc"
         assert call_kwargs["direction"] == "backward"
         assert call_kwargs["depth"] == 3
         assert call_kwargs["limit"] == 100

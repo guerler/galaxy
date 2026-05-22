@@ -117,7 +117,7 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 .graph-node-header {
     display: flex;
     align-items: center;
-    height: 34px;
+    height: 30px;
     font-size: $font-size-base;
 }
 

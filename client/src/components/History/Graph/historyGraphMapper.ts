@@ -16,12 +16,12 @@ const NODE_WIDTH = 200;
 
 // Layout geometry — must match the fixed sizes GraphNode.vue renders, so the
 // computed height (used for ELK placement + edge routing) equals the real node.
-const HEADER_HEIGHT = 34;
+const HEADER_HEIGHT = 30;
 const PORT_ROW_HEIGHT = 30;
 const RULE_HEIGHT = 5;
 const BODY_PADDING = 8;
 const BADGE_BODY_HEIGHT = 34;
-const MIN_NODE_HEIGHT = 34;
+const MIN_NODE_HEIGHT = 30;
 
 function computeNodeHeight(inputCount: number, outputCount: number, hasBadgeBody: boolean = false): number {
     if (hasBadgeBody) {

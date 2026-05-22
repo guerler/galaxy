@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { faClock } from "@fortawesome/free-regular-svg-icons";
-import { faBezierCurve, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
+import { faBezierCurve } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { BAlert, BNav, BNavItem } from "bootstrap-vue";
 import { computed, ref, toRef } from "vue";
@@ -10,12 +10,11 @@ import { usePersistentToggle } from "@/composables/persistentToggle";
 import { useHistoryStore } from "@/stores/historyStore";
 
 import { useHistoryGraphData } from "./useHistoryGraphData";
-import { type ConnectionMode, useHistoryGraphLayout } from "./useHistoryGraphLayout";
+import { useHistoryGraphLayout } from "./useHistoryGraphLayout";
 
 import HistoryGraphOverview from "./HistoryGraphOverview.vue";
 import HistoryGraphReport from "./HistoryGraphReport.vue";
 import HistoryGraphToolRequests from "./HistoryGraphToolRequests.vue";
-import GButton from "@/components/BaseComponents/GButton.vue";
 import NavigationTitle from "@/components/Common/NavigationTitle.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
 import UtcDate from "@/components/UtcDate.vue";
@@ -51,11 +50,11 @@ const { graphData, loading, error } = useHistoryGraphData(
 // Renderer focus key mirrors the mapper's `${src}:${id}` node key.
 const focusNodeId = computed(() => (props.seedSrc && props.seedId ? `${props.seedSrc}:${props.seedId}` : null));
 
-// Connector display mode — toggled via the header "Connections" switch.
-const connectionMode = ref<ConnectionMode>("collapsed");
+// The node whose connections are expanded — driven by "Show Connections" on the graph.
+const expandedNodeId = ref<string | null>(null);
 
 // Layout
-const { layout, layoutLoading } = useHistoryGraphLayout(graphData, connectionMode);
+const { layout, layoutLoading } = useHistoryGraphLayout(graphData, expandedNodeId);
 
 const isLoading = computed(() => loading.value || layoutLoading.value);
 const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped ?? false);
@@ -81,23 +80,6 @@ const toolRequestNodes = computed<GraphNode[]>(
                 collapsible
                 :collapsed="headerCollapsed"
                 @toggle="toggleHeaderCollapse">
-                <template v-slot:actions>
-                    <GButton
-                        v-if="onOverviewTab"
-                        tooltip
-                        :title="
-                            connectionMode === 'expanded'
-                                ? 'Hide individual item connections'
-                                : 'Show individual item connections'
-                        "
-                        size="small"
-                        color="blue"
-                        :pressed="connectionMode === 'expanded'"
-                        @click="connectionMode = connectionMode === 'expanded' ? 'collapsed' : 'expanded'">
-                        <FontAwesomeIcon :icon="faProjectDiagram" fixed-width />
-                        Connections
-                    </GButton>
-                </template>
                 <template v-slot:collapsible>
                     <div v-if="history" class="history-graph-info px-2 py-1 small text-muted">
                         <i data-description="history graph time info">
@@ -132,7 +114,8 @@ const toolRequestNodes = computed<GraphNode[]>(
                     v-if="onOverviewTab"
                     :layout="layout"
                     :focus-node-id="focusNodeId"
-                    :truncated="isTruncated" />
+                    :truncated="isTruncated"
+                    @expand="expandedNodeId = $event" />
                 <HistoryGraphToolRequests v-else-if="props.tab === 'tool-requests'" :nodes="toolRequestNodes" />
                 <HistoryGraphReport v-else-if="props.tab === 'report'" :history-id="historyId" />
             </div>

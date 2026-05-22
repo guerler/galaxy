@@ -4,9 +4,7 @@ import { type Ref, ref, watch } from "vue";
 import type { GraphEdge, GraphLayout, GraphNode } from "@/components/Graph/types";
 import { computeControlPoints } from "@/utils/connectionPath";
 
-import { type ConnectionMode, type HistoryGraphResponse, mapEdges, mapNodes } from "./historyGraphMapper";
-
-export type { ConnectionMode };
+import { type HistoryGraphResponse, mapEdges, mapNodes } from "./historyGraphMapper";
 
 const elk = new ELK();
 
@@ -17,16 +15,19 @@ const elk = new ELK();
  * then runs ELK layered layout for node placement. Edges are drawn as bezier
  * curves between node ports (workflow editor style).
  *
- * `mode` controls connector detail: "collapsed" merges connectors to one per
- * node side; "expanded" gives tool nodes a connector per individual port.
+ * `expandedNodeId` selects which node is rendered expanded (a tool node then
+ * shows a connector per port); all other nodes stay collapsed.
  */
-export function useHistoryGraphLayout(graphData: Ref<HistoryGraphResponse | null>, mode: Ref<ConnectionMode>) {
+export function useHistoryGraphLayout(
+    graphData: Ref<HistoryGraphResponse | null>,
+    expandedNodeId: Ref<string | null>,
+) {
     const layout = ref<GraphLayout | null>(null);
     const layoutLoading = ref(false);
 
     watch(
-        [graphData, mode],
-        async ([data, modeValue]) => {
+        [graphData, expandedNodeId],
+        async ([data, expandedId]) => {
             if (!data || data.nodes.length === 0) {
                 layout.value = null;
                 return;
@@ -34,7 +35,7 @@ export function useHistoryGraphLayout(graphData: Ref<HistoryGraphResponse | null
 
             layoutLoading.value = true;
             try {
-                layout.value = await computeLayout(data, modeValue);
+                layout.value = await computeLayout(data, expandedId);
             } catch (e) {
                 console.error("History graph layout failed:", e);
                 layout.value = null;
@@ -67,9 +68,9 @@ function edgeAnchorY(
     return node?.connectorY ?? nodeHeight / 2;
 }
 
-async function computeLayout(data: HistoryGraphResponse, mode: ConnectionMode): Promise<GraphLayout> {
+async function computeLayout(data: HistoryGraphResponse, expandedNodeId: string | null): Promise<GraphLayout> {
     // Map API types to generic graph types via the history mapper
-    const graphNodes = mapNodes(data.nodes, data.edges, mode);
+    const graphNodes = mapNodes(data.nodes, data.edges, expandedNodeId);
     const graphEdges = mapEdges(data.edges);
 
     // Build ELK graph

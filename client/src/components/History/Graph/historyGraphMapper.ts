@@ -9,9 +9,6 @@ type ApiGraphNode = components["schemas"]["GraphNode"];
 type ApiGraphEdge = components["schemas"]["GraphEdge"];
 export type HistoryGraphResponse = components["schemas"]["HistoryGraphResponse"];
 
-/** Connector display mode: one connector per node side, or one per individual port. */
-export type ConnectionMode = "collapsed" | "expanded";
-
 /** Node width — uniform across all types */
 const NODE_WIDTH = 200;
 
@@ -122,10 +119,14 @@ function toolConnectionSummary(inputCount: number, outputCount: number): string 
  * Map API graph nodes to generic GraphNode[] for the renderer.
  * Returns nodes with dimensions, labels, icons, badges, and domain data.
  *
- * In "expanded" mode tool nodes expose one connector per port; in "collapsed"
- * mode every node carries a single merged connector on each side.
+ * The node identified by `expandedNodeId` is rendered expanded — a tool node
+ * then exposes one connector per port; every other node stays collapsed.
  */
-export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mode: ConnectionMode): GraphNode[] {
+export function mapNodes(
+    apiNodes: ApiGraphNode[],
+    apiEdges: ApiGraphEdge[],
+    expandedNodeId: string | null,
+): GraphNode[] {
     // Build a lookup for node labels by renderer key
     const nodeLabels = new Map<string, string>();
     for (const node of apiNodes) {
@@ -172,9 +173,9 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
         // Only tool_request nodes show input/output port lists.
         // Dataset and collection nodes show state + badge in the body.
         const isToolRequest = node.src === "tool_request";
-        // Port rows (and per-port connectors) only appear in expanded mode;
-        // collapsed mode shows a compact tool node with merged connectors.
-        const expanded = mode === "expanded";
+        // Only the expanded node shows port rows + per-port connectors; every
+        // other node stays collapsed (a single merged connector per side).
+        const expanded = key === expandedNodeId;
         let inputs: GraphNodePort[] = isToolRequest && expanded ? (inputPorts.get(key) ?? []) : [];
         let outputs: GraphNodePort[] = isToolRequest && expanded ? (outputPorts.get(key) ?? []) : [];
         const inputCount = inputPorts.get(key)?.length ?? 0;

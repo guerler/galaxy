@@ -1,10 +1,12 @@
 import ELK, { type ElkExtendedEdge, type ElkNode } from "elkjs/lib/elk.bundled";
 import { type Ref, ref, watch } from "vue";
 
-import type { GraphEdge, GraphLayout, GraphNode } from "@/components/Graph/types";
+import type { GraphEdge, GraphLayout, GraphNode, GraphNodePort } from "@/components/Graph/types";
 import { computeControlPoints } from "@/utils/connectionPath";
 
-import { type HistoryGraphResponse, mapEdges, mapNodes } from "./historyGraphMapper";
+import { type ConnectionMode, type HistoryGraphResponse, mapEdges, mapNodes } from "./historyGraphMapper";
+
+export type { ConnectionMode };
 
 const elk = new ELK();
 
@@ -14,14 +16,17 @@ const elk = new ELK();
  * Uses the history graph mapper to convert API types to generic graph types,
  * then runs ELK layered layout for node placement. Edges are drawn as bezier
  * curves between node ports (workflow editor style).
+ *
+ * `mode` controls connector detail: "collapsed" merges connectors to one per
+ * node side; "expanded" gives tool nodes a connector per individual port.
  */
-export function useHistoryGraphLayout(graphData: Ref<HistoryGraphResponse | null>) {
+export function useHistoryGraphLayout(graphData: Ref<HistoryGraphResponse | null>, mode: Ref<ConnectionMode>) {
     const layout = ref<GraphLayout | null>(null);
     const layoutLoading = ref(false);
 
     watch(
-        graphData,
-        async (data) => {
+        [graphData, mode],
+        async ([data, modeValue]) => {
             if (!data || data.nodes.length === 0) {
                 layout.value = null;
                 return;
@@ -29,7 +34,7 @@ export function useHistoryGraphLayout(graphData: Ref<HistoryGraphResponse | null
 
             layoutLoading.value = true;
             try {
-                layout.value = await computeLayout(data);
+                layout.value = await computeLayout(data, modeValue);
             } catch (e) {
                 console.error("History graph layout failed:", e);
                 layout.value = null;
@@ -43,9 +48,18 @@ export function useHistoryGraphLayout(graphData: Ref<HistoryGraphResponse | null
     return { layout, layoutLoading };
 }
 
-async function computeLayout(data: HistoryGraphResponse): Promise<GraphLayout> {
+/**
+ * Vertical anchor (px from the node top) where an edge meets a node. Uses the
+ * matching port's connector offset when present (expanded mode), else the node center.
+ */
+function edgeAnchorY(ports: GraphNodePort[] | undefined, edgeId: string, nodeHeight: number): number {
+    const port = ports?.find((p) => p.edgeId === edgeId);
+    return port?.offsetY ?? nodeHeight / 2;
+}
+
+async function computeLayout(data: HistoryGraphResponse, mode: ConnectionMode): Promise<GraphLayout> {
     // Map API types to generic graph types via the history mapper
-    const graphNodes = mapNodes(data.nodes, data.edges);
+    const graphNodes = mapNodes(data.nodes, data.edges, mode);
     const graphEdges = mapEdges(data.edges);
 
     // Build ELK graph
@@ -96,13 +110,18 @@ async function computeLayout(data: HistoryGraphResponse): Promise<GraphLayout> {
         nodePositions.set(n.id, { x: n.x, y: n.y, w: n.width, h: n.height });
     }
 
-    // Draw edges as bezier curves between node ports (workflow editor style)
+    // Draw edges as bezier curves (workflow editor style). Each end anchors at its
+    // per-port connector when available (expanded mode), else the node center.
     const layoutEdges: GraphEdge[] = graphEdges.map((ge) => {
+        const srcNode = nodeById.get(ge.source);
+        const tgtNode = nodeById.get(ge.target);
         const src = nodePositions.get(ge.source);
         const tgt = nodePositions.get(ge.target);
         let points: { x: number; y: number }[] = [];
         if (src && tgt) {
-            const controlPoints = computeControlPoints(src.x + src.w, src.y + src.h / 2, tgt.x, tgt.y + tgt.h / 2);
+            const srcY = src.y + edgeAnchorY(srcNode?.outputs, ge.id, src.h);
+            const tgtY = tgt.y + edgeAnchorY(tgtNode?.inputs, ge.id, tgt.h);
+            const controlPoints = computeControlPoints(src.x + src.w, srcY, tgt.x, tgtY);
             points = controlPoints.map(([x, y]) => ({ x, y }));
         }
         return { ...ge, points };

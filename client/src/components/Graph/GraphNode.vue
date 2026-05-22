@@ -2,7 +2,9 @@
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { computed } from "vue";
 
-import type { GraphNode } from "./types";
+import type { ConnectorVariant, GraphNode } from "./types";
+
+import GraphConnector from "./GraphConnector.vue";
 
 interface Props {
     node: GraphNode;
@@ -24,6 +26,35 @@ const hasPorts = computed(() => hasInputs.value || hasOutputs.value);
 const showRule = computed(() => hasInputs.value && hasOutputs.value);
 const showDataBody = computed(() => !hasPorts.value && (props.node.badge || props.node.data?.stateText));
 const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
+
+interface ConnectorPlacement {
+    side: "input" | "output";
+    /** CSS `top` value — "50%" for merged connectors, a px offset for per-port ones. */
+    top: string;
+    variant: ConnectorVariant;
+}
+
+// Connectors to render: merged node-level ones (collapsed) plus per-port ones (expanded).
+const connectorPlacements = computed<ConnectorPlacement[]>(() => {
+    const placements: ConnectorPlacement[] = [];
+    if (props.node.inputConnector) {
+        placements.push({ side: "input", top: "50%", variant: props.node.inputConnector });
+    }
+    if (props.node.outputConnector) {
+        placements.push({ side: "output", top: "50%", variant: props.node.outputConnector });
+    }
+    for (const port of props.node.inputs ?? []) {
+        if (port.offsetY != null) {
+            placements.push({ side: "input", top: `${port.offsetY}px`, variant: port.variant ?? "single" });
+        }
+    }
+    for (const port of props.node.outputs ?? []) {
+        if (port.offsetY != null) {
+            placements.push({ side: "output", top: `${port.offsetY}px`, variant: port.variant ?? "single" });
+        }
+    }
+    return placements;
+});
 </script>
 
 <template>
@@ -49,6 +80,14 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
             <div v-for="output in node.outputs" :key="`out-${output.name}`" class="form-row dataRow output-data-row">
                 <span class="node-port-label">{{ output.label }}</span>
             </div>
+        </div>
+        <div
+            v-for="(connector, index) in connectorPlacements"
+            :key="`connector-${index}`"
+            class="graph-node-connector"
+            :class="`graph-node-connector--${connector.side}`"
+            :style="{ top: connector.top }">
+            <GraphConnector :variant="connector.variant" />
         </div>
     </div>
 </template>
@@ -110,5 +149,19 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
     border: none;
     border-bottom: dotted $brand-primary 1px;
     margin: 0;
+}
+
+.graph-node-connector {
+    position: absolute;
+}
+
+.graph-node-connector--input {
+    left: 0;
+    transform: translate(-50%, -50%);
+}
+
+.graph-node-connector--output {
+    right: 0;
+    transform: translate(50%, -50%);
 }
 </style>

@@ -1,12 +1,15 @@
 import { faFile, faLayerGroup, faWrench } from "@fortawesome/free-solid-svg-icons";
 
 import type { components } from "@/api/schema";
-import type { GraphEdge, GraphNode, GraphNodePort } from "@/components/Graph/types";
+import type { ConnectorVariant, GraphEdge, GraphNode, GraphNodePort } from "@/components/Graph/types";
 import { type StateRepresentation, STATES } from "@/components/History/Content/model/states";
 
 type ApiGraphNode = components["schemas"]["GraphNode"];
 type ApiGraphEdge = components["schemas"]["GraphEdge"];
 export type HistoryGraphResponse = components["schemas"]["HistoryGraphResponse"];
+
+/** Connector display mode: one connector per node side, or one per individual port. */
+export type ConnectionMode = "collapsed" | "expanded";
 
 /** Node width — uniform across all types */
 const NODE_WIDTH = 200;
@@ -41,6 +44,19 @@ function computeNodeHeight(
     const rule = inputCount > 0 && outputCount > 0 ? RULE_HEIGHT : 0;
     const badgeRow = hasBadgeBody ? PORT_ROW_HEIGHT + BODY_PADDING : 0;
     return headerHeight + portRows * PORT_ROW_HEIGHT + rule + BODY_PADDING + badgeRow;
+}
+
+/**
+ * Vertical offset (px from the node top) of a port's connector — mirrors the row
+ * stacking used by computeNodeHeight so connectors align with their label rows.
+ */
+function portOffsetY(label: string, side: "input" | "output", index: number, inputCount: number): number {
+    const headerHeight = estimateHeaderLines(label) * HEADER_LINE_HEIGHT + HEADER_PADDING;
+    if (side === "input") {
+        return headerHeight + index * PORT_ROW_HEIGHT + PORT_ROW_HEIGHT / 2;
+    }
+    const rule = inputCount > 0 ? RULE_HEIGHT : 0;
+    return headerHeight + inputCount * PORT_ROW_HEIGHT + rule + index * PORT_ROW_HEIGHT + PORT_ROW_HEIGHT / 2;
 }
 
 /** User-facing labels keyed by node src */
@@ -114,46 +130,66 @@ function isCollectionEdge(edge: ApiGraphEdge): boolean {
 /**
  * Map API graph nodes to generic GraphNode[] for the renderer.
  * Returns nodes with dimensions, labels, icons, badges, and domain data.
+ *
+ * In "expanded" mode tool nodes expose one connector per port; in "collapsed"
+ * mode every node carries a single merged connector on each side.
  */
-export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): GraphNode[] {
+export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mode: ConnectionMode): GraphNode[] {
     // Build a lookup for node labels by renderer key
     const nodeLabels = new Map<string, string>();
     for (const node of apiNodes) {
         nodeLabels.set(nodeKey(node), resolveNodeLabel(node));
     }
 
-    // Build input/output port lists per node from edges
+    // Build input/output port lists per node from edges. Each port records the
+    // edge it terminates (for routing) and a connector variant (from the edge kind).
     const inputPorts = new Map<string, GraphNodePort[]>();
     const outputPorts = new Map<string, GraphNodePort[]>();
-    for (const edge of apiEdges) {
+    apiEdges.forEach((edge, idx) => {
+        const edgeId = `e${idx}`;
         const sourceKey = nodeKey(edge.source);
         const targetKey = nodeKey(edge.target);
         const sourceLabel = nodeLabels.get(sourceKey) ?? sourceKey;
         const targetLabel = nodeLabels.get(targetKey) ?? targetKey;
+        const variant: ConnectorVariant = isCollectionEdge(edge) ? "multiple" : "single";
 
         // Target node gets an input port labeled by the source
         if (!inputPorts.has(targetKey)) {
             inputPorts.set(targetKey, []);
         }
-        inputPorts.get(targetKey)!.push({ name: sourceKey, label: sourceLabel });
+        inputPorts.get(targetKey)!.push({ name: sourceKey, label: sourceLabel, edgeId, variant });
 
         // Source node gets an output port labeled by the target
         if (!outputPorts.has(sourceKey)) {
             outputPorts.set(sourceKey, []);
         }
-        outputPorts.get(sourceKey)!.push({ name: targetKey, label: targetLabel });
-    }
+        outputPorts.get(sourceKey)!.push({ name: targetKey, label: targetLabel, edgeId, variant });
+    });
 
     return apiNodes.map((node) => {
         const key = nodeKey(node);
+        const label = nodeLabels.get(key)!;
         // Only tool_request nodes show input/output port lists.
         // Dataset and collection nodes show state + badge in the body.
         const isToolRequest = node.src === "tool_request";
-        const inputs = isToolRequest ? (inputPorts.get(key) ?? []) : [];
-        const outputs = isToolRequest ? (outputPorts.get(key) ?? []) : [];
+        let inputs: GraphNodePort[] = isToolRequest ? (inputPorts.get(key) ?? []) : [];
+        let outputs: GraphNodePort[] = isToolRequest ? (outputPorts.get(key) ?? []) : [];
         const inputCount = inputPorts.get(key)?.length ?? 0;
         const outputCount = outputPorts.get(key)?.length ?? 0;
         const badge = resolveNodeBadge(node);
+
+        // Expanded mode: tool nodes anchor one connector per port to its label row.
+        if (mode === "expanded" && isToolRequest) {
+            inputs = inputs.map((p, i) => ({ ...p, offsetY: portOffsetY(label, "input", i, inputCount) }));
+            outputs = outputs.map((p, j) => ({ ...p, offsetY: portOffsetY(label, "output", j, inputCount) }));
+        }
+
+        // Node-level (merged) connectors — one per side. Data nodes always use these;
+        // tool nodes use them only in collapsed mode (expanded uses per-port connectors).
+        const usesNodeConnector = !isToolRequest || mode === "collapsed";
+        const connectorVariant: ConnectorVariant = node.src === "hdca" ? "multiple" : "single";
+        const inputConnector = usesNodeConnector && inputCount > 0 ? connectorVariant : null;
+        const outputConnector = usesNodeConnector && outputCount > 0 ? connectorVariant : null;
 
         // For datasets/collections, use state to determine icon.
         // State-based coloring is handled by data-state attribute on the node element,
@@ -170,7 +206,6 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): Gr
 
         // Data nodes always have a body (badge + state text)
         const hasBody = !isToolRequest;
-        const label = nodeLabels.get(key)!;
         return {
             id: key,
             x: 0,
@@ -183,6 +218,8 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): Gr
             cssClass,
             inputs,
             outputs,
+            inputConnector,
+            outputConnector,
             data: {
                 src: node.src,
                 typeLabel: NODE_TYPE_LABELS[node.src] ?? node.src,

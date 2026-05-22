@@ -39,6 +39,7 @@ function onNodeSelected(node: GraphNode | null) {
                 :edge-style="edgeStyle"
                 :minimap-component="HistoryGraphMinimap"
                 center-on-select
+                show-scroll-overlays
                 @nodeSelected="onNodeSelected" />
         </div>
         <BAlert v-if="truncated" variant="warning" show class="mt-2 mb-0 py-1 text-center">

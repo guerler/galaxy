@@ -22,6 +22,8 @@ interface Props {
     minimapComponent?: object | null;
     /** Center the viewport on a node when it is selected. */
     centerOnSelect?: boolean;
+    /** Show left/right edge strips that act as page-scroll escape zones. */
+    showScrollOverlays?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,6 +33,7 @@ const props = withDefaults(defineProps<Props>(), {
     showMinimap: true,
     minimapComponent: null,
     centerOnSelect: false,
+    showScrollOverlays: false,
 });
 
 const emit = defineEmits<{ (e: "nodeSelected", node: GraphNode | null): void }>();
@@ -148,6 +151,8 @@ watch(
                     @select="onNodeSelect" />
             </div>
         </div>
+        <div v-if="showScrollOverlays" class="graph-scroll-overlay overlay-left" />
+        <div v-if="showScrollOverlays" class="graph-scroll-overlay overlay-right" />
         <component
             :is="minimapComponent"
             v-if="showMinimap && minimapComponent && layout"
@@ -184,5 +189,31 @@ watch(
     top: 0;
     left: 0;
     transform-origin: 0 0;
+}
+
+.graph-scroll-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1.5rem;
+    background: $gray-200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1;
+
+    &.overlay-left {
+        left: 0;
+    }
+
+    &.overlay-right {
+        right: 0;
+    }
+}
+
+// Reveal the scroll-escape strips while the pointer is over the graph.
+.graph-canvas:hover .graph-scroll-overlay {
+    opacity: 0.5;
+    pointer-events: auto;
 }
 </style>

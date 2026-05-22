@@ -20,6 +20,8 @@ interface Props {
     showMinimap?: boolean;
     /** Minimap component — injected by consumer to avoid domain coupling */
     minimapComponent?: object | null;
+    /** Center the viewport on a node when it is selected. */
+    centerOnSelect?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -28,6 +30,7 @@ const props = withDefaults(defineProps<Props>(), {
     showZoomControls: true,
     showMinimap: true,
     minimapComponent: null,
+    centerOnSelect: false,
 });
 
 const emit = defineEmits<{ (e: "nodeSelected", node: GraphNode | null): void }>();
@@ -73,6 +76,10 @@ function onNodeSelect(nodeId: string) {
         selectedNodeId.value = nodeId;
         const node = props.layout?.nodes.find((n) => n.id === nodeId) ?? null;
         emit("nodeSelected", node);
+        // Center the viewport on the selected node.
+        if (props.centerOnSelect && node) {
+            moveTo({ x: node.x + node.width / 2, y: node.y + node.height / 2 });
+        }
     }
 }
 

@@ -38,6 +38,7 @@ function onNodeSelected(node: GraphNode | null) {
                 :focus-node-id="focusNodeId"
                 :edge-style="edgeStyle"
                 :minimap-component="HistoryGraphMinimap"
+                center-on-select
                 @nodeSelected="onNodeSelected" />
         </div>
         <BAlert v-if="truncated" variant="warning" show class="mt-2 mb-0 py-1 text-center">

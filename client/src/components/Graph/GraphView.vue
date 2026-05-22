@@ -9,6 +9,7 @@ import { maxZoom, minZoom } from "@/utils/zoomLevels";
 import type { GraphLayout, GraphNode } from "./types";
 
 import GraphEdges from "./GraphEdges.vue";
+import GraphMinimap from "./GraphMinimap.vue";
 import GraphNodeComponent from "./GraphNode.vue";
 import ZoomControl from "./ZoomControl.vue";
 
@@ -17,8 +18,8 @@ interface Props {
     focusNodeId?: string | null;
     showZoomControls?: boolean;
     showMinimap?: boolean;
-    /** Minimap component — injected by consumer to avoid domain coupling */
-    minimapComponent?: object | null;
+    /** Per-node minimap fill color; a falsy result uses the minimap's default. */
+    nodeColor?: (node: GraphNode) => string | null | undefined;
     /** Center the viewport on a node when it is selected. */
     centerOnSelect?: boolean;
     /** Show left/right edge strips that act as page-scroll escape zones. */
@@ -29,7 +30,7 @@ const props = withDefaults(defineProps<Props>(), {
     focusNodeId: null,
     showZoomControls: true,
     showMinimap: true,
-    minimapComponent: null,
+    nodeColor: undefined,
     centerOnSelect: false,
     showScrollOverlays: false,
 });
@@ -150,12 +151,12 @@ watch(
         </div>
         <div v-if="showScrollOverlays" class="graph-scroll-overlay overlay-left" />
         <div v-if="showScrollOverlays" class="graph-scroll-overlay overlay-right" />
-        <component
-            :is="minimapComponent"
-            v-if="showMinimap && minimapComponent && layout"
+        <GraphMinimap
+            v-if="showMinimap && layout"
             :layout="layout"
             :viewport-bounding-box="viewportBoundingBox"
             :selected-node-id="selectedNodeId"
+            :node-color="nodeColor"
             :parent-right="elementBounding.right.value"
             :parent-bottom="elementBounding.bottom.value"
             @panBy="panBy"

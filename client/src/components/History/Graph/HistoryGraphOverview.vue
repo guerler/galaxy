@@ -4,7 +4,8 @@ import { ref } from "vue";
 
 import type { GraphLayout, GraphNode } from "@/components/Graph/types";
 
-import HistoryGraphMinimap from "./HistoryGraphMinimap.vue";
+import { historyNodeColor } from "./historyNodeColor";
+
 import HistoryGraphNodeDetails from "./HistoryGraphNodeDetails.vue";
 import GraphView from "@/components/Graph/GraphView.vue";
 
@@ -34,7 +35,7 @@ function onNodeSelected(node: GraphNode | null) {
             <GraphView
                 :layout="layout"
                 :focus-node-id="focusNodeId"
-                :minimap-component="HistoryGraphMinimap"
+                :node-color="historyNodeColor"
                 center-on-select
                 show-scroll-overlays
                 @nodeSelected="onNodeSelected" />

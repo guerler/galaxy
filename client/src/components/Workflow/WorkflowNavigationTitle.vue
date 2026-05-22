@@ -22,6 +22,7 @@ import GButton from "../BaseComponents/GButton.vue";
 import GButtonGroup from "../BaseComponents/GButtonGroup.vue";
 import AsyncButton from "../Common/AsyncButton.vue";
 import ButtonSpinner from "../Common/ButtonSpinner.vue";
+import NavigationTitle from "../Common/NavigationTitle.vue";
 import LoadingSpan from "../LoadingSpan.vue";
 
 const router = useRouter();
@@ -135,14 +136,15 @@ async function rerunWorkflow() {
         <BAlert v-if="error" variant="danger" show>{{ error }}</BAlert>
 
         <div class="position-relative">
-            <div v-if="workflow" class="bg-secondary px-2 py-1 rounded d-flex flex-gapx-1 justify-content-between">
-                <div class="py-1 d-flex flex-wrap align-items-center flex-gapx-1" data-description="workflow heading">
+            <NavigationTitle v-if="workflow" :icon="faSitemap" heading-description="workflow heading">
+                <template v-slot:before-icon>
                     <slot name="before-icon" />
-                    <FontAwesomeIcon :icon="faSitemap" fixed-width />
+                </template>
+                <template v-slot:title>
                     <b> {{ props.invocation ? "Invoked " : "" }}Workflow: {{ getWorkflowName() }} </b>
                     <span>(Version: {{ workflow.version + 1 }})</span>
-                </div>
-                <div class="d-flex flex-gapx-1 align-self-baseline">
+                </template>
+                <template v-slot:actions>
                     <GButtonGroup data-button-group>
                         <GButton
                             v-if="owned && workflow"
@@ -208,8 +210,8 @@ async function rerunWorkflow() {
                             <span v-localize>Rerun</span>
                         </GButton>
                     </GButtonGroup>
-                </div>
-            </div>
+                </template>
+            </NavigationTitle>
             <div v-if="props.success" class="donemessagelarge">
                 Successfully invoked workflow
                 <b>{{ getWorkflowName() }}</b>

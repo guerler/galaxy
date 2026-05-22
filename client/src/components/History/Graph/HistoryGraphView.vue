@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { faBezierCurve, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
+import { faClock } from "@fortawesome/free-regular-svg-icons";
+import { faAngleDoubleDown, faAngleDoubleUp, faBezierCurve, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { BAlert, BNav, BNavItem } from "bootstrap-vue";
 import { computed, ref, toRef } from "vue";
 
 import type { EdgeStyle, GraphNode } from "@/components/Graph/types";
+import { usePersistentToggle } from "@/composables/persistentToggle";
 import { useHistoryStore } from "@/stores/historyStore";
 
 import { useHistoryGraphData } from "./useHistoryGraphData";
@@ -15,8 +17,9 @@ import HistoryGraphReport from "./HistoryGraphReport.vue";
 import HistoryGraphToolRequests from "./HistoryGraphToolRequests.vue";
 import GButton from "@/components/BaseComponents/GButton.vue";
 import GButtonGroup from "@/components/BaseComponents/GButtonGroup.vue";
-import Heading from "@/components/Common/Heading.vue";
+import NavigationTitle from "@/components/Common/NavigationTitle.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
+import UtcDate from "@/components/UtcDate.vue";
 
 interface Props {
     historyId: string;
@@ -28,9 +31,13 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// History name
+// History summary — feeds the title and the collapsible info block.
 const historyStore = useHistoryStore();
-const historyName = computed(() => historyStore.getHistoryNameById(props.historyId));
+const history = computed(() => historyStore.getHistoryById(props.historyId));
+const historyName = computed(() => history.value?.name ?? "...");
+
+// Collapsible header info block, mirroring the invocation page's annotation.
+const { toggled: headerCollapsed, toggle: toggleHeaderCollapse } = usePersistentToggle("history-graph-header-collapsed");
 
 // Fetch params — product decisions owned here
 const limit = ref(500);
@@ -66,28 +73,20 @@ const toolRequestNodes = computed<GraphNode[]>(
         <BAlert v-if="error" variant="danger" show>{{ error }}</BAlert>
         <LoadingSpan v-else-if="isLoading" message="Loading history graph" />
         <template v-else>
-            <div class="d-flex align-items-center flex-gapx-1 px-2 pt-2">
-                <FontAwesomeIcon :icon="faBezierCurve" class="fa-fw" />
-                <Heading h1 inline bold size="text">{{ historyName }}</Heading>
-            </div>
-            <BNav pills class="mb-2 p-2 bg-light border-bottom">
-                <BNavItem title="Overview" :active="onOverviewTab" :to="`/histories/${historyId}/graph`">
-                    Overview
-                </BNavItem>
-                <BNavItem
-                    title="Tool Requests"
-                    :active="props.tab === 'tool-requests'"
-                    :to="`/histories/${historyId}/graph/tool-requests`">
-                    Tool Requests
-                </BNavItem>
-                <BNavItem
-                    title="AI Report"
-                    :active="props.tab === 'report'"
-                    :to="`/histories/${historyId}/graph/report`">
-                    AI Report
-                </BNavItem>
-                <div v-if="onOverviewTab" class="ml-auto d-flex align-items-center">
-                    <GButtonGroup>
+            <NavigationTitle :icon="faBezierCurve" :title="historyName" heading-description="history graph heading">
+                <template v-slot:before-icon>
+                    <GButton
+                        transparent
+                        size="small"
+                        :title="headerCollapsed ? 'Expand header' : 'Collapse header'"
+                        icon-only
+                        inline
+                        @click="toggleHeaderCollapse">
+                        <FontAwesomeIcon :icon="headerCollapsed ? faAngleDoubleDown : faAngleDoubleUp" fixed-width />
+                    </GButton>
+                </template>
+                <template v-slot:actions>
+                    <GButtonGroup v-if="onOverviewTab">
                         <GButton
                             tooltip
                             title="Orthogonal edges"
@@ -109,7 +108,36 @@ const toolRequestNodes = computed<GraphNode[]>(
                             <FontAwesomeIcon :icon="faBezierCurve" fixed-width />
                         </GButton>
                     </GButtonGroup>
+                </template>
+            </NavigationTitle>
+
+            <Transition name="header-collapse">
+                <div v-if="!headerCollapsed && history" class="history-graph-info px-2 py-1 small text-muted">
+                    <i data-description="history graph time info">
+                        <FontAwesomeIcon :icon="faClock" class="mr-1" />
+                        <span v-localize>updated</span>
+                        <UtcDate :date="history.update_time" mode="elapsed" />
+                    </i>
+                    <span class="ml-3">{{ history.count }} items</span>
                 </div>
+            </Transition>
+
+            <BNav pills class="mb-2 mt-2 p-2 bg-light border-bottom">
+                <BNavItem title="Overview" :active="onOverviewTab" :to="`/histories/${historyId}/graph`">
+                    Overview
+                </BNavItem>
+                <BNavItem
+                    title="Tool Requests"
+                    :active="props.tab === 'tool-requests'"
+                    :to="`/histories/${historyId}/graph/tool-requests`">
+                    Tool Requests
+                </BNavItem>
+                <BNavItem
+                    title="AI Report"
+                    :active="props.tab === 'report'"
+                    :to="`/histories/${historyId}/graph/report`">
+                    AI Report
+                </BNavItem>
             </BNav>
             <div class="tab-content-container d-flex flex-column overflow-auto">
                 <HistoryGraphOverview
@@ -136,5 +164,25 @@ const toolRequestNodes = computed<GraphNode[]>(
 .tab-content-container {
     flex: 1;
     min-height: 0;
+}
+
+.header-collapse-enter-active,
+.header-collapse-leave-active {
+    overflow: hidden;
+    max-height: 600px;
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+        max-height 0.3s ease,
+        opacity 0.25s ease,
+        transform 0.25s ease;
+}
+
+// TODO(vue3): rename .header-collapse-enter to .header-collapse-enter-from
+.header-collapse-enter,
+.header-collapse-leave-to {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
 }
 </style>

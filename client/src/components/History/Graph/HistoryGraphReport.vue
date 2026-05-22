@@ -16,7 +16,7 @@ const props = defineProps<Props>();
 const { renderMarkdown } = useMarkdown({ openLinksInNewPage: true });
 
 // Comprehensive history-wide AI analysis report. Generated when the tab is
-// first opened — the component only mounts while the AI Report tab is active.
+// first opened — the component only mounts while the AI Summary tab is active.
 const reportLoading = ref(false);
 const reportError = ref<string | null>(null);
 const report = ref<string | null>(null);

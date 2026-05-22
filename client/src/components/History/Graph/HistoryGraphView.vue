@@ -104,10 +104,10 @@ const toolRequestNodes = computed<GraphNode[]>(() =>
                     Tool Requests
                 </BNavItem>
                 <BNavItem
-                    title="AI Report"
+                    title="AI Summary"
                     :active="props.tab === 'report'"
                     :to="`/histories/${historyId}/graph/report`">
-                    AI Report
+                    AI Summary
                 </BNavItem>
             </BNav>
             <div class="tab-content-container d-flex flex-column overflow-auto">

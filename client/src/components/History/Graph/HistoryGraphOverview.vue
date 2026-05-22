@@ -41,19 +41,28 @@ function onNodeSelected(node: GraphNode | null) {
                 show-scroll-overlays
                 @nodeSelected="onNodeSelected" />
         </div>
-        <BAlert v-if="truncated" variant="warning" show class="mt-2 mb-0 py-1 text-center">
+        <BAlert v-if="truncated" variant="warning" show class="mt-2 mb-0 py-1 text-center flex-shrink-0">
             Showing a partial graph. Not all connections are visible.
         </BAlert>
-        <HistoryGraphNodeDetails class="mt-2" :node="selectedNode" />
+        <HistoryGraphNodeDetails class="mt-2 flex-shrink-0" :node="selectedNode" />
     </div>
 </template>
 
 <style lang="scss" scoped>
 @import "@/style/scss/theme/blue.scss";
 
+// Fill the tab container as a flex column so the graph pane absorbs exactly
+// the space left by the details card — no fixed height that overflows slightly.
+.history-graph-overview {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
 .graph-pane {
     display: flex;
-    height: 60vh;
+    flex: 1;
     min-height: 400px;
 }
 

@@ -13498,6 +13498,8 @@ export interface components {
         };
         /** GraphEdge */
         GraphEdge: {
+            /** Name */
+            name?: string | null;
             source: components["schemas"]["NodeRef"];
             target: components["schemas"]["NodeRef"];
             /**

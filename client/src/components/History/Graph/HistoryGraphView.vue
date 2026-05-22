@@ -35,7 +35,9 @@ const history = computed(() => historyStore.getHistoryById(props.historyId));
 const historyName = computed(() => history.value?.name ?? "...");
 
 // Collapsible header info block, mirroring the invocation page's annotation.
-const { toggled: headerCollapsed, toggle: toggleHeaderCollapse } = usePersistentToggle("history-graph-header-collapsed");
+const { toggled: headerCollapsed, toggle: toggleHeaderCollapse } = usePersistentToggle(
+    "history-graph-header-collapsed",
+);
 
 // Fetch params — product decisions owned here
 const limit = ref(500);

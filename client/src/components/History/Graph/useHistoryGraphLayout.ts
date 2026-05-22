@@ -18,10 +18,7 @@ const elk = new ELK();
  * `expandedNodeId` selects which node is rendered expanded (a tool node then
  * shows a connector per port); all other nodes stay collapsed.
  */
-export function useHistoryGraphLayout(
-    graphData: Ref<HistoryGraphResponse | null>,
-    expandedNodeId: Ref<string | null>,
-) {
+export function useHistoryGraphLayout(graphData: Ref<HistoryGraphResponse | null>, expandedNodeId: Ref<string | null>) {
     const layout = ref<GraphLayout | null>(null);
     const layoutLoading = ref(false);
 

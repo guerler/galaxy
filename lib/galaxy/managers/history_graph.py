@@ -172,23 +172,23 @@ class HistoryGraphBuilder:
         all_producers = {**hda_producers, **hdca_producers}
 
         # Emit output edges and collect tr_ids.
-        for item_key, (tr_id, tool_id) in all_producers.items():
+        for item_key, (tr_id, tool_id, output_name) in all_producers.items():
             item_type, item_id = item_key
             tr_nodes[tr_id] = tool_id
             source = self._ref("tool_request", tr_id)
             target = self._ref(item_type, item_id)
             etype = "dataset_output" if item_type == "dataset" else "collection_output"
-            edges.append(GraphEdge(source=source, target=target, type=etype))
+            edges.append(GraphEdge(source=source, target=target, type=etype, name=output_name))
 
         # Batch-fetch all payloads, parse inputs, emit input edges.
         payloads = self._fetch_payloads(set(tr_nodes.keys()))
         for tr_id, payload in payloads.items():
             input_refs = self._extract_inputs(payload)
-            for ref_type, ref_id in input_refs:
+            for ref_type, ref_id, input_name in input_refs:
                 source = self._ref(ref_type, ref_id)
                 target = self._ref("tool_request", tr_id)
                 etype = "dataset_input" if ref_type == "dataset" else "collection_input"
-                edges.append(GraphEdge(source=source, target=target, type=etype))
+                edges.append(GraphEdge(source=source, target=target, type=etype, name=input_name))
                 if ref_type == "dataset" and ref_id not in dataset_ids:
                     closure_dataset_ids.add(ref_id)
                 elif ref_type == "collection" and ref_id not in collection_ids:
@@ -327,9 +327,9 @@ class HistoryGraphBuilder:
 
     # ── Producer lookup ──
 
-    def _hda_producers(self, dataset_ids: set[int]) -> dict[tuple[str, int], tuple[int, str]]:
-        """Resolve each HDA's producing (tool_request_id, tool_id) by
-        joining JobToOutputDatasetAssociation to Job. Only HDAs with
+    def _hda_producers(self, dataset_ids: set[int]) -> dict[tuple[str, int], tuple[int, str, Optional[str]]]:
+        """Resolve each HDA's producing (tool_request_id, tool_id, output_name)
+        by joining JobToOutputDatasetAssociation to Job. Only HDAs with
         exactly one distinct producing tool_request are returned;
         ambiguous ones are logged at debug level."""
         if not dataset_ids:
@@ -337,6 +337,7 @@ class HistoryGraphBuilder:
         stmt = (
             select(
                 JobToOutputDatasetAssociation.dataset_id.label("hda_id"),
+                JobToOutputDatasetAssociation.name.label("output_name"),
                 Job.tool_request_id,
                 Job.tool_id,
             )
@@ -348,22 +349,23 @@ class HistoryGraphBuilder:
                 Job.tool_id.notin_(SYNTHETIC_TOOL_IDS),
             )
         )
-        candidates: dict[int, dict[int, str]] = {}  # hda_id -> {tr_id: tool_id}
+        # hda_id -> {tr_id: (tool_id, output_name)}
+        candidates: dict[int, dict[int, tuple[str, Optional[str]]]] = {}
         for row in self.sa_session.execute(stmt):
-            candidates.setdefault(row.hda_id, {})[row.tool_request_id] = row.tool_id
+            candidates.setdefault(row.hda_id, {})[row.tool_request_id] = (row.tool_id, row.output_name)
 
-        result: dict[tuple[str, int], tuple[int, str]] = {}
+        result: dict[tuple[str, int], tuple[int, str, Optional[str]]] = {}
         for hda_id, tr_map in candidates.items():
             if len(tr_map) == 1:
-                tr_id, tool_id = next(iter(tr_map.items()))
-                result[("dataset", hda_id)] = (tr_id, tool_id)
+                tr_id, (tool_id, output_name) = next(iter(tr_map.items()))
+                result[("dataset", hda_id)] = (tr_id, tool_id, output_name)
             else:
                 log.debug("history_graph: skipping HDA %d — ambiguous producer (%s)", hda_id, set(tr_map.keys()))
         return result
 
-    def _hdca_producers(self, collection_ids: set[int]) -> dict[tuple[str, int], tuple[int, str]]:
-        """Resolve each HDCA's producing (tool_request_id, tool_id) by
-        joining JobToOutputDatasetCollectionAssociation to Job. Only
+    def _hdca_producers(self, collection_ids: set[int]) -> dict[tuple[str, int], tuple[int, str, Optional[str]]]:
+        """Resolve each HDCA's producing (tool_request_id, tool_id, output_name)
+        by joining JobToOutputDatasetCollectionAssociation to Job. Only
         HDCAs with exactly one distinct producing tool_request are
         returned; ambiguous ones are logged at debug level."""
         if not collection_ids:
@@ -371,6 +373,7 @@ class HistoryGraphBuilder:
         stmt = (
             select(
                 JobToOutputDatasetCollectionAssociation.dataset_collection_id.label("hdca_id"),
+                JobToOutputDatasetCollectionAssociation.name.label("output_name"),
                 Job.tool_request_id,
                 Job.tool_id,
             )
@@ -382,15 +385,16 @@ class HistoryGraphBuilder:
                 Job.tool_id.notin_(SYNTHETIC_TOOL_IDS),
             )
         )
-        candidates: dict[int, dict[int, str]] = {}
+        # hdca_id -> {tr_id: (tool_id, output_name)}
+        candidates: dict[int, dict[int, tuple[str, Optional[str]]]] = {}
         for row in self.sa_session.execute(stmt):
-            candidates.setdefault(row.hdca_id, {})[row.tool_request_id] = row.tool_id
+            candidates.setdefault(row.hdca_id, {})[row.tool_request_id] = (row.tool_id, row.output_name)
 
-        result: dict[tuple[str, int], tuple[int, str]] = {}
+        result: dict[tuple[str, int], tuple[int, str, Optional[str]]] = {}
         for hdca_id, tr_map in candidates.items():
             if len(tr_map) == 1:
-                tr_id, tool_id = next(iter(tr_map.items()))
-                result[("collection", hdca_id)] = (tr_id, tool_id)
+                tr_id, (tool_id, output_name) = next(iter(tr_map.items()))
+                result[("collection", hdca_id)] = (tr_id, tool_id, output_name)
             else:
                 log.debug("history_graph: skipping HDCA %d — ambiguous producer (%s)", hdca_id, set(tr_map.keys()))
         return result
@@ -416,7 +420,7 @@ class HistoryGraphBuilder:
                 log.debug("history_graph: malformed payload for tool_request %d", row.id)
         return result
 
-    def _extract_inputs(self, payload: dict) -> set[tuple[str, int]]:
+    def _extract_inputs(self, payload: dict) -> set[tuple[str, int, str]]:
         """Sole payload entry point inside the builder. Walks a single
         ``tool_request.request`` payload and returns the deduplicated
         set of input refs the builder will emit edges for.
@@ -434,16 +438,19 @@ class HistoryGraphBuilder:
         Payload shape is trusted to be Pydantic-validated upstream when
         the tool_request was accepted; no explicit depth or ref caps are
         applied here by design."""
-        refs = {(ref.content_type, ref.id) for ref in request_internal_input_refs(payload, {"hda", "hdca"})}
+        refs = {
+            (ref.content_type, ref.id, ref.input_name)
+            for ref in request_internal_input_refs(payload, {"hda", "hdca"})
+        }
         return self._normalize_refs(refs)
 
-    def _normalize_refs(self, refs: set[tuple[str, int]]) -> set[tuple[str, int]]:
+    def _normalize_refs(self, refs: set[tuple[str, int, str]]) -> set[tuple[str, int, str]]:
         """Apply the single normalization rule: a hidden-element HDA
         ref is replaced with its parent HDCA. Single-hop only — the
         replacement is not re-normalized. No other rules apply here
         by design; adding more cases should be weighed against the
         invariant that every emitted ref points at a top-level item."""
-        hda_ids = [item_id for t, item_id in refs if t == "dataset"]
+        hda_ids = [item_id for t, item_id, _ in refs if t == "dataset"]
         hdca_parents: dict[int, int] = {}
         if hda_ids:
             stmt = (
@@ -464,12 +471,12 @@ class HistoryGraphBuilder:
             for row in self.sa_session.execute(stmt):
                 hdca_parents[row.hda_id] = row.hdca_id
 
-        result: set[tuple[str, int]] = set()
-        for ref_type, ref_id in refs:
+        result: set[tuple[str, int, str]] = set()
+        for ref_type, ref_id, input_name in refs:
             if ref_type == "dataset" and ref_id in hdca_parents:
-                result.add(("collection", hdca_parents[ref_id]))
+                result.add(("collection", hdca_parents[ref_id], input_name))
             else:
-                result.add((ref_type, ref_id))
+                result.add((ref_type, ref_id, input_name))
         return result
 
     # ── Collection element walk ──

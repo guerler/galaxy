@@ -151,7 +151,7 @@ export function mapNodes(
         }
         inputPorts.get(targetKey)!.push({
             name: sourceKey,
-            label: sourceLabel,
+            label: edge.name ?? sourceLabel,
             edgeId,
             variant: edgeEndVariant(edge.target, edge),
         });
@@ -161,7 +161,7 @@ export function mapNodes(
         }
         outputPorts.get(sourceKey)!.push({
             name: targetKey,
-            label: targetLabel,
+            label: edge.name ?? targetLabel,
             edgeId,
             variant: edgeEndVariant(edge.source, edge),
         });

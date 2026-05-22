@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { faBezierCurve, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { BAlert } from "bootstrap-vue";
+import { BAlert, BNav, BNavItem } from "bootstrap-vue";
 import { computed, ref, toRef } from "vue";
 
 import type { EdgeStyle, GraphNode } from "@/components/Graph/types";
@@ -10,16 +10,18 @@ import { useHistoryStore } from "@/stores/historyStore";
 import { useHistoryGraphData } from "./useHistoryGraphData";
 import { useHistoryGraphLayout } from "./useHistoryGraphLayout";
 
-import HistoryGraphDetails from "./HistoryGraphDetails.vue";
-import HistoryGraphMinimap from "./HistoryGraphMinimap.vue";
+import HistoryGraphOverview from "./HistoryGraphOverview.vue";
+import HistoryGraphReport from "./HistoryGraphReport.vue";
+import HistoryGraphToolRequests from "./HistoryGraphToolRequests.vue";
 import GButton from "@/components/BaseComponents/GButton.vue";
 import GButtonGroup from "@/components/BaseComponents/GButtonGroup.vue";
 import Heading from "@/components/Common/Heading.vue";
-import GraphView from "@/components/Graph/GraphView.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
 
 interface Props {
     historyId: string;
+    /** Active tab — undefined means the Overview tab (mirrors the invocation page). */
+    tab?: string;
     seedSrc?: string;
     seedId?: string;
 }
@@ -47,15 +49,16 @@ const focusNodeId = computed(() => (props.seedSrc && props.seedId ? `${props.see
 const edgeStyle = ref<EdgeStyle>("orthogonal");
 const { layout, layoutLoading } = useHistoryGraphLayout(graphData, edgeStyle);
 
-// Selection
-const selectedNode = ref<GraphNode | null>(null);
-
-function onNodeSelected(node: GraphNode | null) {
-    selectedNode.value = node;
-}
-
 const isLoading = computed(() => loading.value || layoutLoading.value);
 const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped ?? false);
+
+// `tab` undefined means the Overview tab.
+const onOverviewTab = computed(() => !props.tab);
+
+// Tool request nodes feed the "Tool Requests" tab.
+const toolRequestNodes = computed<GraphNode[]>(
+    () => layout.value?.nodes.filter((n) => (n.data?.src as string) === "tool_request") ?? [],
+);
 </script>
 
 <template>
@@ -63,17 +66,31 @@ const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped
         <BAlert v-if="error" variant="danger" show>{{ error }}</BAlert>
         <LoadingSpan v-else-if="isLoading" message="Loading history graph" />
         <template v-else>
-            <div class="ui-form-header-underlay sticky-top" />
-            <div class="tool-header sticky-top bg-secondary px-2 py-1 mb-2 rounded">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="py-1 d-flex flex-gapx-1 align-items-center">
-                        <FontAwesomeIcon :icon="faBezierCurve" class="fa-fw" />
-                        <Heading h1 inline bold size="text">{{ historyName }}</Heading>
-                    </div>
+            <div class="d-flex align-items-center flex-gapx-1 px-2 pt-2">
+                <FontAwesomeIcon :icon="faBezierCurve" class="fa-fw" />
+                <Heading h1 inline bold size="text">{{ historyName }}</Heading>
+            </div>
+            <BNav pills class="mb-2 p-2 bg-light border-bottom">
+                <BNavItem title="Overview" :active="onOverviewTab" :to="`/histories/${historyId}/graph`">
+                    Overview
+                </BNavItem>
+                <BNavItem
+                    title="Tool Requests"
+                    :active="props.tab === 'tool-requests'"
+                    :to="`/histories/${historyId}/graph/tool-requests`">
+                    Tool Requests
+                </BNavItem>
+                <BNavItem
+                    title="AI Report"
+                    :active="props.tab === 'report'"
+                    :to="`/histories/${historyId}/graph/report`">
+                    AI Report
+                </BNavItem>
+                <div v-if="onOverviewTab" class="ml-auto d-flex align-items-center">
                     <GButtonGroup>
                         <GButton
                             tooltip
-                            :title="'Orthogonal edges'"
+                            title="Orthogonal edges"
                             size="small"
                             color="blue"
                             :outline="edgeStyle !== 'orthogonal'"
@@ -83,7 +100,7 @@ const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped
                         </GButton>
                         <GButton
                             tooltip
-                            :title="'Curved edges'"
+                            title="Curved edges"
                             size="small"
                             color="blue"
                             :outline="edgeStyle !== 'curved'"
@@ -93,26 +110,22 @@ const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped
                         </GButton>
                     </GButtonGroup>
                 </div>
-            </div>
-            <div class="history-graph-content">
-                <GraphView
+            </BNav>
+            <div class="tab-content-container d-flex flex-column overflow-auto">
+                <HistoryGraphOverview
+                    v-if="onOverviewTab"
                     :layout="layout"
                     :focus-node-id="focusNodeId"
                     :edge-style="edgeStyle"
-                    :minimap-component="HistoryGraphMinimap"
-                    @nodeSelected="onNodeSelected" />
-                <HistoryGraphDetails :history-id="historyId" :node="selectedNode" />
-            </div>
-            <div v-if="isTruncated" class="history-graph-truncation">
-                Showing a partial graph. Not all connections are visible.
+                    :truncated="isTruncated" />
+                <HistoryGraphToolRequests v-else-if="props.tab === 'tool-requests'" :nodes="toolRequestNodes" />
+                <HistoryGraphReport v-else-if="props.tab === 'report'" :history-id="historyId" />
             </div>
         </template>
     </div>
 </template>
 
 <style lang="scss" scoped>
-@import "@/style/scss/theme/blue.scss";
-
 .history-graph-view {
     display: flex;
     flex-direction: column;
@@ -120,31 +133,8 @@ const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped
     min-height: 400px;
 }
 
-.history-graph-content {
-    display: flex;
-    flex-direction: row;
+.tab-content-container {
     flex: 1;
     min-height: 0;
-}
-
-.history-graph-truncation {
-    padding: 0.375rem 1rem;
-    background: $state-warning-bg;
-    color: $state-warning-text;
-    font-size: $h6-font-size;
-    text-align: center;
-    border-top: 1px solid $state-warning-border;
-}
-
-/* Tool request nodes use primary header (no dataset state) */
-:deep(.node-tool-request) .graph-node-header {
-    background: $brand-primary;
-    color: $white;
-}
-
-/* Dataset/collection nodes use state-driven coloring via data-state attribute */
-:deep(.node-dataset) .graph-node-header,
-:deep(.node-collection) .graph-node-header {
-    color: $text-color;
 }
 </style>

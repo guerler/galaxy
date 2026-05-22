@@ -1,0 +1,70 @@
+<script setup lang="ts">
+import { BAlert } from "bootstrap-vue";
+import { ref } from "vue";
+
+import type { EdgeStyle, GraphLayout, GraphNode } from "@/components/Graph/types";
+
+import HistoryGraphMinimap from "./HistoryGraphMinimap.vue";
+import HistoryGraphNodeDetails from "./HistoryGraphNodeDetails.vue";
+import GraphView from "@/components/Graph/GraphView.vue";
+
+interface Props {
+    layout: GraphLayout | null;
+    focusNodeId?: string | null;
+    edgeStyle?: EdgeStyle;
+    truncated?: boolean;
+}
+
+withDefaults(defineProps<Props>(), {
+    focusNodeId: null,
+    edgeStyle: "orthogonal",
+    truncated: false,
+});
+
+// Selected graph node — its details render in the card below the graph,
+// mirroring the workflow invocation overview (graph + step card).
+const selectedNode = ref<GraphNode | null>(null);
+
+function onNodeSelected(node: GraphNode | null) {
+    selectedNode.value = node;
+}
+</script>
+
+<template>
+    <div class="history-graph-overview">
+        <div class="graph-pane rounded border">
+            <GraphView
+                :layout="layout"
+                :focus-node-id="focusNodeId"
+                :edge-style="edgeStyle"
+                :minimap-component="HistoryGraphMinimap"
+                @nodeSelected="onNodeSelected" />
+        </div>
+        <BAlert v-if="truncated" variant="warning" show class="mt-2 mb-0 py-1 text-center">
+            Showing a partial graph. Not all connections are visible.
+        </BAlert>
+        <HistoryGraphNodeDetails class="mt-2" :node="selectedNode" />
+    </div>
+</template>
+
+<style lang="scss" scoped>
+@import "@/style/scss/theme/blue.scss";
+
+.graph-pane {
+    display: flex;
+    height: 60vh;
+    min-height: 400px;
+}
+
+/* Tool request nodes use primary header (no dataset state) */
+:deep(.node-tool-request) .graph-node-header {
+    background: $brand-primary;
+    color: $white;
+}
+
+/* Dataset/collection nodes use state-driven coloring via data-state attribute */
+:deep(.node-dataset) .graph-node-header,
+:deep(.node-collection) .graph-node-header {
+    color: $text-color;
+}
+</style>

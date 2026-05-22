@@ -145,6 +145,7 @@ class HistoryGraphBuilder:
         self._older_than_hid: Optional[int] = None
         self._newer_than_hid: Optional[int] = None
         self._sort_keys: dict[NodeRef, tuple[int, int]] = {}
+        self._tool_input_label_cache: dict[str, dict[str, str]] = {}
 
     def build(self) -> HistoryGraphResponse:
         truncation = TruncationInfo()
@@ -184,18 +185,26 @@ class HistoryGraphBuilder:
         payloads = self._fetch_payloads(set(tr_nodes.keys()))
         for tr_id, payload in payloads.items():
             input_refs = self._extract_inputs(payload)
+            input_labels = self._tool_input_labels(tr_nodes[tr_id])
             for ref_type, ref_id, input_name in input_refs:
                 source = self._ref(ref_type, ref_id)
                 target = self._ref("tool_request", tr_id)
                 etype = "dataset_input" if ref_type == "dataset" else "collection_input"
-                edges.append(GraphEdge(source=source, target=target, type=etype, name=input_name))
+                edges.append(
+                    GraphEdge(
+                        source=source,
+                        target=target,
+                        type=etype,
+                        name=input_labels.get(input_name, input_name),
+                    )
+                )
                 if ref_type == "dataset" and ref_id not in dataset_ids:
                     closure_dataset_ids.add(ref_id)
                 elif ref_type == "collection" and ref_id not in collection_ids:
                     closure_collection_ids.add(ref_id)
 
-        # Collection element membership: each HDA that is (transitively) an
-        # element of an HDCA in the graph gets a `dataset_element` edge to
+        # Collection element membership: each visible HDA that is (transitively)
+        # an element of an HDCA in the graph gets a `dataset_element` edge to
         # that HDCA, surfacing the build-collection-from-datasets step that
         # has no tool_request of its own.
         for hda_id, hdca_id in self._collection_element_edges(collection_ids):
@@ -483,7 +492,8 @@ class HistoryGraphBuilder:
 
     def _collection_element_edges(self, hdca_ids: set[int]) -> set[tuple[int, int]]:
         """Walk each HDCA's collection tree and return (hda_id, hdca_id) pairs
-        for every leaf HDA element. Nested collections are traversed
+        for every visible leaf HDA element. Hidden elements are suppressed,
+        mirroring ``_remove_hidden_elements``. Nested collections are traversed
         transparently: intermediate child_collections do not have HDCA nodes,
         so leaf HDAs are wired directly to the top-level HDCA they belong to.
         """
@@ -518,7 +528,20 @@ class HistoryGraphBuilder:
                     next_frontier.add(row.child_collection_id)
             seen |= frontier
             frontier = next_frontier - seen
-        return edges
+
+        # Suppress hidden elements: a tool-produced collection's internal
+        # element HDAs are hidden and must not surface as dataset nodes.
+        # This mirrors _remove_hidden_elements, which strips them from the
+        # top-level selection — without it the closure would re-add them.
+        if not edges:
+            return edges
+        leaf_hda_ids = {hda_id for hda_id, _ in edges}
+        visible_stmt = select(HistoryDatasetAssociation.id).where(
+            HistoryDatasetAssociation.id.in_(leaf_hda_ids),
+            HistoryDatasetAssociation.visible == True,  # noqa: E712
+        )
+        visible_ids = {row.id for row in self.sa_session.execute(visible_stmt)}
+        return {(hda_id, hdca_id) for hda_id, hdca_id in edges if hda_id in visible_ids}
 
     # ── Node construction ──
 
@@ -602,6 +625,29 @@ class HistoryGraphBuilder:
         for node in nodes:
             if node.src == "tool_request" and node.tool_id and node.tool_id in name_map:
                 node.tool_name = name_map[node.tool_id]
+
+    def _tool_input_labels(self, tool_id: Optional[str]) -> dict[str, str]:
+        """Top-level input parameter name -> display label for a tool, from
+        the in-memory toolbox. Empty when the toolbox is unavailable or the
+        tool is not found; callers fall back to the parameter name (which is
+        also the fallback for nested parameters)."""
+        if tool_id is None:
+            return {}
+        if tool_id not in self._tool_input_label_cache:
+            labels: dict[str, str] = {}
+            toolbox = self.toolbox
+            if toolbox is not None:
+                try:
+                    tool = toolbox.get_tool(tool_id)
+                except MessageException:
+                    tool = None
+                if tool is not None:
+                    for name, param in tool.inputs.items():
+                        label = getattr(param, "label", None)
+                        if label:
+                            labels[name] = label
+            self._tool_input_label_cache[tool_id] = labels
+        return self._tool_input_label_cache[tool_id]
 
     # ── Seed subgraph filter (in-memory only) ──
 

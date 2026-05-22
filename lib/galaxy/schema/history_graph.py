@@ -53,8 +53,9 @@ class GraphEdge(BaseModel):
         "collection_output",
         "dataset_element",
     ]
-    # Tool input parameter name (input edges) or tool output name (output edges);
-    # None for dataset_element edges, which have no tool port.
+    # Tool port label — input parameter label (input edges; the parameter name
+    # when it has no label) or output name (output edges). None for
+    # dataset_element edges, which have no tool port.
     name: Optional[str] = None
 
 

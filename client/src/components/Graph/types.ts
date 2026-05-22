@@ -34,6 +34,8 @@ export interface GraphNode {
     outputConnector?: ConnectorVariant | null;
     /** Measured Y offset (px from node top) of each per-port connector, keyed by edge id. */
     portOffsets?: Record<string, number>;
+    /** Measured Y offset (px from node top) of the merged connector (collapsed node). */
+    connectorY?: number;
     /** Arbitrary domain data attached by the mapper */
     data?: Record<string, unknown>;
 }

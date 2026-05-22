@@ -45,6 +45,8 @@ interface NodeSize {
     height: number;
     /** Per-port connector Y offsets (px from node top), keyed by edge id. */
     ports: Record<string, number>;
+    /** Merged connector Y offset (px from node top) for a collapsed node. */
+    connectorY?: number;
 }
 
 // ── Measure-then-layout ──────────────────────────────────────────────
@@ -85,6 +87,7 @@ async function runLayout() {
             ...node,
             height: measured?.height ?? node.height,
             portOffsets: measured?.ports,
+            connectorY: measured?.connectorY,
         };
     });
     const result = await layoutGraph(sized, props.edges);

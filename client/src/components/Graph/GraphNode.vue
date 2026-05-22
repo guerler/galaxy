@@ -14,7 +14,11 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{
     (e: "select", nodeId: string): void;
-    (e: "resize", nodeId: string, size: { width: number; height: number; ports: Record<string, number> }): void;
+    (
+        e: "resize",
+        nodeId: string,
+        size: { width: number; height: number; ports: Record<string, number>; connectorY?: number },
+    ): void;
 }>();
 
 // The node has a fixed width but content-driven height (multiline header, body
@@ -37,14 +41,17 @@ function measure() {
             ports[edgeId] = portEl.offsetTop + portEl.offsetHeight / 2;
         }
     });
+    // A collapsed node anchors its merged connectors to the first body row.
+    const mergedRow = el.querySelector<HTMLElement>("[data-merged-connector]");
+    const connectorY = mergedRow ? mergedRow.offsetTop + mergedRow.offsetHeight / 2 : undefined;
     const width = el.offsetWidth;
     const height = el.offsetHeight;
-    const key = `${width}x${height}:${JSON.stringify(ports)}`;
+    const key = `${width}x${height}:${connectorY}:${JSON.stringify(ports)}`;
     if (key === lastEmitted) {
         return;
     }
     lastEmitted = key;
-    emit("resize", props.node.id, { width, height, ports });
+    emit("resize", props.node.id, { width, height, ports, connectorY });
 }
 
 onMounted(() => {
@@ -110,20 +117,36 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
             </div>
         </div>
 
-        <!-- Collapsed node: badge / state / summary body, merged connectors. -->
+        <!-- Collapsed node: badge / state / summary body. The merged connectors
+             anchor to the first body row, or the node centre when there is none. -->
         <template v-else>
             <div v-if="showBody" class="graph-node-body">
-                <span v-if="node.badge" class="badge badge-secondary">{{ node.badge }}</span>
-                <div v-if="stateText" class="graph-node-state">{{ stateText }}</div>
+                <div class="graph-node-body-row" data-merged-connector>
+                    <span v-if="node.badge" class="badge badge-secondary">{{ node.badge }}</span>
+                    <span v-else class="graph-node-state">{{ stateText }}</span>
+                    <GraphConnector
+                        v-if="node.inputConnector"
+                        class="graph-node-connector graph-node-connector--input"
+                        :variant="node.inputConnector" />
+                    <GraphConnector
+                        v-if="node.outputConnector"
+                        class="graph-node-connector graph-node-connector--output"
+                        :variant="node.outputConnector" />
+                </div>
+                <div v-if="node.badge && stateText" class="graph-node-body-row">
+                    <span class="graph-node-state">{{ stateText }}</span>
+                </div>
             </div>
-            <GraphConnector
-                v-if="node.inputConnector"
-                class="graph-node-connector graph-node-connector--input"
-                :variant="node.inputConnector" />
-            <GraphConnector
-                v-if="node.outputConnector"
-                class="graph-node-connector graph-node-connector--output"
-                :variant="node.outputConnector" />
+            <template v-else>
+                <GraphConnector
+                    v-if="node.inputConnector"
+                    class="graph-node-connector graph-node-connector--input"
+                    :variant="node.inputConnector" />
+                <GraphConnector
+                    v-if="node.outputConnector"
+                    class="graph-node-connector graph-node-connector--output"
+                    :variant="node.outputConnector" />
+            </template>
         </template>
     </div>
 </template>
@@ -146,15 +169,19 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
 .node-highlight {
     z-index: 1001;
     border-color: $white;
-    box-shadow: 0 0 0 3px $brand-primary;
+    // Matches the workflow/invocation node selection ring.
+    box-shadow: 0 0 0 2px $brand-primary;
 }
 
 .graph-node-header {
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.4rem 0.5rem;
+    // Matches the workflow/invocation node header (Bootstrap `py-1 px-2`).
+    padding: 0.25rem 0.5rem;
     font-size: $font-size-base;
+    // Round the top corners so the coloured header follows the node's outline.
+    border-radius: 0.25rem 0.25rem 0 0;
 }
 
 .graph-node-icon {
@@ -171,13 +198,18 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
 }
 
 .graph-node-body {
-    padding: 0.35rem 0.5rem;
     border-top: solid $border-color 1px;
     font-size: $font-size-base;
 }
 
+// position: relative anchors the first row's merged connectors at its centre.
+// Horizontal padding matches the workflow/invocation node body inset.
+.graph-node-body-row {
+    position: relative;
+    padding: 0.3rem 0.75rem;
+}
+
 .graph-node-state {
-    margin-top: 0.15rem;
     font-size: $h6-font-size;
     color: $text-muted;
     white-space: normal;
@@ -192,7 +224,7 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
 // position: relative anchors the row's per-port connector at its vertical centre.
 .graph-node-port {
     position: relative;
-    padding: 0.3rem 0.6rem;
+    padding: 0.3rem 0.75rem;
 }
 
 .graph-node-port--output {

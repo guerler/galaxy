@@ -2,7 +2,7 @@
 import type { Ref } from "vue";
 import { computed, onMounted, ref, toRef, watch } from "vue";
 
-import type { GraphLayout } from "@/components/Graph/types";
+import type { GraphLayout, GraphNode } from "@/components/Graph/types";
 import { useAnimationFrame } from "@/composables/sensors/animationFrame";
 import { useMinimapInteraction } from "@/composables/useMinimapInteraction";
 import { AxisAlignedBoundingBox } from "@/utils/geometry";
@@ -134,6 +134,29 @@ useAnimationFrame(() => {
 
 // ── Rendering ──
 
+// State colors for dataset/collection nodes — read lazily from the global
+// `--state-color-*` custom properties defined in base.scss.
+const stateColors: Record<string, string> = {};
+
+function stateColor(state: string): string {
+    if (!(state in stateColors)) {
+        const el = canvas.value;
+        stateColors[state] = el
+            ? getComputedStyle(el).getPropertyValue(`--state-color-${state.replace(/_/g, "-")}`).trim()
+            : "";
+    }
+    return stateColors[state]!;
+}
+
+/** Fill color for a node — tool nodes use the brand color, data nodes their state color. */
+function nodeFillColor(node: GraphNode): string {
+    if ((node.data?.src as string) === "tool_request") {
+        return nodeColor;
+    }
+    const state = node.data?.state as string | undefined;
+    return (state && stateColor(state)) || nodeColor;
+}
+
 function renderMinimap() {
     const canvasTransform = getCanvasTransform();
     const ctx = canvas.value!.getContext("2d") as CanvasRenderingContext2D;
@@ -146,13 +169,25 @@ function renderMinimap() {
 
     canvasTransform.applyToContext(ctx);
 
-    // Draw nodes
-    ctx.fillStyle = nodeColor;
-    ctx.beginPath();
+    // Draw nodes, grouped by fill color for fewer canvas fills
+    const nodesByColor = new Map<string, GraphNode[]>();
     for (const node of props.layout.nodes) {
-        ctx.rect(node.x, node.y, node.width, node.height);
+        const color = nodeFillColor(node);
+        const list = nodesByColor.get(color);
+        if (list) {
+            list.push(node);
+        } else {
+            nodesByColor.set(color, [node]);
+        }
     }
-    ctx.fill();
+    for (const [color, nodes] of nodesByColor) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (const node of nodes) {
+            ctx.rect(node.x, node.y, node.width, node.height);
+        }
+        ctx.fill();
+    }
 
     // Draw selected node outline
     if (props.selectedNodeId) {

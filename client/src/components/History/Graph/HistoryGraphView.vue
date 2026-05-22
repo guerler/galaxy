@@ -9,8 +9,8 @@ import type { GraphNode } from "@/components/Graph/types";
 import { usePersistentToggle } from "@/composables/persistentToggle";
 import { useHistoryStore } from "@/stores/historyStore";
 
+import { mapEdges, mapNodes } from "./historyGraphMapper";
 import { useHistoryGraphData } from "./useHistoryGraphData";
-import { useHistoryGraphLayout } from "./useHistoryGraphLayout";
 
 import HistoryGraphOverview from "./HistoryGraphOverview.vue";
 import HistoryGraphReport from "./HistoryGraphReport.vue";
@@ -35,9 +35,7 @@ const history = computed(() => historyStore.getHistoryById(props.historyId));
 const historyName = computed(() => history.value?.name ?? "...");
 
 // Collapsible header info block, mirroring the invocation page's annotation.
-const { toggled: headerCollapsed, toggle: toggleHeaderCollapse } = usePersistentToggle(
-    "history-graph-header-collapsed",
-);
+const { toggled: headerCollapsed, toggle: toggleHeaderCollapse } = usePersistentToggle("history-graph-header-collapsed");
 
 // Fetch params — product decisions owned here
 const limit = ref(500);
@@ -52,28 +50,27 @@ const { graphData, loading, error } = useHistoryGraphData(
 // Renderer focus key mirrors the mapper's `${src}:${id}` node key.
 const focusNodeId = computed(() => (props.seedSrc && props.seedId ? `${props.seedSrc}:${props.seedId}` : null));
 
-// The node whose connections are expanded — driven by "Show Connections" on the graph.
-const expandedNodeId = ref<string | null>(null);
+// Graph structure for the renderer — GraphView measures and positions it.
+const graphNodes = computed<GraphNode[]>(() =>
+    graphData.value ? mapNodes(graphData.value.nodes, graphData.value.edges) : [],
+);
+const graphEdges = computed(() => (graphData.value ? mapEdges(graphData.value.edges) : []));
 
-// Layout
-const { layout, layoutLoading } = useHistoryGraphLayout(graphData, expandedNodeId);
-
-const isLoading = computed(() => loading.value || layoutLoading.value);
 const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped ?? false);
 
 // `tab` undefined means the Overview tab.
 const onOverviewTab = computed(() => !props.tab);
 
 // Tool request nodes feed the "Tool Requests" tab.
-const toolRequestNodes = computed<GraphNode[]>(
-    () => layout.value?.nodes.filter((n) => (n.data?.src as string) === "tool_request") ?? [],
+const toolRequestNodes = computed<GraphNode[]>(() =>
+    graphNodes.value.filter((node) => (node.data?.src as string) === "tool_request"),
 );
 </script>
 
 <template>
     <div class="history-graph-view">
         <BAlert v-if="error" variant="danger" show>{{ error }}</BAlert>
-        <LoadingSpan v-else-if="isLoading" message="Loading history graph" />
+        <LoadingSpan v-else-if="loading" message="Loading history graph" />
         <template v-else>
             <NavigationTitle
                 :icon="faBezierCurve"
@@ -114,10 +111,10 @@ const toolRequestNodes = computed<GraphNode[]>(
             <div class="tab-content-container d-flex flex-column overflow-auto">
                 <HistoryGraphOverview
                     v-if="onOverviewTab"
-                    :layout="layout"
+                    :nodes="graphNodes"
+                    :edges="graphEdges"
                     :focus-node-id="focusNodeId"
-                    :truncated="isTruncated"
-                    @expand="expandedNodeId = $event" />
+                    :truncated="isTruncated" />
                 <HistoryGraphToolRequests v-else-if="props.tab === 'tool-requests'" :nodes="toolRequestNodes" />
                 <HistoryGraphReport v-else-if="props.tab === 'report'" :history-id="historyId" />
             </div>

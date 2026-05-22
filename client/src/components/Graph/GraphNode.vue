@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { computed } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 
-import { HEADER_HEIGHT, PORT_ROW_HEIGHT, RULE_HEIGHT } from "./nodeGeometry";
-import type { ConnectorVariant, GraphNode } from "./types";
+import type { GraphNode } from "./types";
 
 import GraphConnector from "./GraphConnector.vue";
 
@@ -13,7 +12,34 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits<{ (e: "select", nodeId: string): void }>();
+const emit = defineEmits<{
+    (e: "select", nodeId: string): void;
+    (e: "resize", nodeId: string, size: { width: number; height: number }): void;
+}>();
+
+// The node has a fixed width but content-driven height (multiline header and
+// body text). A ResizeObserver reports the rendered size so the graph layout
+// can position nodes once they are all measured. observe() fires immediately,
+// so the initial size is reported without any extra mount-time emit.
+const root = ref<HTMLElement | null>(null);
+let observer: ResizeObserver | null = null;
+
+onMounted(() => {
+    if (!root.value) {
+        return;
+    }
+    observer = new ResizeObserver(() => {
+        if (root.value) {
+            emit("resize", props.node.id, {
+                width: root.value.offsetWidth,
+                height: root.value.offsetHeight,
+            });
+        }
+    });
+    observer.observe(root.value);
+});
+
+onBeforeUnmount(() => observer?.disconnect());
 
 const nodeStyle = computed(() => ({
     left: `${props.node.x}px`,
@@ -21,88 +47,34 @@ const nodeStyle = computed(() => ({
     width: `${props.node.width}px`,
 }));
 
-// Expose the geometry constants to the scoped styles as CSS custom properties.
-const geometryStyle = {
-    "--header-height": `${HEADER_HEIGHT}px`,
-    "--port-row-height": `${PORT_ROW_HEIGHT}px`,
-    "--rule-height": `${RULE_HEIGHT}px`,
-};
-
-const hasInputs = computed(() => props.node.inputs && props.node.inputs.length > 0);
-const hasOutputs = computed(() => props.node.outputs && props.node.outputs.length > 0);
-const hasPorts = computed(() => hasInputs.value || hasOutputs.value);
-const showRule = computed(() => hasInputs.value && hasOutputs.value);
-const showDataBody = computed(() => !hasPorts.value && (props.node.badge || props.node.data?.stateText));
+const stateText = computed(() => (props.node.data?.stateText as string | undefined) ?? "");
+const showBody = computed(() => Boolean(props.node.badge || stateText.value));
 const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
-
-interface ConnectorPlacement {
-    side: "input" | "output";
-    /** CSS `top` value — "50%" for merged connectors, a px offset for per-port ones. */
-    top: string;
-    variant: ConnectorVariant;
-}
-
-// Connectors to render: merged node-level ones (collapsed) plus per-port ones (expanded).
-const connectorPlacements = computed<ConnectorPlacement[]>(() => {
-    const placements: ConnectorPlacement[] = [];
-    // Merged connectors anchor at the node's connector row (the first body line).
-    const mergedTop = `${props.node.connectorY ?? props.node.height / 2}px`;
-    if (props.node.inputConnector) {
-        placements.push({ side: "input", top: mergedTop, variant: props.node.inputConnector });
-    }
-    if (props.node.outputConnector) {
-        placements.push({ side: "output", top: mergedTop, variant: props.node.outputConnector });
-    }
-    for (const port of props.node.inputs ?? []) {
-        if (port.offsetY != null) {
-            placements.push({ side: "input", top: `${port.offsetY}px`, variant: port.variant ?? "single" });
-        }
-    }
-    for (const port of props.node.outputs ?? []) {
-        if (port.offsetY != null) {
-            placements.push({ side: "output", top: `${port.offsetY}px`, variant: port.variant ?? "single" });
-        }
-    }
-    return placements;
-});
 </script>
 
 <template>
     <div
-        class="graph-node card"
+        ref="root"
+        class="graph-node"
         :class="[node.cssClass, { 'node-highlight': selected }]"
-        :style="[nodeStyle, geometryStyle]"
+        :style="nodeStyle"
         @click.stop="emit('select', node.id)">
-        <div class="graph-node-header card-header unselectable" :data-state="node.data?.state ?? undefined">
-            <FontAwesomeIcon :icon="node.icon" class="graph-node-icon mr-1" :spin="iconSpin" />
-            <span class="graph-node-label" :title="node.label">{{ node.label }}</span>
-            <span v-if="hasPorts && node.badge" class="badge badge-light ml-auto">{{ node.badge }}</span>
+        <div class="graph-node-header unselectable" :data-state="node.data?.state ?? undefined">
+            <FontAwesomeIcon :icon="node.icon" class="graph-node-icon" :spin="iconSpin" fixed-width />
+            <span class="graph-node-label">{{ node.label }}</span>
         </div>
-        <div v-if="showDataBody" class="node-body card-body p-0 mx-2">
-            <div v-if="node.badge" class="form-row dataRow">
-                <span class="badge badge-secondary">{{ node.badge }}</span>
-            </div>
-            <div v-if="node.data?.stateText" class="form-row dataRow">
-                <span class="node-state-text">{{ node.data.stateText }}</span>
-            </div>
+        <div v-if="showBody" class="graph-node-body">
+            <span v-if="node.badge" class="badge badge-secondary">{{ node.badge }}</span>
+            <div v-if="stateText" class="graph-node-state">{{ stateText }}</div>
         </div>
-        <div v-if="hasPorts" class="node-body card-body p-0 mx-2">
-            <div v-for="input in node.inputs" :key="`in-${input.edgeId}`" class="form-row dataRow input-data-row">
-                <span class="node-port-label" :title="input.label">{{ input.label }}</span>
-            </div>
-            <div v-if="showRule" class="rule" />
-            <div v-for="output in node.outputs" :key="`out-${output.edgeId}`" class="form-row dataRow output-data-row">
-                <span class="node-port-label" :title="output.label">{{ output.label }}</span>
-            </div>
-        </div>
-        <div
-            v-for="(connector, index) in connectorPlacements"
-            :key="`connector-${index}`"
-            class="graph-node-connector"
-            :class="`graph-node-connector--${connector.side}`"
-            :style="{ top: connector.top }">
-            <GraphConnector :variant="connector.variant" />
-        </div>
+        <GraphConnector
+            v-if="node.inputConnector"
+            class="graph-node-connector graph-node-connector--input"
+            :variant="node.inputConnector" />
+        <GraphConnector
+            v-if="node.outputConnector"
+            class="graph-node-connector graph-node-connector--output"
+            :variant="node.outputConnector" />
     </div>
 </template>
 
@@ -111,74 +83,61 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 
 .graph-node {
     position: absolute;
+    background: $white;
+    border: solid $brand-primary 1px;
+    border-radius: 0.25rem;
     cursor: pointer;
     user-select: none;
-    border: solid $brand-primary 1px;
     transition:
         border-color 0.15s,
-        box-shadow 0.15s,
-        opacity 0.2s ease;
+        box-shadow 0.15s;
 }
 
 .node-highlight {
     z-index: 1001;
-    border: solid $white 1px;
+    border-color: $white;
     box-shadow: 0 0 0 3px $brand-primary;
 }
 
 .graph-node-header {
     display: flex;
     align-items: center;
-    height: var(--header-height);
-    padding: 0 0.5rem;
+    gap: 0.35rem;
+    padding: 0.4rem 0.5rem;
     font-size: $font-size-base;
 }
 
+.graph-node-icon {
+    flex: none;
+}
+
+// Header and body text wrap to as many lines as needed — never truncated.
 .graph-node-label {
     flex: 1;
     min-width: 0;
     font-weight: 500;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
-.node-body {
+.graph-node-body {
+    padding: 0.35rem 0.5rem;
+    border-top: solid $border-color 1px;
     font-size: $font-size-base;
 }
 
-.node-state-text {
+.graph-node-state {
+    margin-top: 0.15rem;
     font-size: $h6-font-size;
     color: $text-muted;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
-.form-row {
-    height: var(--port-row-height);
-    line-height: var(--port-row-height);
-    padding: 0 10px;
-}
-
-.output-data-row {
-    text-align: right;
-}
-
-.node-port-label {
-    display: block;
-    overflow: hidden;
-    color: $text-color;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.rule {
-    height: var(--rule-height);
-    border: none;
-    border-bottom: dotted $brand-primary 1px;
-    margin: 0;
-}
-
+// Merged connectors straddle the node edge at its vertical centre.
 .graph-node-connector {
     position: absolute;
+    top: 50%;
 }
 
 .graph-node-connector--input {

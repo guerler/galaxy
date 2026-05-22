@@ -36,9 +36,7 @@ function select(node: GraphNode) {
                     {{ node.label }}
                 </BListGroupItem>
             </BListGroup>
-            <HistoryGraphNodeDetails
-                :node="selected"
-                empty-text="Select a tool execution above to view its details." />
+            <HistoryGraphNodeDetails :node="selected" empty-text="Select a tool execution above to view its details." />
         </template>
     </div>
 </template>

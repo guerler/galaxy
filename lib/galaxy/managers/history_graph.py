@@ -146,6 +146,7 @@ class HistoryGraphBuilder:
         self._newer_than_hid: Optional[int] = None
         self._sort_keys: dict[NodeRef, tuple[int, int]] = {}
         self._tool_input_label_cache: dict[str, dict[str, str]] = {}
+        self._tool_output_label_cache: dict[str, dict[str, str]] = {}
 
     def build(self) -> HistoryGraphResponse:
         truncation = TruncationInfo()
@@ -179,7 +180,9 @@ class HistoryGraphBuilder:
             source = self._ref("tool_request", tr_id)
             target = self._ref(item_type, item_id)
             etype = "dataset_output" if item_type == "dataset" else "collection_output"
-            edges.append(GraphEdge(source=source, target=target, type=etype, name=output_name))
+            output_labels = self._tool_output_labels(tool_id)
+            edge_name = output_labels.get(output_name, output_name) if output_name is not None else None
+            edges.append(GraphEdge(source=source, target=target, type=etype, name=edge_name))
 
         # Batch-fetch all payloads, parse inputs, emit input edges.
         payloads = self._fetch_payloads(set(tr_nodes.keys()))
@@ -627,10 +630,10 @@ class HistoryGraphBuilder:
                 node.tool_name = name_map[node.tool_id]
 
     def _tool_input_labels(self, tool_id: Optional[str]) -> dict[str, str]:
-        """Top-level input parameter name -> display label for a tool, from
-        the in-memory toolbox. Empty when the toolbox is unavailable or the
-        tool is not found; callers fall back to the parameter name (which is
-        also the fallback for nested parameters)."""
+        """Connection-name -> display label for a tool's input parameters,
+        resolved from the in-memory toolbox (nested parameters included).
+        Empty when the toolbox is unavailable or the tool is not found;
+        callers fall back to the parameter name."""
         if tool_id is None:
             return {}
         if tool_id not in self._tool_input_label_cache:
@@ -642,12 +645,52 @@ class HistoryGraphBuilder:
                 except MessageException:
                     tool = None
                 if tool is not None:
-                    for name, param in tool.inputs.items():
-                        label = getattr(param, "label", None)
-                        if label:
-                            labels[name] = label
+                    self._collect_input_labels(tool.inputs, "", labels)
             self._tool_input_label_cache[tool_id] = labels
         return self._tool_input_label_cache[tool_id]
+
+    def _collect_input_labels(self, inputs: dict, prefix: str, labels: dict[str, str]) -> None:
+        """Recursively collect leaf parameter labels keyed by their `|`-joined
+        connection name, descending through conditionals, repeats and sections
+        so nested data parameters resolve. The key form matches the names
+        produced by request_internal_input_refs."""
+        for name, param in inputs.items():
+            path = f"{prefix}{name}"
+            cases = getattr(param, "cases", None)
+            if cases is not None:
+                for case in cases:
+                    self._collect_input_labels(case.inputs, f"{path}|", labels)
+                continue
+            group_inputs = getattr(param, "inputs", None)
+            if group_inputs is not None:
+                self._collect_input_labels(group_inputs, f"{path}|", labels)
+                continue
+            label = getattr(param, "label", None)
+            if label:
+                labels[path] = label
+
+    def _tool_output_labels(self, tool_id: Optional[str]) -> dict[str, str]:
+        """Output name -> display label for a tool, resolved from the in-memory
+        toolbox. Templated labels (those referencing `$`, e.g. `${on_string}`,
+        which need job context to render) and missing labels are skipped so
+        callers fall back to the plain output name."""
+        if tool_id is None:
+            return {}
+        if tool_id not in self._tool_output_label_cache:
+            labels: dict[str, str] = {}
+            toolbox = self.toolbox
+            if toolbox is not None:
+                try:
+                    tool = toolbox.get_tool(tool_id)
+                except MessageException:
+                    tool = None
+                if tool is not None:
+                    for name, output in {**tool.outputs, **tool.output_collections}.items():
+                        label = getattr(output, "label", None)
+                        if label and "$" not in label:
+                            labels[name] = label
+            self._tool_output_label_cache[tool_id] = labels
+        return self._tool_output_label_cache[tool_id]
 
     # ── Seed subgraph filter (in-memory only) ──
 

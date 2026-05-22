@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<Props>(), {
     selectedNodeId: null,
 });
 
-/** Ribbon margin for collection edges — matches workflow editor's ribbonMargin */
+/** Ribbon margin for collection edges — the gap between parallel ribbon strands. */
 const RIBBON_MARGIN = 4;
 const RIBBON_OFFSETS = [-2 * RIBBON_MARGIN, -1 * RIBBON_MARGIN, 0, 1 * RIBBON_MARGIN, 2 * RIBBON_MARGIN];
 

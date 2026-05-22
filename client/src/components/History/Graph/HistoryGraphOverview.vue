@@ -21,8 +21,7 @@ withDefaults(defineProps<Props>(), {
     truncated: false,
 });
 
-// Selected graph node — its details render in the card below the graph,
-// mirroring the workflow invocation overview (graph + step card).
+// Selected graph node — its details render in the card below the graph.
 const selectedNode = ref<GraphNode | null>(null);
 
 function onNodeSelected(node: GraphNode | null) {

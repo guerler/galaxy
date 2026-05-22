@@ -8,7 +8,7 @@ type ApiGraphNode = components["schemas"]["GraphNode"];
 type ApiGraphEdge = components["schemas"]["GraphEdge"];
 export type HistoryGraphResponse = components["schemas"]["HistoryGraphResponse"];
 
-/** Fixed node width — uniform across all node types, matching the workflow editor. */
+/** Fixed node width — uniform across all node types. */
 const NODE_WIDTH = 200;
 
 /** User-facing labels keyed by node src */

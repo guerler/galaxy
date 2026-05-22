@@ -11,8 +11,7 @@ const elk = new ELK();
  * bezier curves between node centres.
  *
  * Input nodes must already carry their measured `width`/`height`; this assigns
- * each node an `x`/`y` and each edge its `points`. Generic and domain-free —
- * it knows nothing about histories or workflows.
+ * each node an `x`/`y` and each edge its `points`. Generic and domain-free.
  */
 export async function layoutGraph(nodes: GraphNode[], edges: GraphEdge[]): Promise<GraphLayout> {
     const elkChildren: ElkNode[] = nodes.map((node) => ({

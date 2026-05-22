@@ -21,7 +21,7 @@ import UtcDate from "@/components/UtcDate.vue";
 
 interface Props {
     historyId: string;
-    /** Active tab — undefined means the Overview tab (mirrors the invocation page). */
+    /** Active tab — undefined means the Overview tab. */
     tab?: string;
     seedSrc?: string;
     seedId?: string;
@@ -34,8 +34,10 @@ const historyStore = useHistoryStore();
 const history = computed(() => historyStore.getHistoryById(props.historyId));
 const historyName = computed(() => history.value?.name ?? "...");
 
-// Collapsible header info block, mirroring the invocation page's annotation.
-const { toggled: headerCollapsed, toggle: toggleHeaderCollapse } = usePersistentToggle("history-graph-header-collapsed");
+// Collapsible header info block.
+const { toggled: headerCollapsed, toggle: toggleHeaderCollapse } = usePersistentToggle(
+    "history-graph-header-collapsed",
+);
 
 // Fetch params — product decisions owned here
 const limit = ref(500);

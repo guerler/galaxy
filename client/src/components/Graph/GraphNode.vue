@@ -30,9 +30,12 @@ function measure() {
     if (!el) {
         return;
     }
-    // The merged connectors anchor to the first body row.
+    // The merged connectors anchor to the first body row. offsetTop is measured
+    // from the node's padding edge (inside the border), so clientTop — the top
+    // border width — is added to make connectorY relative to the node's outer
+    // top, the origin the layout positions the node from.
     const mergedRow = el.querySelector<HTMLElement>("[data-merged-connector]");
-    const connectorY = mergedRow ? mergedRow.offsetTop + mergedRow.offsetHeight / 2 : undefined;
+    const connectorY = mergedRow ? el.clientTop + mergedRow.offsetTop + mergedRow.offsetHeight / 2 : undefined;
     const width = el.offsetWidth;
     const height = el.offsetHeight;
     const key = `${width}x${height}:${connectorY}`;
@@ -127,15 +130,12 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
 .node-highlight {
     z-index: 1001;
     border-color: $white;
-    // Matches the workflow/invocation node selection ring.
     box-shadow: 0 0 0 2px $brand-primary;
 }
 
 .graph-node-header {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    // Matches the workflow/invocation node header (Bootstrap `py-1 px-2`).
+    // Block flow (not flex) so the icon sits inline at the start and wrapped
+    // header text uses the node's full width.
     padding: 0.25rem 0.5rem;
     font-size: $font-size-base;
     // Round the top corners to the node's inner radius (node radius minus the
@@ -144,13 +144,11 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
 }
 
 .graph-node-icon {
-    flex: none;
+    margin-right: 0.2rem;
 }
 
 // Header and body text wrap to as many lines as needed — never truncated.
 .graph-node-label {
-    flex: 1;
-    min-width: 0;
     font-weight: 500;
     white-space: normal;
     overflow-wrap: anywhere;
@@ -162,7 +160,6 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
 }
 
 // position: relative anchors the first row's merged connectors at its centre.
-// Horizontal padding matches the workflow/invocation node body inset.
 .graph-node-body-row {
     position: relative;
     padding: 0.3rem 0.75rem;
@@ -182,13 +179,15 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
     top: 50%;
 }
 
+// -0.5px places the connector centre on the 1px border's centreline rather
+// than on its inner edge (where left/right: 0 — the content-box edge — sits).
 .graph-node-connector--input {
-    left: 0;
+    left: -0.5px;
     transform: translate(-50%, -50%);
 }
 
 .graph-node-connector--output {
-    right: 0;
+    right: -0.5px;
     transform: translate(50%, -50%);
 }
 </style>

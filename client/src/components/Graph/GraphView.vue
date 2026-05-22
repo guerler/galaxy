@@ -40,55 +40,64 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{ (e: "nodeSelected", node: GraphNode | null): void }>();
 
+interface NodeSize {
+    width: number;
+    height: number;
+    /** Per-port connector Y offsets (px from node top), keyed by edge id. */
+    ports: Record<string, number>;
+}
+
 // ── Measure-then-layout ──────────────────────────────────────────────
-// Nodes render hidden first so the browser computes their wrapped height;
-// once every node has reported a size, ELK positions them and the graph is
-// revealed. Node widths stay fixed while text wraps to as many lines as needed.
-const measuredSizes = ref(new Map<string, { width: number; height: number }>());
+// Nodes render first so the browser computes their wrapped height (and the
+// position of each port row); once every node has reported a size, ELK
+// positions them. The current layout stays on screen while a re-layout runs,
+// so toggling node expansion never blanks the view.
+const measuredSizes = ref(new Map<string, NodeSize>());
 const layout = ref<GraphLayout | null>(null);
 const measuring = computed(() => layout.value === null && props.nodes.length > 0);
 
-function onNodeResize(id: string, size: { width: number; height: number }) {
+function onNodeResize(id: string, size: NodeSize) {
     const next = new Map(measuredSizes.value);
     next.set(id, size);
     measuredSizes.value = next;
 }
 
-let layoutScheduled = false;
+// Coalesce the measurement burst into a single layout run. A macrotask delay
+// lets ResizeObserver deliver this frame's sizes before the layout runs.
+let layoutScheduled: ReturnType<typeof setTimeout> | null = null;
 function scheduleLayout() {
-    if (layoutScheduled) {
+    if (layoutScheduled !== null) {
         return;
     }
-    layoutScheduled = true;
-    requestAnimationFrame(() => {
-        layoutScheduled = false;
+    layoutScheduled = setTimeout(() => {
+        layoutScheduled = null;
         void runLayout();
-    });
+    }, 0);
 }
 
 let layoutToken = 0;
+let fitted = false;
 async function runLayout() {
     const token = ++layoutToken;
-    const sized = props.nodes.map((node) => ({
-        ...node,
-        height: measuredSizes.value.get(node.id)?.height ?? node.height,
-    }));
+    const sized = props.nodes.map((node) => {
+        const measured = measuredSizes.value.get(node.id);
+        return {
+            ...node,
+            height: measured?.height ?? node.height,
+            portOffsets: measured?.ports,
+        };
+    });
     const result = await layoutGraph(sized, props.edges);
     if (token !== layoutToken) {
         return; // superseded by a newer run
     }
     layout.value = result;
     await nextTick();
-    fitView();
+    if (!fitted) {
+        fitted = true;
+        fitView();
+    }
 }
-
-// A new graph structure drops the stale layout so it re-measures and re-runs.
-watch(
-    () => props.nodes,
-    () => {
-        layout.value = null;
-    },
-);
 
 // Run layout once every current node has reported a measured size.
 watch(
@@ -123,7 +132,7 @@ const canvasStyle = computed(() => ({
     transform: `translate(${transform.value.x}px, ${transform.value.y}px) scale(${transform.value.k})`,
 }));
 
-// ── Fit to view ──────────────────────────────────────────────────────
+// ── Fit to view (initial layout only) ────────────────────────────────
 function fitView() {
     const current = layout.value;
     if (!current || current.nodes.length === 0) {
@@ -180,9 +189,19 @@ function onPointerUp(e: PointerEvent) {
     }
 }
 
-// Positioned nodes once laid out; before that, the raw nodes (stacked at the
-// origin, hidden) purely so they can be measured.
-const renderNodes = computed<GraphNode[]>(() => layout.value?.nodes ?? props.nodes);
+// Render current node content at the latest known positions. Keeping the prior
+// positions during a re-layout (rather than clearing them) avoids a blank.
+const renderNodes = computed<GraphNode[]>(() => {
+    const positioned = layout.value;
+    if (!positioned) {
+        return props.nodes;
+    }
+    const placedById = new Map(positioned.nodes.map((node) => [node.id, node]));
+    return props.nodes.map((node) => {
+        const placed = placedById.get(node.id);
+        return placed ? { ...node, x: placed.x, y: placed.y } : node;
+    });
+});
 </script>
 
 <template>
@@ -247,7 +266,8 @@ const renderNodes = computed<GraphNode[]>(() => layout.value?.nodes ?? props.nod
     left: 0;
     transform-origin: 0 0;
 
-    // While measuring, nodes are rendered (so they can be sized) but hidden.
+    // While measuring the initial layout, nodes are rendered (so they can be
+    // sized) but hidden until they are positioned.
     &.measuring {
         visibility: hidden;
     }

@@ -8,8 +8,6 @@ export interface GraphNodePort {
     edgeId?: string;
     /** Connector variant for this port's connector. */
     variant?: ConnectorVariant;
-    /** Vertical offset (px from the node top) of the connector — set in expanded mode. */
-    offsetY?: number;
 }
 
 /** Connector visual variant — "multiple" renders larger (used to mark collections). */
@@ -34,6 +32,8 @@ export interface GraphNode {
     inputConnector?: ConnectorVariant | null;
     /** Connector straddling the node's output (right) edge when it has outgoing edges. */
     outputConnector?: ConnectorVariant | null;
+    /** Measured Y offset (px from node top) of each per-port connector, keyed by edge id. */
+    portOffsets?: Record<string, number>;
     /** Arbitrary domain data attached by the mapper */
     data?: Record<string, unknown>;
 }

@@ -117,8 +117,14 @@ function toolConnectionSummary(inputCount: number, outputCount: number): string 
  *
  * Nodes are emitted with a fixed width and no position or height — GraphView
  * measures each node's rendered height, then positions everything with ELK.
+ * The tool node identified by `expandedNodeId` is rendered with a row +
+ * connector per port; every other node stays collapsed.
  */
-export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): GraphNode[] {
+export function mapNodes(
+    apiNodes: ApiGraphNode[],
+    apiEdges: ApiGraphEdge[],
+    expandedNodeId: string | null = null,
+): GraphNode[] {
     // Aggregate edges per node to derive merged connector variants and counts.
     const inputPorts = new Map<string, GraphNodePort[]>();
     const outputPorts = new Map<string, GraphNodePort[]>();
@@ -131,7 +137,7 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): Gr
         }
         inputPorts.get(targetKey)!.push({
             name: sourceKey,
-            label: "",
+            label: edge.name ?? "",
             edgeId,
             variant: edgeEndVariant(edge.target, edge),
         });
@@ -140,7 +146,7 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): Gr
         }
         outputPorts.get(sourceKey)!.push({
             name: targetKey,
-            label: "",
+            label: edge.name ?? "",
             edgeId,
             variant: edgeEndVariant(edge.source, edge),
         });
@@ -149,8 +155,10 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): Gr
     return apiNodes.map((node) => {
         const key = nodeKey(node);
         const isToolRequest = node.src === "tool_request";
-        const inputCount = inputPorts.get(key)?.length ?? 0;
-        const outputCount = outputPorts.get(key)?.length ?? 0;
+        const inputs = inputPorts.get(key) ?? [];
+        const outputs = outputPorts.get(key) ?? [];
+        // The focused tool node is expanded — a row + connector per port.
+        const expanded = isToolRequest && key === expandedNodeId;
 
         // Dataset/collection nodes carry a state (drives header colour + state text);
         // map "failed" → "error" to match the dataset state vocabulary.
@@ -159,8 +167,12 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): Gr
         const stateRep: StateRepresentation | null =
             !isToolRequest && stateKey && stateKey in STATES ? STATES[stateKey] : null;
 
-        // Tool nodes summarise their connections; data nodes show their state text.
-        const bodyText = isToolRequest ? toolConnectionSummary(inputCount, outputCount) : (stateRep?.text ?? null);
+        // Collapsed nodes show a body line (tool summary / data state text);
+        // expanded nodes show port rows instead.
+        let bodyText: string | null = null;
+        if (!expanded) {
+            bodyText = isToolRequest ? toolConnectionSummary(inputs.length, outputs.length) : (stateRep?.text ?? null);
+        }
 
         return {
             id: key,
@@ -172,16 +184,19 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): Gr
             icon: stateRep?.icon ?? NODE_ICONS[node.src] ?? faFile,
             badge: resolveNodeBadge(node),
             cssClass: NODE_CSS_CLASS[node.src],
-            inputConnector: mergedConnectorVariant(inputPorts.get(key)),
-            outputConnector: mergedConnectorVariant(outputPorts.get(key)),
+            // Expanded nodes use per-port connectors; collapsed nodes a merged one.
+            inputs: expanded ? inputs : undefined,
+            outputs: expanded ? outputs : undefined,
+            inputConnector: expanded ? null : mergedConnectorVariant(inputs),
+            outputConnector: expanded ? null : mergedConnectorVariant(outputs),
             data: {
                 src: node.src,
                 typeLabel: NODE_TYPE_LABELS[node.src] ?? node.src,
                 /** Encoded id of the underlying item (no prefix). */
                 itemId: node.id,
                 toolId: isToolRequest ? node.tool_id : null,
-                inputCount,
-                outputCount,
+                inputCount: inputs.length,
+                outputCount: outputs.length,
                 state: displayState,
                 stateText: bodyText,
                 stateDisplayName: stateRep?.displayName ?? null,

@@ -50,9 +50,12 @@ const { graphData, loading, error } = useHistoryGraphData(
 // Renderer focus key mirrors the mapper's `${src}:${id}` node key.
 const focusNodeId = computed(() => (props.seedSrc && props.seedId ? `${props.seedSrc}:${props.seedId}` : null));
 
+// The focused tool node whose connections are expanded ("Show Connections").
+const expandedNodeId = ref<string | null>(null);
+
 // Graph structure for the renderer — GraphView measures and positions it.
 const graphNodes = computed<GraphNode[]>(() =>
-    graphData.value ? mapNodes(graphData.value.nodes, graphData.value.edges) : [],
+    graphData.value ? mapNodes(graphData.value.nodes, graphData.value.edges, expandedNodeId.value) : [],
 );
 const graphEdges = computed(() => (graphData.value ? mapEdges(graphData.value.edges) : []));
 
@@ -114,7 +117,8 @@ const toolRequestNodes = computed<GraphNode[]>(() =>
                     :nodes="graphNodes"
                     :edges="graphEdges"
                     :focus-node-id="focusNodeId"
-                    :truncated="isTruncated" />
+                    :truncated="isTruncated"
+                    @expand="expandedNodeId = $event" />
                 <HistoryGraphToolRequests v-else-if="props.tab === 'tool-requests'" :nodes="toolRequestNodes" />
                 <HistoryGraphReport v-else-if="props.tab === 'report'" :history-id="historyId" />
             </div>

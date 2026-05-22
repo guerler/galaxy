@@ -17,19 +17,24 @@ const NODE_WIDTH = 200;
 // Layout geometry — must match the fixed sizes GraphNode.vue renders, so the
 // computed height (used for ELK placement + edge routing) equals the real node.
 const HEADER_HEIGHT = 34;
-const PORT_ROW_HEIGHT = 18;
+const PORT_ROW_HEIGHT = 30;
 const RULE_HEIGHT = 5;
 const BODY_PADDING = 8;
+const BADGE_BODY_HEIGHT = 34;
 const MIN_NODE_HEIGHT = 34;
 
 function computeNodeHeight(inputCount: number, outputCount: number, hasBadgeBody: boolean = false): number {
-    if (inputCount === 0 && outputCount === 0 && !hasBadgeBody) {
+    if (hasBadgeBody) {
+        // Dataset/collection node — header plus the badge/state body.
+        return HEADER_HEIGHT + BADGE_BODY_HEIGHT;
+    }
+    if (inputCount === 0 && outputCount === 0) {
         return Math.max(MIN_NODE_HEIGHT, HEADER_HEIGHT);
     }
+    // Tool node — header plus stacked port rows and the input/output divider.
     const portRows = inputCount + outputCount;
     const rule = inputCount > 0 && outputCount > 0 ? RULE_HEIGHT : 0;
-    const badgeRow = hasBadgeBody ? PORT_ROW_HEIGHT + BODY_PADDING : 0;
-    return HEADER_HEIGHT + portRows * PORT_ROW_HEIGHT + rule + BODY_PADDING + badgeRow;
+    return HEADER_HEIGHT + portRows * PORT_ROW_HEIGHT + rule + BODY_PADDING;
 }
 
 /**
@@ -189,14 +194,17 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
         // Only tool_request nodes show input/output port lists.
         // Dataset and collection nodes show state + badge in the body.
         const isToolRequest = node.src === "tool_request";
-        let inputs: GraphNodePort[] = isToolRequest ? (inputPorts.get(key) ?? []) : [];
-        let outputs: GraphNodePort[] = isToolRequest ? (outputPorts.get(key) ?? []) : [];
+        // Port rows (and per-port connectors) only appear in expanded mode;
+        // collapsed mode shows a compact tool node with merged connectors.
+        const expanded = mode === "expanded";
+        let inputs: GraphNodePort[] = isToolRequest && expanded ? (inputPorts.get(key) ?? []) : [];
+        let outputs: GraphNodePort[] = isToolRequest && expanded ? (outputPorts.get(key) ?? []) : [];
         const inputCount = inputPorts.get(key)?.length ?? 0;
         const outputCount = outputPorts.get(key)?.length ?? 0;
         const badge = resolveNodeBadge(node);
 
         // Expanded mode: tool nodes anchor one connector per port to its label row.
-        if (mode === "expanded" && isToolRequest) {
+        if (expanded && isToolRequest) {
             inputs = inputs.map((p, i) => ({ ...p, offsetY: portOffsetY("input", i, inputCount) }));
             outputs = outputs.map((p, j) => ({ ...p, offsetY: portOffsetY("output", j, inputCount) }));
         }
@@ -205,7 +213,7 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
         // tool nodes use them only in collapsed mode (expanded uses per-port connectors).
         // The variant aggregates the side's ports, so the merged connector stays
         // consistent with the edges meeting it (e.g. a collection input reads as "multiple").
-        const usesNodeConnector = !isToolRequest || mode === "collapsed";
+        const usesNodeConnector = !isToolRequest || !expanded;
         const inputConnector = usesNodeConnector ? mergedConnectorVariant(inputPorts.get(key)) : null;
         const outputConnector = usesNodeConnector ? mergedConnectorVariant(outputPorts.get(key)) : null;
 

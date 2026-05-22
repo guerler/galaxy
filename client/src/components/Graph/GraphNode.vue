@@ -131,7 +131,7 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 }
 
 .node-body {
-    font-size: $h6-font-size;
+    font-size: $font-size-base;
 }
 
 .node-state-text {
@@ -141,8 +141,9 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 }
 
 .form-row {
-    height: 18px;
-    line-height: 18px;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
 }
 
 .output-data-row {
@@ -151,7 +152,6 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 
 .node-port-label {
     color: $text-color;
-    padding: 0 2px;
 }
 
 .rule {

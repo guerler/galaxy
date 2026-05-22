@@ -6,7 +6,7 @@ import { useD3Zoom } from "@/composables/d3Zoom";
 import { useViewportBoundingBox } from "@/composables/viewportBoundingBox";
 import { maxZoom, minZoom } from "@/utils/zoomLevels";
 
-import type { EdgeStyle, GraphLayout, GraphNode } from "./types";
+import type { GraphLayout, GraphNode } from "./types";
 
 import GraphEdges from "./GraphEdges.vue";
 import GraphNodeComponent from "./GraphNode.vue";
@@ -15,7 +15,6 @@ import ZoomControl from "./ZoomControl.vue";
 interface Props {
     layout: GraphLayout | null;
     focusNodeId?: string | null;
-    edgeStyle?: EdgeStyle;
     showZoomControls?: boolean;
     showMinimap?: boolean;
     /** Minimap component — injected by consumer to avoid domain coupling */
@@ -28,7 +27,6 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     focusNodeId: null,
-    edgeStyle: "orthogonal",
     showZoomControls: true,
     showMinimap: true,
     minimapComponent: null,
@@ -141,8 +139,7 @@ watch(
                     :edges="layout.edges"
                     :selected-node-id="selectedNodeId"
                     :width="layout.width + 200"
-                    :height="layout.height + 200"
-                    :edge-style="edgeStyle" />
+                    :height="layout.height + 200" />
                 <GraphNodeComponent
                     v-for="node in layout.nodes"
                     :key="node.id"

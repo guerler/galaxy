@@ -2,7 +2,7 @@
 import { BAlert } from "bootstrap-vue";
 import { ref } from "vue";
 
-import type { EdgeStyle, GraphLayout, GraphNode } from "@/components/Graph/types";
+import type { GraphLayout, GraphNode } from "@/components/Graph/types";
 
 import HistoryGraphMinimap from "./HistoryGraphMinimap.vue";
 import HistoryGraphNodeDetails from "./HistoryGraphNodeDetails.vue";
@@ -11,13 +11,11 @@ import GraphView from "@/components/Graph/GraphView.vue";
 interface Props {
     layout: GraphLayout | null;
     focusNodeId?: string | null;
-    edgeStyle?: EdgeStyle;
     truncated?: boolean;
 }
 
 withDefaults(defineProps<Props>(), {
     focusNodeId: null,
-    edgeStyle: "orthogonal",
     truncated: false,
 });
 
@@ -36,7 +34,6 @@ function onNodeSelected(node: GraphNode | null) {
             <GraphView
                 :layout="layout"
                 :focus-node-id="focusNodeId"
-                :edge-style="edgeStyle"
                 :minimap-component="HistoryGraphMinimap"
                 center-on-select
                 show-scroll-overlays

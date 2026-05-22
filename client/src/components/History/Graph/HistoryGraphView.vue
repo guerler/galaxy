@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { faClock } from "@fortawesome/free-regular-svg-icons";
-import { faBezierCurve, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
+import { faBezierCurve } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { BAlert, BNav, BNavItem } from "bootstrap-vue";
 import { computed, ref, toRef } from "vue";
 
-import type { EdgeStyle, GraphNode } from "@/components/Graph/types";
+import type { GraphNode } from "@/components/Graph/types";
 import { usePersistentToggle } from "@/composables/persistentToggle";
 import { useHistoryStore } from "@/stores/historyStore";
 
@@ -15,8 +15,6 @@ import { useHistoryGraphLayout } from "./useHistoryGraphLayout";
 import HistoryGraphOverview from "./HistoryGraphOverview.vue";
 import HistoryGraphReport from "./HistoryGraphReport.vue";
 import HistoryGraphToolRequests from "./HistoryGraphToolRequests.vue";
-import GButton from "@/components/BaseComponents/GButton.vue";
-import GButtonGroup from "@/components/BaseComponents/GButtonGroup.vue";
 import NavigationTitle from "@/components/Common/NavigationTitle.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
 import UtcDate from "@/components/UtcDate.vue";
@@ -53,8 +51,7 @@ const { graphData, loading, error } = useHistoryGraphData(
 const focusNodeId = computed(() => (props.seedSrc && props.seedId ? `${props.seedSrc}:${props.seedId}` : null));
 
 // Layout
-const edgeStyle = ref<EdgeStyle>("curved");
-const { layout, layoutLoading } = useHistoryGraphLayout(graphData, edgeStyle);
+const { layout, layoutLoading } = useHistoryGraphLayout(graphData);
 
 const isLoading = computed(() => loading.value || layoutLoading.value);
 const isTruncated = computed(() => graphData.value?.truncated?.item_count_capped ?? false);
@@ -80,30 +77,6 @@ const toolRequestNodes = computed<GraphNode[]>(
                 collapsible
                 :collapsed="headerCollapsed"
                 @toggle="toggleHeaderCollapse">
-                <template v-slot:actions>
-                    <GButtonGroup v-if="onOverviewTab">
-                        <GButton
-                            tooltip
-                            title="Orthogonal edges"
-                            size="small"
-                            color="blue"
-                            :outline="edgeStyle !== 'orthogonal'"
-                            :pressed="edgeStyle === 'orthogonal'"
-                            @click="edgeStyle = 'orthogonal'">
-                            <FontAwesomeIcon :icon="faProjectDiagram" fixed-width />
-                        </GButton>
-                        <GButton
-                            tooltip
-                            title="Curved edges"
-                            size="small"
-                            color="blue"
-                            :outline="edgeStyle !== 'curved'"
-                            :pressed="edgeStyle === 'curved'"
-                            @click="edgeStyle = 'curved'">
-                            <FontAwesomeIcon :icon="faBezierCurve" fixed-width />
-                        </GButton>
-                    </GButtonGroup>
-                </template>
                 <template v-slot:collapsible>
                     <div v-if="history" class="history-graph-info px-2 py-1 small text-muted">
                         <i data-description="history graph time info">
@@ -138,7 +111,6 @@ const toolRequestNodes = computed<GraphNode[]>(
                     v-if="onOverviewTab"
                     :layout="layout"
                     :focus-node-id="focusNodeId"
-                    :edge-style="edgeStyle"
                     :truncated="isTruncated" />
                 <HistoryGraphToolRequests v-else-if="props.tab === 'tool-requests'" :nodes="toolRequestNodes" />
                 <HistoryGraphReport v-else-if="props.tab === 'report'" :history-id="historyId" />

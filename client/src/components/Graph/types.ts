@@ -36,9 +36,6 @@ export interface GraphEdge {
     points: { x: number; y: number }[];
 }
 
-/** Edge rendering style */
-export type EdgeStyle = "orthogonal" | "curved";
-
 /** Complete layout result ready for rendering */
 export interface GraphLayout {
     nodes: GraphNode[];

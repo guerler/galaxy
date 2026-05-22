@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import { curveBasisPath, orthogonalPath } from "@/utils/connectionPath";
+import { curveBasisPath } from "@/utils/connectionPath";
 
-import type { EdgeStyle, GraphEdge } from "./types";
+import type { GraphEdge } from "./types";
 
 interface Props {
     edges: GraphEdge[];
     selectedNodeId?: string | null;
     width: number;
     height: number;
-    edgeStyle?: EdgeStyle;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     selectedNodeId: null,
-    edgeStyle: "orthogonal",
 });
 
 /** Ribbon margin for collection edges — matches workflow editor's ribbonMargin */
@@ -21,10 +19,7 @@ const RIBBON_MARGIN = 4;
 const RIBBON_OFFSETS = [-2 * RIBBON_MARGIN, -1 * RIBBON_MARGIN, 0, 1 * RIBBON_MARGIN, 2 * RIBBON_MARGIN];
 
 function makePath(points: { x: number; y: number }[]): string {
-    if (props.edgeStyle === "curved") {
-        return curveBasisPath(points.map((p) => [p.x, p.y] as [number, number]));
-    }
-    return orthogonalPath(points);
+    return curveBasisPath(points.map((p) => [p.x, p.y] as [number, number]));
 }
 
 /** For a single (non-collection) edge, return one path string */
@@ -33,8 +28,7 @@ function edgePaths(edge: GraphEdge): string[] {
         return [makePath(edge.points)];
     }
     // Collection ribbon: offset each path perpendicular to the edge direction.
-    // For orthogonal/curved layouts the edges run mostly left-to-right,
-    // so vertical offsets produce the ribbon effect.
+    // Edges run mostly left-to-right, so vertical offsets produce the ribbon effect.
     return RIBBON_OFFSETS.map((offset) => {
         const offsetPoints = edge.points.map((p) => ({ x: p.x, y: p.y + offset }));
         return makePath(offsetPoints);

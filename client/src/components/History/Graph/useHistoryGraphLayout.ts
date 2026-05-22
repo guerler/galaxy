@@ -1,7 +1,7 @@
 import ELK, { type ElkExtendedEdge, type ElkNode } from "elkjs/lib/elk.bundled";
 import { type Ref, ref, watch } from "vue";
 
-import type { GraphEdge, GraphLayout, GraphNode, GraphNodePort } from "@/components/Graph/types";
+import type { GraphEdge, GraphLayout, GraphNode } from "@/components/Graph/types";
 import { computeControlPoints } from "@/utils/connectionPath";
 
 import { type ConnectionMode, type HistoryGraphResponse, mapEdges, mapNodes } from "./historyGraphMapper";
@@ -50,11 +50,21 @@ export function useHistoryGraphLayout(graphData: Ref<HistoryGraphResponse | null
 
 /**
  * Vertical anchor (px from the node top) where an edge meets a node. Uses the
- * matching port's connector offset when present (expanded mode), else the node center.
+ * matching port's connector offset when present (expanded mode), else the node's
+ * merged-connector row.
  */
-function edgeAnchorY(ports: GraphNodePort[] | undefined, edgeId: string, nodeHeight: number): number {
+function edgeAnchorY(
+    node: GraphNode | undefined,
+    side: "input" | "output",
+    edgeId: string,
+    nodeHeight: number,
+): number {
+    const ports = side === "output" ? node?.outputs : node?.inputs;
     const port = ports?.find((p) => p.edgeId === edgeId);
-    return port?.offsetY ?? nodeHeight / 2;
+    if (port?.offsetY != null) {
+        return port.offsetY;
+    }
+    return node?.connectorY ?? nodeHeight / 2;
 }
 
 async function computeLayout(data: HistoryGraphResponse, mode: ConnectionMode): Promise<GraphLayout> {
@@ -119,8 +129,8 @@ async function computeLayout(data: HistoryGraphResponse, mode: ConnectionMode): 
         const tgt = nodePositions.get(ge.target);
         let points: { x: number; y: number }[] = [];
         if (src && tgt) {
-            const srcY = src.y + edgeAnchorY(srcNode?.outputs, ge.id, src.h);
-            const tgtY = tgt.y + edgeAnchorY(tgtNode?.inputs, ge.id, tgt.h);
+            const srcY = src.y + edgeAnchorY(srcNode, "output", ge.id, src.h);
+            const tgtY = tgt.y + edgeAnchorY(tgtNode, "input", ge.id, tgt.h);
             const controlPoints = computeControlPoints(src.x + src.w, srcY, tgt.x, tgtY);
             points = controlPoints.map(([x, y]) => ({ x, y }));
         }

@@ -104,6 +104,18 @@ function mergedConnectorVariant(ports: GraphNodePort[] | undefined): ConnectorVa
     return ports.some((port) => port.variant === "multiple") ? "multiple" : "single";
 }
 
+/** Connection summary shown in a collapsed tool node's body, e.g. "3 inputs, 2 outputs". */
+function toolConnectionSummary(inputCount: number, outputCount: number): string {
+    const parts: string[] = [];
+    if (inputCount > 0) {
+        parts.push(`${inputCount} input${inputCount === 1 ? "" : "s"}`);
+    }
+    if (outputCount > 0) {
+        parts.push(`${outputCount} output${outputCount === 1 ? "" : "s"}`);
+    }
+    return parts.join(", ");
+}
+
 // ── Public API ──
 
 /**
@@ -169,6 +181,9 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
         const outputCount = outputPorts.get(key)?.length ?? 0;
         const badge = resolveNodeBadge(node);
 
+        // Collapsed tool nodes show a connection summary where the port rows would be.
+        const toolSummary = isToolRequest && !expanded ? toolConnectionSummary(inputCount, outputCount) : "";
+
         // Expanded mode: tool nodes anchor one connector per port to its label row.
         if (expanded && isToolRequest) {
             inputs = inputs.map((p, i) => ({ ...p, offsetY: portOffsetY("input", i, inputCount) }));
@@ -196,14 +211,22 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
         const icon = stateRep?.icon ?? NODE_ICONS[node.src] ?? faFile;
         const cssClass = NODE_CSS_CLASS[node.src];
 
-        // Data nodes always have a body (badge + state text)
-        const hasBody = !isToolRequest;
+        // The node body is a stack of fixed-height rows: a tool's port rows when
+        // expanded, otherwise the badge and/or state/summary lines.
+        const bodyText = toolSummary || (stateRep?.text ?? null);
+        const portRowCount = inputs.length + outputs.length;
+        const bodyRows = portRowCount > 0 ? portRowCount : (badge ? 1 : 0) + (bodyText ? 1 : 0);
+        const hasRule = inputs.length > 0 && outputs.length > 0;
+        const height = computeNodeHeight(bodyRows, hasRule);
+        // Merged connectors anchor at the first body row; bodyless nodes use the node center.
+        const connectorY = bodyRows > 0 ? portOffsetY("input", 0, 0) : height / 2;
         return {
             id: key,
             x: 0,
             y: 0,
             width: NODE_WIDTH,
-            height: computeNodeHeight(inputs.length, outputs.length, hasBody),
+            height,
+            connectorY,
             label,
             icon,
             badge,
@@ -221,7 +244,7 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
                 inputCount,
                 outputCount,
                 state: displayState,
-                stateText: stateRep?.text ?? null,
+                stateText: bodyText,
                 stateDisplayName: stateRep?.displayName ?? null,
                 stateSpin: stateRep?.spin ?? false,
             },

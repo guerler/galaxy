@@ -45,13 +45,13 @@ interface ConnectorPlacement {
 // Connectors to render: merged node-level ones (collapsed) plus per-port ones (expanded).
 const connectorPlacements = computed<ConnectorPlacement[]>(() => {
     const placements: ConnectorPlacement[] = [];
-    // Merged connectors anchor at the exact node center the edge routing uses.
-    const centerTop = `${props.node.height / 2}px`;
+    // Merged connectors anchor at the node's connector row (the first body line).
+    const mergedTop = `${props.node.connectorY ?? props.node.height / 2}px`;
     if (props.node.inputConnector) {
-        placements.push({ side: "input", top: centerTop, variant: props.node.inputConnector });
+        placements.push({ side: "input", top: mergedTop, variant: props.node.inputConnector });
     }
     if (props.node.outputConnector) {
-        placements.push({ side: "output", top: centerTop, variant: props.node.outputConnector });
+        placements.push({ side: "output", top: mergedTop, variant: props.node.outputConnector });
     }
     for (const port of props.node.inputs ?? []) {
         if (port.offsetY != null) {
@@ -78,9 +78,13 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
             <span class="graph-node-label" :title="node.label">{{ node.label }}</span>
             <span v-if="hasPorts && node.badge" class="badge badge-light ml-auto">{{ node.badge }}</span>
         </div>
-        <div v-if="showDataBody" class="card-body p-0 mx-2 my-1">
-            <span v-if="node.badge" class="badge badge-secondary">{{ node.badge }}</span>
-            <div v-if="node.data?.stateText" class="node-state-text">{{ node.data.stateText }}</div>
+        <div v-if="showDataBody" class="node-body card-body p-0 mx-2">
+            <div v-if="node.badge" class="form-row dataRow">
+                <span class="badge badge-secondary">{{ node.badge }}</span>
+            </div>
+            <div v-if="node.data?.stateText" class="form-row dataRow">
+                <span class="node-state-text">{{ node.data.stateText }}</span>
+            </div>
         </div>
         <div v-if="hasPorts" class="node-body card-body p-0 mx-2">
             <div v-for="input in node.inputs" :key="`in-${input.name}`" class="form-row dataRow input-data-row">
@@ -146,7 +150,6 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 .node-state-text {
     font-size: $h6-font-size;
     color: $text-muted;
-    padding: 2px 0;
 }
 
 .form-row {

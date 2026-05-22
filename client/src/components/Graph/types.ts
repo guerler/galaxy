@@ -34,6 +34,8 @@ export interface GraphNode {
     inputConnector?: ConnectorVariant | null;
     /** Connector straddling the node's output (right) edge when it has outgoing edges. */
     outputConnector?: ConnectorVariant | null;
+    /** Vertical offset (px from node top) of the merged input/output connectors. */
+    connectorY?: number;
     /** Arbitrary domain data attached by the mapper */
     data?: Record<string, unknown>;
 }

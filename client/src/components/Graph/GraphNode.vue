@@ -14,17 +14,13 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{
     (e: "select", nodeId: string): void;
-    (
-        e: "resize",
-        nodeId: string,
-        size: { width: number; height: number; ports: Record<string, number>; connectorY?: number },
-    ): void;
+    (e: "resize", nodeId: string, size: { width: number; height: number; connectorY?: number }): void;
 }>();
 
-// The node has a fixed width but content-driven height (multiline header, body
-// and port rows). A ResizeObserver reports the rendered size — and, for an
-// expanded node, the centre Y of each port row — so the graph layout can
-// position nodes and route edges once everything is measured.
+// The node has a fixed width but content-driven height (multiline header and
+// body text). A ResizeObserver reports the rendered size — and the centre Y of
+// the first body row — so the graph layout can position nodes and anchor edges
+// once everything is measured.
 const root = ref<HTMLElement | null>(null);
 let observer: ResizeObserver | null = null;
 let lastEmitted = "";
@@ -34,24 +30,17 @@ function measure() {
     if (!el) {
         return;
     }
-    const ports: Record<string, number> = {};
-    el.querySelectorAll<HTMLElement>("[data-edge-id]").forEach((portEl) => {
-        const edgeId = portEl.dataset.edgeId;
-        if (edgeId) {
-            ports[edgeId] = portEl.offsetTop + portEl.offsetHeight / 2;
-        }
-    });
-    // A collapsed node anchors its merged connectors to the first body row.
+    // The merged connectors anchor to the first body row.
     const mergedRow = el.querySelector<HTMLElement>("[data-merged-connector]");
     const connectorY = mergedRow ? mergedRow.offsetTop + mergedRow.offsetHeight / 2 : undefined;
     const width = el.offsetWidth;
     const height = el.offsetHeight;
-    const key = `${width}x${height}:${connectorY}:${JSON.stringify(ports)}`;
+    const key = `${width}x${height}:${connectorY}`;
     if (key === lastEmitted) {
         return;
     }
     lastEmitted = key;
-    emit("resize", props.node.id, { width, height, ports, connectorY });
+    emit("resize", props.node.id, { width, height, connectorY });
 }
 
 onMounted(() => {
@@ -71,12 +60,8 @@ const nodeStyle = computed(() => ({
     width: `${props.node.width}px`,
 }));
 
-const hasInputs = computed(() => (props.node.inputs?.length ?? 0) > 0);
-const hasOutputs = computed(() => (props.node.outputs?.length ?? 0) > 0);
-const expanded = computed(() => hasInputs.value || hasOutputs.value);
-
 const stateText = computed(() => (props.node.data?.stateText as string | undefined) ?? "");
-const showBody = computed(() => !expanded.value && Boolean(props.node.badge || stateText.value));
+const showBody = computed(() => Boolean(props.node.badge || stateText.value));
 const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
 </script>
 
@@ -92,52 +77,12 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
             <span class="graph-node-label">{{ node.label }}</span>
         </div>
 
-        <!-- Expanded node: one row + connector per input/output port. -->
-        <div v-if="expanded" class="graph-node-ports">
-            <div
-                v-for="port in node.inputs"
-                :key="`in-${port.edgeId}`"
-                class="graph-node-port graph-node-port--input"
-                :data-edge-id="port.edgeId">
-                <GraphConnector
-                    class="graph-node-connector graph-node-connector--input"
-                    :variant="port.variant ?? 'single'" />
-                <span class="graph-node-port-label">{{ port.label }}</span>
-            </div>
-            <div v-if="hasInputs && hasOutputs" class="graph-node-rule" />
-            <div
-                v-for="port in node.outputs"
-                :key="`out-${port.edgeId}`"
-                class="graph-node-port graph-node-port--output"
-                :data-edge-id="port.edgeId">
-                <span class="graph-node-port-label">{{ port.label }}</span>
-                <GraphConnector
-                    class="graph-node-connector graph-node-connector--output"
-                    :variant="port.variant ?? 'single'" />
-            </div>
-        </div>
-
-        <!-- Collapsed node: badge / state / summary body. The merged connectors
-             anchor to the first body row, or the node centre when there is none. -->
-        <template v-else>
-            <div v-if="showBody" class="graph-node-body">
-                <div class="graph-node-body-row" data-merged-connector>
-                    <span v-if="node.badge" class="badge badge-secondary">{{ node.badge }}</span>
-                    <span v-else class="graph-node-state">{{ stateText }}</span>
-                    <GraphConnector
-                        v-if="node.inputConnector"
-                        class="graph-node-connector graph-node-connector--input"
-                        :variant="node.inputConnector" />
-                    <GraphConnector
-                        v-if="node.outputConnector"
-                        class="graph-node-connector graph-node-connector--output"
-                        :variant="node.outputConnector" />
-                </div>
-                <div v-if="node.badge && stateText" class="graph-node-body-row">
-                    <span class="graph-node-state">{{ stateText }}</span>
-                </div>
-            </div>
-            <template v-else>
+        <!-- Badge / state / summary body. The merged connectors anchor to the
+             first body row, or to the node centre when there is no body. -->
+        <div v-if="showBody" class="graph-node-body">
+            <div class="graph-node-body-row" data-merged-connector>
+                <span v-if="node.badge" class="badge badge-secondary">{{ node.badge }}</span>
+                <span v-else class="graph-node-state">{{ stateText }}</span>
                 <GraphConnector
                     v-if="node.inputConnector"
                     class="graph-node-connector graph-node-connector--input"
@@ -146,7 +91,20 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
                     v-if="node.outputConnector"
                     class="graph-node-connector graph-node-connector--output"
                     :variant="node.outputConnector" />
-            </template>
+            </div>
+            <div v-if="node.badge && stateText" class="graph-node-body-row">
+                <span class="graph-node-state">{{ stateText }}</span>
+            </div>
+        </div>
+        <template v-else>
+            <GraphConnector
+                v-if="node.inputConnector"
+                class="graph-node-connector graph-node-connector--input"
+                :variant="node.inputConnector" />
+            <GraphConnector
+                v-if="node.outputConnector"
+                class="graph-node-connector graph-node-connector--output"
+                :variant="node.outputConnector" />
         </template>
     </div>
 </template>
@@ -189,7 +147,7 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
     flex: none;
 }
 
-// Header, body and port text all wrap to as many lines as needed — never truncated.
+// Header and body text wrap to as many lines as needed — never truncated.
 .graph-node-label {
     flex: 1;
     min-width: 0;
@@ -217,32 +175,8 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
     overflow-wrap: anywhere;
 }
 
-.graph-node-ports {
-    border-top: solid $border-color 1px;
-    font-size: $font-size-base;
-}
-
-// position: relative anchors the row's per-port connector at its vertical centre.
-.graph-node-port {
-    position: relative;
-    padding: 0.3rem 0.75rem;
-}
-
-.graph-node-port--output {
-    text-align: right;
-}
-
-.graph-node-port-label {
-    white-space: normal;
-    overflow-wrap: anywhere;
-}
-
-.graph-node-rule {
-    border-top: dotted $brand-primary 1px;
-}
-
-// Connectors straddle the left/right edge — of the node (merged) or of a port
-// row (expanded), whichever is the connector's positioned ancestor.
+// Connectors straddle the left/right edge of the node (or its first body row,
+// whichever is the connector's positioned ancestor).
 .graph-node-connector {
     position: absolute;
     top: 50%;

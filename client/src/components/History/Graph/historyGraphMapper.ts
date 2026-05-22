@@ -1,7 +1,7 @@
 import { faFile, faLayerGroup, faWrench } from "@fortawesome/free-solid-svg-icons";
 
 import type { components } from "@/api/schema";
-import type { ConnectorVariant, GraphEdge, GraphNode, GraphNodePort } from "@/components/Graph/types";
+import type { ConnectorVariant, GraphEdge, GraphNode } from "@/components/Graph/types";
 import { type StateRepresentation, STATES } from "@/components/History/Content/model/states";
 
 type ApiGraphNode = components["schemas"]["GraphNode"];
@@ -90,12 +90,12 @@ function edgeEndVariant(ref: { src: string }, edge: ApiGraphEdge): ConnectorVari
     return isCollectionEdge(edge) ? "multiple" : "single";
 }
 
-/** Variant of a node's merged connector — "multiple" if any edge on the side is a collection. */
-function mergedConnectorVariant(ports: GraphNodePort[] | undefined): ConnectorVariant | null {
-    if (!ports || ports.length === 0) {
+/** Merged connector variant for a node side — "multiple" if any edge there is a collection. */
+function mergedConnectorVariant(variants: ConnectorVariant[]): ConnectorVariant | null {
+    if (variants.length === 0) {
         return null;
     }
-    return ports.some((port) => port.variant === "multiple") ? "multiple" : "single";
+    return variants.some((variant) => variant === "multiple") ? "multiple" : "single";
 }
 
 /** Connection summary shown in a tool node's body, e.g. "3 inputs, 2 outputs". */
@@ -115,50 +115,33 @@ function toolConnectionSummary(inputCount: number, outputCount: number): string 
 /**
  * Map API graph nodes to generic GraphNode[] for the renderer.
  *
- * Nodes are emitted with a fixed width and no position or height — GraphView
- * measures each node's rendered height, then positions everything with ELK.
- * The tool node identified by `expandedNodeId` is rendered with a row +
- * connector per port; every other node stays collapsed.
+ * Nodes are emitted collapsed, with a fixed width and no position or height —
+ * GraphView measures each node's rendered height, then positions everything
+ * with ELK.
  */
-export function mapNodes(
-    apiNodes: ApiGraphNode[],
-    apiEdges: ApiGraphEdge[],
-    expandedNodeId: string | null = null,
-): GraphNode[] {
-    // Aggregate edges per node to derive merged connector variants and counts.
-    const inputPorts = new Map<string, GraphNodePort[]>();
-    const outputPorts = new Map<string, GraphNodePort[]>();
-    apiEdges.forEach((edge, idx) => {
-        const edgeId = `e${idx}`;
+export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[]): GraphNode[] {
+    // Per node, the connector variant of each incoming / outgoing edge end —
+    // used to derive the merged connector variant and the connection counts.
+    const inputVariants = new Map<string, ConnectorVariant[]>();
+    const outputVariants = new Map<string, ConnectorVariant[]>();
+    for (const edge of apiEdges) {
         const sourceKey = nodeKey(edge.source);
         const targetKey = nodeKey(edge.target);
-        if (!inputPorts.has(targetKey)) {
-            inputPorts.set(targetKey, []);
+        if (!inputVariants.has(targetKey)) {
+            inputVariants.set(targetKey, []);
         }
-        inputPorts.get(targetKey)!.push({
-            name: sourceKey,
-            label: edge.name ?? "",
-            edgeId,
-            variant: edgeEndVariant(edge.target, edge),
-        });
-        if (!outputPorts.has(sourceKey)) {
-            outputPorts.set(sourceKey, []);
+        inputVariants.get(targetKey)!.push(edgeEndVariant(edge.target, edge));
+        if (!outputVariants.has(sourceKey)) {
+            outputVariants.set(sourceKey, []);
         }
-        outputPorts.get(sourceKey)!.push({
-            name: targetKey,
-            label: edge.name ?? "",
-            edgeId,
-            variant: edgeEndVariant(edge.source, edge),
-        });
-    });
+        outputVariants.get(sourceKey)!.push(edgeEndVariant(edge.source, edge));
+    }
 
     return apiNodes.map((node) => {
         const key = nodeKey(node);
         const isToolRequest = node.src === "tool_request";
-        const inputs = inputPorts.get(key) ?? [];
-        const outputs = outputPorts.get(key) ?? [];
-        // The focused tool node is expanded — a row + connector per port.
-        const expanded = isToolRequest && key === expandedNodeId;
+        const inputs = inputVariants.get(key) ?? [];
+        const outputs = outputVariants.get(key) ?? [];
 
         // Dataset/collection nodes carry a state (drives header colour + state text);
         // map "failed" → "error" to match the dataset state vocabulary.
@@ -167,12 +150,10 @@ export function mapNodes(
         const stateRep: StateRepresentation | null =
             !isToolRequest && stateKey && stateKey in STATES ? STATES[stateKey] : null;
 
-        // Collapsed nodes show a body line (tool summary / data state text);
-        // expanded nodes show port rows instead.
-        let bodyText: string | null = null;
-        if (!expanded) {
-            bodyText = isToolRequest ? toolConnectionSummary(inputs.length, outputs.length) : (stateRep?.text ?? null);
-        }
+        // Tool nodes summarise their connections; data nodes show their state text.
+        const bodyText = isToolRequest
+            ? toolConnectionSummary(inputs.length, outputs.length)
+            : (stateRep?.text ?? null);
 
         return {
             id: key,
@@ -184,11 +165,8 @@ export function mapNodes(
             icon: stateRep?.icon ?? NODE_ICONS[node.src] ?? faFile,
             badge: resolveNodeBadge(node),
             cssClass: NODE_CSS_CLASS[node.src],
-            // Expanded nodes use per-port connectors; collapsed nodes a merged one.
-            inputs: expanded ? inputs : undefined,
-            outputs: expanded ? outputs : undefined,
-            inputConnector: expanded ? null : mergedConnectorVariant(inputs),
-            outputConnector: expanded ? null : mergedConnectorVariant(outputs),
+            inputConnector: mergedConnectorVariant(inputs),
+            outputConnector: mergedConnectorVariant(outputs),
             data: {
                 src: node.src,
                 typeLabel: NODE_TYPE_LABELS[node.src] ?? node.src,

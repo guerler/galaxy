@@ -56,12 +56,12 @@ export async function layoutGraph(nodes: GraphNode[], edges: GraphEdge[]): Promi
         const target = nodeById.get(edge.target);
         let points: { x: number; y: number }[] = [];
         if (source && target) {
-            // Anchor at the matching per-port connector when the node is expanded,
-            // otherwise at the node's vertical centre (merged connector).
+            // Anchor at the node's merged connector (its first body row), or the
+            // node's vertical centre when it has no body.
             const startX = source.x + source.width;
-            const startY = source.y + (source.portOffsets?.[edge.id] ?? source.connectorY ?? source.height / 2);
+            const startY = source.y + (source.connectorY ?? source.height / 2);
             const endX = target.x;
-            const endY = target.y + (target.portOffsets?.[edge.id] ?? target.connectorY ?? target.height / 2);
+            const endY = target.y + (target.connectorY ?? target.height / 2);
             points = computeControlPoints(startX, startY, endX, endY).map(([x, y]) => ({ x, y }));
         }
         return { ...edge, points };

@@ -43,17 +43,14 @@ const emit = defineEmits<{ (e: "nodeSelected", node: GraphNode | null): void }>(
 interface NodeSize {
     width: number;
     height: number;
-    /** Per-port connector Y offsets (px from node top), keyed by edge id. */
-    ports: Record<string, number>;
-    /** Merged connector Y offset (px from node top) for a collapsed node. */
+    /** Merged connector Y offset (px from node top) — the first body row's centre. */
     connectorY?: number;
 }
 
 // ── Measure-then-layout ──────────────────────────────────────────────
-// Nodes render first so the browser computes their wrapped height (and the
-// position of each port row); once every node has reported a size, ELK
-// positions them. The current layout stays on screen while a re-layout runs,
-// so toggling node expansion never blanks the view.
+// Nodes render first so the browser computes their wrapped height; once every
+// node has reported a size, ELK positions them. The current layout stays on
+// screen while a re-layout runs, so a data refresh never blanks the view.
 const measuredSizes = ref(new Map<string, NodeSize>());
 const layout = ref<GraphLayout | null>(null);
 const measuring = computed(() => layout.value === null && props.nodes.length > 0);
@@ -86,7 +83,6 @@ async function runLayout() {
         return {
             ...node,
             height: measured?.height ?? node.height,
-            portOffsets: measured?.ports,
             connectorY: measured?.connectorY,
         };
     });

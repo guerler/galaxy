@@ -76,11 +76,11 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
         </div>
         <div v-if="hasPorts" class="node-body card-body p-0 mx-2">
             <div v-for="input in node.inputs" :key="`in-${input.name}`" class="form-row dataRow input-data-row">
-                <span class="node-port-label">{{ input.label }}</span>
+                <span class="node-port-label" :title="input.label">{{ input.label }}</span>
             </div>
             <div v-if="showRule" class="rule" />
             <div v-for="output in node.outputs" :key="`out-${output.name}`" class="form-row dataRow output-data-row">
-                <span class="node-port-label">{{ output.label }}</span>
+                <span class="node-port-label" :title="output.label">{{ output.label }}</span>
             </div>
         </div>
         <div
@@ -151,7 +151,11 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 }
 
 .node-port-label {
+    display: block;
+    overflow: hidden;
     color: $text-color;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .rule {

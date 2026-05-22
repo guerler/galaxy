@@ -34,6 +34,10 @@ interface Props {
     runWaiting?: boolean;
     success?: boolean;
     validRerun?: boolean;
+    /** Show a collapse/expand toggle in the title bar. */
+    collapsible?: boolean;
+    /** Current collapsed state of the `collapsible` slot. */
+    collapsed?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -42,6 +46,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     (e: "on-execute"): void;
+    (e: "toggle"): void;
 }>();
 
 const { workflow, loading, error, owned } = useWorkflowInstance(props.workflowId);
@@ -136,10 +141,13 @@ async function rerunWorkflow() {
         <BAlert v-if="error" variant="danger" show>{{ error }}</BAlert>
 
         <div class="position-relative">
-            <NavigationTitle v-if="workflow" :icon="faSitemap" heading-description="workflow heading">
-                <template v-slot:before-icon>
-                    <slot name="before-icon" />
-                </template>
+            <NavigationTitle
+                v-if="workflow"
+                :icon="faSitemap"
+                heading-description="workflow heading"
+                :collapsible="collapsible"
+                :collapsed="collapsed"
+                @toggle="emit('toggle')">
                 <template v-slot:title>
                     <b> {{ props.invocation ? "Invoked " : "" }}Workflow: {{ getWorkflowName() }} </b>
                     <span>(Version: {{ workflow.version + 1 }})</span>
@@ -210,6 +218,9 @@ async function rerunWorkflow() {
                             <span v-localize>Rerun</span>
                         </GButton>
                     </GButtonGroup>
+                </template>
+                <template v-slot:collapsible>
+                    <slot name="collapsible" />
                 </template>
             </NavigationTitle>
             <div v-if="props.success" class="donemessagelarge">

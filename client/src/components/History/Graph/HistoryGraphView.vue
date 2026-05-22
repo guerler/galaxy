@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { faClock } from "@fortawesome/free-regular-svg-icons";
-import { faAngleDoubleDown, faAngleDoubleUp, faBezierCurve, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
+import { faBezierCurve, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { BAlert, BNav, BNavItem } from "bootstrap-vue";
 import { computed, ref, toRef } from "vue";
@@ -53,7 +53,7 @@ const { graphData, loading, error } = useHistoryGraphData(
 const focusNodeId = computed(() => (props.seedSrc && props.seedId ? `${props.seedSrc}:${props.seedId}` : null));
 
 // Layout
-const edgeStyle = ref<EdgeStyle>("orthogonal");
+const edgeStyle = ref<EdgeStyle>("curved");
 const { layout, layoutLoading } = useHistoryGraphLayout(graphData, edgeStyle);
 
 const isLoading = computed(() => loading.value || layoutLoading.value);
@@ -73,18 +73,13 @@ const toolRequestNodes = computed<GraphNode[]>(
         <BAlert v-if="error" variant="danger" show>{{ error }}</BAlert>
         <LoadingSpan v-else-if="isLoading" message="Loading history graph" />
         <template v-else>
-            <NavigationTitle :icon="faBezierCurve" :title="historyName" heading-description="history graph heading">
-                <template v-slot:before-icon>
-                    <GButton
-                        transparent
-                        size="small"
-                        :title="headerCollapsed ? 'Expand header' : 'Collapse header'"
-                        icon-only
-                        inline
-                        @click="toggleHeaderCollapse">
-                        <FontAwesomeIcon :icon="headerCollapsed ? faAngleDoubleDown : faAngleDoubleUp" fixed-width />
-                    </GButton>
-                </template>
+            <NavigationTitle
+                :icon="faBezierCurve"
+                :title="`History Graph: ${historyName}`"
+                heading-description="history graph heading"
+                collapsible
+                :collapsed="headerCollapsed"
+                @toggle="toggleHeaderCollapse">
                 <template v-slot:actions>
                     <GButtonGroup v-if="onOverviewTab">
                         <GButton
@@ -109,18 +104,17 @@ const toolRequestNodes = computed<GraphNode[]>(
                         </GButton>
                     </GButtonGroup>
                 </template>
+                <template v-slot:collapsible>
+                    <div v-if="history" class="history-graph-info px-2 py-1 small text-muted">
+                        <i data-description="history graph time info">
+                            <FontAwesomeIcon :icon="faClock" class="mr-1" />
+                            <span v-localize>updated</span>
+                            <UtcDate :date="history.update_time" mode="elapsed" />
+                        </i>
+                        <span class="ml-3">{{ history.count }} items</span>
+                    </div>
+                </template>
             </NavigationTitle>
-
-            <Transition name="header-collapse">
-                <div v-if="!headerCollapsed && history" class="history-graph-info px-2 py-1 small text-muted">
-                    <i data-description="history graph time info">
-                        <FontAwesomeIcon :icon="faClock" class="mr-1" />
-                        <span v-localize>updated</span>
-                        <UtcDate :date="history.update_time" mode="elapsed" />
-                    </i>
-                    <span class="ml-3">{{ history.count }} items</span>
-                </div>
-            </Transition>
 
             <BNav pills class="mb-2 mt-2 p-2 bg-light border-bottom">
                 <BNavItem title="Overview" :active="onOverviewTab" :to="`/histories/${historyId}/graph`">
@@ -164,25 +158,5 @@ const toolRequestNodes = computed<GraphNode[]>(
 .tab-content-container {
     flex: 1;
     min-height: 0;
-}
-
-.header-collapse-enter-active,
-.header-collapse-leave-active {
-    overflow: hidden;
-    max-height: 600px;
-    opacity: 1;
-    transform: translateY(0);
-    transition:
-        max-height 0.3s ease,
-        opacity 0.25s ease,
-        transform 0.25s ease;
-}
-
-// TODO(vue3): rename .header-collapse-enter to .header-collapse-enter-from
-.header-collapse-enter,
-.header-collapse-leave-to {
-    max-height: 0;
-    opacity: 0;
-    transform: translateY(-6px);
 }
 </style>

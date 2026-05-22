@@ -1,6 +1,7 @@
 import { faFile, faLayerGroup, faWrench } from "@fortawesome/free-solid-svg-icons";
 
 import type { components } from "@/api/schema";
+import { computeNodeHeight, portOffsetY } from "@/components/Graph/nodeGeometry";
 import type { ConnectorVariant, GraphEdge, GraphNode, GraphNodePort } from "@/components/Graph/types";
 import { type StateRepresentation, STATES } from "@/components/History/Content/model/states";
 
@@ -13,41 +14,6 @@ export type ConnectionMode = "collapsed" | "expanded";
 
 /** Node width — uniform across all types */
 const NODE_WIDTH = 200;
-
-// Layout geometry — must match the fixed sizes GraphNode.vue renders, so the
-// computed height (used for ELK placement + edge routing) equals the real node.
-const HEADER_HEIGHT = 30;
-const PORT_ROW_HEIGHT = 30;
-const RULE_HEIGHT = 5;
-const BODY_PADDING = 8;
-const BADGE_BODY_HEIGHT = 34;
-const MIN_NODE_HEIGHT = 30;
-
-function computeNodeHeight(inputCount: number, outputCount: number, hasBadgeBody: boolean = false): number {
-    if (hasBadgeBody) {
-        // Dataset/collection node — header plus the badge/state body.
-        return HEADER_HEIGHT + BADGE_BODY_HEIGHT;
-    }
-    if (inputCount === 0 && outputCount === 0) {
-        return Math.max(MIN_NODE_HEIGHT, HEADER_HEIGHT);
-    }
-    // Tool node — header plus stacked port rows and the input/output divider.
-    const portRows = inputCount + outputCount;
-    const rule = inputCount > 0 && outputCount > 0 ? RULE_HEIGHT : 0;
-    return HEADER_HEIGHT + portRows * PORT_ROW_HEIGHT + rule + BODY_PADDING;
-}
-
-/**
- * Vertical offset (px from the node top) of a port's connector — mirrors the row
- * stacking used by computeNodeHeight so connectors align with their label rows.
- */
-function portOffsetY(side: "input" | "output", index: number, inputCount: number): number {
-    if (side === "input") {
-        return HEADER_HEIGHT + index * PORT_ROW_HEIGHT + PORT_ROW_HEIGHT / 2;
-    }
-    const rule = inputCount > 0 ? RULE_HEIGHT : 0;
-    return HEADER_HEIGHT + inputCount * PORT_ROW_HEIGHT + rule + index * PORT_ROW_HEIGHT + PORT_ROW_HEIGHT / 2;
-}
 
 /** User-facing labels keyed by node src */
 export const NODE_TYPE_LABELS: Record<string, string> = {

@@ -2,6 +2,7 @@
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { computed } from "vue";
 
+import { HEADER_HEIGHT, PORT_ROW_HEIGHT, RULE_HEIGHT } from "./nodeGeometry";
 import type { ConnectorVariant, GraphNode } from "./types";
 
 import GraphConnector from "./GraphConnector.vue";
@@ -19,6 +20,13 @@ const nodeStyle = computed(() => ({
     top: `${props.node.y}px`,
     width: `${props.node.width}px`,
 }));
+
+// Expose the geometry constants to the scoped styles as CSS custom properties.
+const geometryStyle = {
+    "--header-height": `${HEADER_HEIGHT}px`,
+    "--port-row-height": `${PORT_ROW_HEIGHT}px`,
+    "--rule-height": `${RULE_HEIGHT}px`,
+};
 
 const hasInputs = computed(() => props.node.inputs && props.node.inputs.length > 0);
 const hasOutputs = computed(() => props.node.outputs && props.node.outputs.length > 0);
@@ -63,9 +71,9 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
     <div
         class="graph-node card"
         :class="[node.cssClass, { 'node-highlight': selected }]"
-        :style="nodeStyle"
+        :style="[nodeStyle, geometryStyle]"
         @click.stop="emit('select', node.id)">
-        <div class="graph-node-header card-header unselectable py-1 px-2" :data-state="node.data?.state ?? undefined">
+        <div class="graph-node-header card-header unselectable" :data-state="node.data?.state ?? undefined">
             <FontAwesomeIcon :icon="node.icon" class="graph-node-icon mr-1" :spin="iconSpin" />
             <span class="graph-node-label" :title="node.label">{{ node.label }}</span>
             <span v-if="hasPorts && node.badge" class="badge badge-light ml-auto">{{ node.badge }}</span>
@@ -117,7 +125,8 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 .graph-node-header {
     display: flex;
     align-items: center;
-    height: 30px;
+    height: var(--header-height);
+    padding: 0 0.5rem;
     font-size: $font-size-base;
 }
 
@@ -141,8 +150,8 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 }
 
 .form-row {
-    height: 30px;
-    line-height: 30px;
+    height: var(--port-row-height);
+    line-height: var(--port-row-height);
     padding: 0 10px;
 }
 
@@ -159,7 +168,7 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 }
 
 .rule {
-    height: 5px;
+    height: var(--rule-height);
     border: none;
     border-bottom: dotted $brand-primary 1px;
     margin: 0;

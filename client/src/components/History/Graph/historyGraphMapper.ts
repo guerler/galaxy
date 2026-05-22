@@ -110,6 +110,29 @@ function isCollectionEdge(edge: ApiGraphEdge): boolean {
     return edge.type === "collection_input" || edge.type === "collection_output";
 }
 
+/**
+ * Connector variant at one end of an edge — the single source of truth shared by
+ * the edge ribbon and the node connectors, so the two can never disagree.
+ * A data node's end follows the node kind; a tool node's end follows the edge kind.
+ */
+function edgeEndVariant(ref: { src: string }, edge: ApiGraphEdge): ConnectorVariant {
+    if (ref.src === "hdca") {
+        return "multiple";
+    }
+    if (ref.src === "hda") {
+        return "single";
+    }
+    return isCollectionEdge(edge) ? "multiple" : "single";
+}
+
+/** Variant of a node's merged connector — "multiple" if any port on the side is a collection. */
+function mergedConnectorVariant(ports: GraphNodePort[] | undefined): ConnectorVariant | null {
+    if (!ports || ports.length === 0) {
+        return null;
+    }
+    return ports.some((port) => port.variant === "multiple") ? "multiple" : "single";
+}
+
 // ── Public API ──
 
 /**
@@ -136,19 +159,28 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
         const targetKey = nodeKey(edge.target);
         const sourceLabel = nodeLabels.get(sourceKey) ?? sourceKey;
         const targetLabel = nodeLabels.get(targetKey) ?? targetKey;
-        const variant: ConnectorVariant = isCollectionEdge(edge) ? "multiple" : "single";
 
-        // Target node gets an input port labeled by the source
+        // Each port's variant is the edge's connector variant at that node's end,
+        // so a port connector always matches the edge that meets it.
         if (!inputPorts.has(targetKey)) {
             inputPorts.set(targetKey, []);
         }
-        inputPorts.get(targetKey)!.push({ name: sourceKey, label: sourceLabel, edgeId, variant });
+        inputPorts.get(targetKey)!.push({
+            name: sourceKey,
+            label: sourceLabel,
+            edgeId,
+            variant: edgeEndVariant(edge.target, edge),
+        });
 
-        // Source node gets an output port labeled by the target
         if (!outputPorts.has(sourceKey)) {
             outputPorts.set(sourceKey, []);
         }
-        outputPorts.get(sourceKey)!.push({ name: targetKey, label: targetLabel, edgeId, variant });
+        outputPorts.get(sourceKey)!.push({
+            name: targetKey,
+            label: targetLabel,
+            edgeId,
+            variant: edgeEndVariant(edge.source, edge),
+        });
     });
 
     return apiNodes.map((node) => {
@@ -171,10 +203,11 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
 
         // Node-level (merged) connectors — one per side. Data nodes always use these;
         // tool nodes use them only in collapsed mode (expanded uses per-port connectors).
+        // The variant aggregates the side's ports, so the merged connector stays
+        // consistent with the edges meeting it (e.g. a collection input reads as "multiple").
         const usesNodeConnector = !isToolRequest || mode === "collapsed";
-        const connectorVariant: ConnectorVariant = node.src === "hdca" ? "multiple" : "single";
-        const inputConnector = usesNodeConnector && inputCount > 0 ? connectorVariant : null;
-        const outputConnector = usesNodeConnector && outputCount > 0 ? connectorVariant : null;
+        const inputConnector = usesNodeConnector ? mergedConnectorVariant(inputPorts.get(key)) : null;
+        const outputConnector = usesNodeConnector ? mergedConnectorVariant(outputPorts.get(key)) : null;
 
         // For datasets/collections, use state to determine icon.
         // State-based coloring is handled by data-state attribute on the node element,
@@ -232,7 +265,8 @@ export function mapEdges(apiEdges: ApiGraphEdge[]): GraphEdge[] {
         source: nodeKey(edge.source),
         target: nodeKey(edge.target),
         cssClass: isCollectionEdge(edge) ? "edge-collection" : "edge-dataset",
-        isCollection: isCollectionEdge(edge),
+        sourceVariant: edgeEndVariant(edge.source, edge),
+        targetVariant: edgeEndVariant(edge.target, edge),
         points: [],
     }));
 }

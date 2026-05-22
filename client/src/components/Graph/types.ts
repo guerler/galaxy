@@ -44,8 +44,10 @@ export interface GraphEdge {
     source: string;
     target: string;
     cssClass?: string;
-    /** Render as a collection ribbon (multiple parallel lines) */
-    isCollection?: boolean;
+    /** Connector variant at the source end — "multiple" spreads the edge into a ribbon. */
+    sourceVariant?: ConnectorVariant;
+    /** Connector variant at the target end — "multiple" spreads the edge into a ribbon. */
+    targetVariant?: ConnectorVariant;
     points: { x: number; y: number }[];
 }
 

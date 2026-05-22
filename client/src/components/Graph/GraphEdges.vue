@@ -22,15 +22,27 @@ function makePath(points: { x: number; y: number }[]): string {
     return curveBasisPath(points.map((p) => [p.x, p.y] as [number, number]));
 }
 
-/** For a single (non-collection) edge, return one path string */
+/**
+ * Return the SVG path(s) for an edge. A single line when both ends are "single";
+ * otherwise a ribbon whose offsets spread at a "multiple" end and converge to 0
+ * at a "single" end — so a dataset→collection edge morphs from one line to a ribbon.
+ */
 function edgePaths(edge: GraphEdge): string[] {
-    if (!edge.isCollection || edge.points.length < 2) {
+    const startMultiple = edge.sourceVariant === "multiple";
+    const endMultiple = edge.targetVariant === "multiple";
+    if ((!startMultiple && !endMultiple) || edge.points.length < 2) {
         return [makePath(edge.points)];
     }
-    // Collection ribbon: offset each path perpendicular to the edge direction.
-    // Edges run mostly left-to-right, so vertical offsets produce the ribbon effect.
+    // Start-side control points take the source offset, end-side points the
+    // target offset; the bezier smooths the morph between them.
+    const mid = Math.floor(edge.points.length / 2);
     return RIBBON_OFFSETS.map((offset) => {
-        const offsetPoints = edge.points.map((p) => ({ x: p.x, y: p.y + offset }));
+        const startOffset = startMultiple ? offset : 0;
+        const endOffset = endMultiple ? offset : 0;
+        const offsetPoints = edge.points.map((p, i) => ({
+            x: p.x,
+            y: p.y + (i < mid ? startOffset : endOffset),
+        }));
         return makePath(offsetPoints);
     });
 }
@@ -41,7 +53,6 @@ function edgeClass(edge: GraphEdge): Record<string, boolean> {
     return {
         [edge.cssClass ?? "edge-default"]: true,
         "edge-dimmed": !isConnected,
-        "edge-collection": !!edge.isCollection,
     };
 }
 </script>

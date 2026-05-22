@@ -15,6 +15,7 @@ from typing import Optional
 
 from galaxy.exceptions import MessageException
 from galaxy.tool_util.toolbox import AbstractToolBox
+from galaxy.util.template import fill_template
 
 
 class ToolLabelResolver:
@@ -42,10 +43,10 @@ class ToolLabelResolver:
         return self._input_cache[tool_id]
 
     def output_labels(self, tool_id: Optional[str]) -> dict[str, str]:
-        """Output name -> display label for a tool. Templated labels (those
-        referencing ``$``, e.g. ``${on_string}``, which need job context to
-        render) and missing labels are skipped so callers fall back to the
-        plain output name."""
+        """Output name -> display label for a tool — the descriptive part of
+        each output's label (see ``_output_label``). Empty when the toolbox is
+        unavailable or the tool is not found; callers fall back to the plain
+        output name."""
         if tool_id is None:
             return {}
         if tool_id not in self._output_cache:
@@ -53,8 +54,8 @@ class ToolLabelResolver:
             tool = self._get_tool(tool_id)
             if tool is not None:
                 for name, output in {**tool.outputs, **tool.output_collections}.items():
-                    label = getattr(output, "label", None)
-                    if label and "$" not in label:
+                    label = _output_label(output, tool)
+                    if label:
                         labels[name] = label
             self._output_cache[tool_id] = labels
         return self._output_cache[tool_id]
@@ -86,3 +87,26 @@ def _collect_input_labels(inputs: dict, prefix: str, labels: dict[str, str]) -> 
         label = getattr(param, "label", None)
         if label:
             labels[path] = label
+
+
+def _output_label(output, tool) -> Optional[str]:
+    """Human label for a tool output: the descriptive tail after the
+    conventional ``${tool.name} on ${on_string}:`` prefix. Templated text is
+    rendered against a placeholder context; returns None when the output has no
+    label or it cannot be rendered, so callers fall back to the output name."""
+    label = getattr(output, "label", None)
+    if not label:
+        return None
+    # Convention: "<tool> on <inputs>: <descriptive>" — keep the descriptive tail.
+    descriptive = label.split(": ", 1)[-1]
+    if "$" in descriptive:
+        try:
+            descriptive = fill_template(
+                descriptive,
+                context={"tool": tool, "on_string": "input dataset(s)"},
+                python_template_version=getattr(tool, "python_template_version", None),
+            )
+        except Exception:
+            return None
+    descriptive = descriptive.strip()
+    return descriptive or None

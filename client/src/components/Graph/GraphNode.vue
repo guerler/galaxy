@@ -180,8 +180,9 @@ const iconSpin = computed(() => Boolean(props.node.data?.stateSpin));
     // Matches the workflow/invocation node header (Bootstrap `py-1 px-2`).
     padding: 0.25rem 0.5rem;
     font-size: $font-size-base;
-    // Round the top corners so the coloured header follows the node's outline.
-    border-radius: 0.25rem 0.25rem 0 0;
+    // Round the top corners to the node's inner radius (node radius minus the
+    // 1px border) so the coloured header follows the outline exactly.
+    border-radius: calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0;
 }
 
 .graph-node-icon {

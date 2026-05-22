@@ -37,11 +37,13 @@ interface ConnectorPlacement {
 // Connectors to render: merged node-level ones (collapsed) plus per-port ones (expanded).
 const connectorPlacements = computed<ConnectorPlacement[]>(() => {
     const placements: ConnectorPlacement[] = [];
+    // Merged connectors anchor at the exact node center the edge routing uses.
+    const centerTop = `${props.node.height / 2}px`;
     if (props.node.inputConnector) {
-        placements.push({ side: "input", top: "50%", variant: props.node.inputConnector });
+        placements.push({ side: "input", top: centerTop, variant: props.node.inputConnector });
     }
     if (props.node.outputConnector) {
-        placements.push({ side: "output", top: "50%", variant: props.node.outputConnector });
+        placements.push({ side: "output", top: centerTop, variant: props.node.outputConnector });
     }
     for (const port of props.node.inputs ?? []) {
         if (port.offsetY != null) {
@@ -113,12 +115,19 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 }
 
 .graph-node-header {
+    display: flex;
+    align-items: center;
+    height: 34px;
     font-size: $font-size-base;
 }
 
 .graph-node-label {
+    flex: 1;
+    min-width: 0;
     font-weight: 500;
-    word-break: break-word;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .node-body {
@@ -132,7 +141,8 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 }
 
 .form-row {
-    padding: 1px 0;
+    height: 18px;
+    line-height: 18px;
 }
 
 .output-data-row {
@@ -145,7 +155,7 @@ const connectorPlacements = computed<ConnectorPlacement[]>(() => {
 }
 
 .rule {
-    height: 0;
+    height: 5px;
     border: none;
     border-bottom: dotted $brand-primary 1px;
     margin: 0;

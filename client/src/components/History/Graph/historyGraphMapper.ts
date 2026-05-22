@@ -14,49 +14,34 @@ export type ConnectionMode = "collapsed" | "expanded";
 /** Node width — uniform across all types */
 const NODE_WIDTH = 200;
 
-/** Compute node height based on content: header + ports + padding */
-const HEADER_LINE_HEIGHT = 20;
-const HEADER_PADDING = 10;
-const HEADER_ICON_CHARS = 3;
-const CHARS_PER_LINE = 22;
+// Layout geometry — must match the fixed sizes GraphNode.vue renders, so the
+// computed height (used for ELK placement + edge routing) equals the real node.
+const HEADER_HEIGHT = 34;
 const PORT_ROW_HEIGHT = 18;
 const RULE_HEIGHT = 5;
 const BODY_PADDING = 8;
-const MIN_NODE_HEIGHT = 32;
+const MIN_NODE_HEIGHT = 34;
 
-function estimateHeaderLines(label: string): number {
-    const effectiveLength = label.length + HEADER_ICON_CHARS;
-    return Math.max(1, Math.ceil(effectiveLength / CHARS_PER_LINE));
-}
-
-function computeNodeHeight(
-    label: string,
-    inputCount: number,
-    outputCount: number,
-    hasBadgeBody: boolean = false,
-): number {
-    const headerLines = estimateHeaderLines(label);
-    const headerHeight = headerLines * HEADER_LINE_HEIGHT + HEADER_PADDING;
+function computeNodeHeight(inputCount: number, outputCount: number, hasBadgeBody: boolean = false): number {
     if (inputCount === 0 && outputCount === 0 && !hasBadgeBody) {
-        return Math.max(MIN_NODE_HEIGHT, headerHeight);
+        return Math.max(MIN_NODE_HEIGHT, HEADER_HEIGHT);
     }
     const portRows = inputCount + outputCount;
     const rule = inputCount > 0 && outputCount > 0 ? RULE_HEIGHT : 0;
     const badgeRow = hasBadgeBody ? PORT_ROW_HEIGHT + BODY_PADDING : 0;
-    return headerHeight + portRows * PORT_ROW_HEIGHT + rule + BODY_PADDING + badgeRow;
+    return HEADER_HEIGHT + portRows * PORT_ROW_HEIGHT + rule + BODY_PADDING + badgeRow;
 }
 
 /**
  * Vertical offset (px from the node top) of a port's connector — mirrors the row
  * stacking used by computeNodeHeight so connectors align with their label rows.
  */
-function portOffsetY(label: string, side: "input" | "output", index: number, inputCount: number): number {
-    const headerHeight = estimateHeaderLines(label) * HEADER_LINE_HEIGHT + HEADER_PADDING;
+function portOffsetY(side: "input" | "output", index: number, inputCount: number): number {
     if (side === "input") {
-        return headerHeight + index * PORT_ROW_HEIGHT + PORT_ROW_HEIGHT / 2;
+        return HEADER_HEIGHT + index * PORT_ROW_HEIGHT + PORT_ROW_HEIGHT / 2;
     }
     const rule = inputCount > 0 ? RULE_HEIGHT : 0;
-    return headerHeight + inputCount * PORT_ROW_HEIGHT + rule + index * PORT_ROW_HEIGHT + PORT_ROW_HEIGHT / 2;
+    return HEADER_HEIGHT + inputCount * PORT_ROW_HEIGHT + rule + index * PORT_ROW_HEIGHT + PORT_ROW_HEIGHT / 2;
 }
 
 /** User-facing labels keyed by node src */
@@ -180,8 +165,8 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
 
         // Expanded mode: tool nodes anchor one connector per port to its label row.
         if (mode === "expanded" && isToolRequest) {
-            inputs = inputs.map((p, i) => ({ ...p, offsetY: portOffsetY(label, "input", i, inputCount) }));
-            outputs = outputs.map((p, j) => ({ ...p, offsetY: portOffsetY(label, "output", j, inputCount) }));
+            inputs = inputs.map((p, i) => ({ ...p, offsetY: portOffsetY("input", i, inputCount) }));
+            outputs = outputs.map((p, j) => ({ ...p, offsetY: portOffsetY("output", j, inputCount) }));
         }
 
         // Node-level (merged) connectors — one per side. Data nodes always use these;
@@ -211,7 +196,7 @@ export function mapNodes(apiNodes: ApiGraphNode[], apiEdges: ApiGraphEdge[], mod
             x: 0,
             y: 0,
             width: NODE_WIDTH,
-            height: computeNodeHeight(label, inputs.length, outputs.length, hasBody),
+            height: computeNodeHeight(inputs.length, outputs.length, hasBody),
             label,
             icon,
             badge,

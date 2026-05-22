@@ -220,7 +220,7 @@ class AgentAPI:
     @router.post("/api/ai/agents/history-summary", unstable=True)
     async def history_summary(
         self,
-        history_id: str = Body(..., description="Encoded id of the history to summarize."),
+        history_id: str = Body(..., embed=True, description="Encoded id of the history to summarize."),
         trans: ProvidesUserContext = DependsOnTrans,
         user: User = DependsOnUser,
     ) -> AgentResponse:

@@ -98,27 +98,27 @@ const reportHtml = computed(() => (report.value ? renderMarkdown(report.value) :
 <template>
     <div class="history-graph-details border-left bg-white">
         <div class="details-body">
-            <!-- Comprehensive analysis report (history-wide; same regardless of selection) -->
-            <div class="p-2 report-section">
-                <Heading h1 separator inline size="md">Analysis Report</Heading>
-                <LoadingSpan v-if="reportLoading" message="Generating analysis report" />
-                <BAlert v-else-if="reportError" variant="info" show class="mb-0">{{ reportError }}</BAlert>
-                <div v-else-if="report" class="report-text" v-html="reportHtml" />
-            </div>
-
             <!-- Node-specific details when a node is selected -->
             <div v-if="itemSrc && itemId" :key="itemId" class="p-2">
-                <Heading h2 separator inline size="sm">
+                <Heading h1 separator inline size="md">
                     {{ nodeSrc === "hda" ? "Dataset Information" : "Collection Information" }}
                 </Heading>
                 <GenericHistoryItem :item-id="itemId" :item-src="itemSrc" />
             </div>
 
             <div v-else-if="nodeSrc === 'tool_request'" class="p-2">
-                <Heading h2 separator inline size="sm">Job Information</Heading>
+                <Heading h1 separator inline size="md">Job Information</Heading>
                 <LoadingSpan v-if="jobLoading" message="Loading job details" />
                 <BAlert v-else-if="jobError" variant="info" show class="mb-0">{{ jobError }}</BAlert>
                 <JobInformation v-else-if="jobId" :job-id="jobId" :include-times="true" />
+            </div>
+
+            <!-- Comprehensive analysis report (history-wide; same regardless of selection) -->
+            <div class="p-2 report-section">
+                <Heading h1 separator inline size="md">Analysis Report</Heading>
+                <LoadingSpan v-if="reportLoading" message="Generating analysis report" />
+                <BAlert v-else-if="reportError" variant="info" show class="mb-0">{{ reportError }}</BAlert>
+                <div v-else-if="report" class="report-text" v-html="reportHtml" />
             </div>
         </div>
     </div>

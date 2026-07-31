@@ -2300,11 +2300,14 @@ class JobSubmitter:
             sa_session.rollback()
             tool_request.state = ToolRequest.states.FAILED
             # str(e) is empty for e.g. bare AssertionErrors, leaving the client with an
-            # unhelpful blank message. Record the exception type and origin frame so a
-            # failed request is diagnosable from the tool request state alone.
+            # unhelpful blank message. Record the exception type and a compact call
+            # chain so a failed request is diagnosable from the tool request state alone.
             frames = traceback.extract_tb(e.__traceback__)
-            origin = f" [{frames[-1].filename.rsplit('/', 1)[-1]}:{frames[-1].lineno}]" if frames else ""
-            state_message: dict = {"err_msg": f"{type(e).__name__}: {e}{origin}".strip()}
+            chain = " <- ".join(f"{f.filename.rsplit('/', 1)[-1]}:{f.lineno}:{f.name}" for f in frames[-6:])
+            err_msg = f"{type(e).__name__}: {e}".strip()
+            if chain:
+                err_msg = f"{err_msg} | {chain}"
+            state_message: dict = {"err_msg": err_msg}
             if isinstance(e, MessageException) and e.extra_error_info:
                 if "err_data" in e.extra_error_info:
                     state_message["err_data"] = e.extra_error_info["err_data"]

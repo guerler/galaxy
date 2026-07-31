@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+import traceback
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import (
@@ -2298,7 +2299,12 @@ class JobSubmitter:
             log.exception("Problem validating tool state after request created")
             sa_session.rollback()
             tool_request.state = ToolRequest.states.FAILED
-            state_message: dict = {"err_msg": str(e)}
+            # str(e) is empty for e.g. bare AssertionErrors, leaving the client with an
+            # unhelpful blank message. Record the exception type and origin frame so a
+            # failed request is diagnosable from the tool request state alone.
+            frames = traceback.extract_tb(e.__traceback__)
+            origin = f" [{frames[-1].filename.rsplit('/', 1)[-1]}:{frames[-1].lineno}]" if frames else ""
+            state_message: dict = {"err_msg": f"{type(e).__name__}: {e}{origin}".strip()}
             if isinstance(e, MessageException) and e.extra_error_info:
                 if "err_data" in e.extra_error_info:
                     state_message["err_data"] = e.extra_error_info["err_data"]

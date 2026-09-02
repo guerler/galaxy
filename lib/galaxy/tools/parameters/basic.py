@@ -1617,6 +1617,10 @@ class ColumnListParameter(SelectToolParameter):
 
     def get_initial_value(self, trans: "ProvidesHistoryContext | None", other_values):
         if self.default_value is not None:
+            if self.multiple:
+                # from_json splits a comma joined default, so the initial value matches it.
+                columns = multiple_select_value_split(self.default_value)
+                return [ColumnListParameter._strip_c(column) for column in columns]
             return self.default_value
         return super().get_initial_value(trans, other_values)
 

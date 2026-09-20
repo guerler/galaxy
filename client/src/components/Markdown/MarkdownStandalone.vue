@@ -26,16 +26,25 @@ function onMessage(event: MessageEvent) {
     }
 }
 
+function post(message: Record<string, unknown>) {
+    if (window.parent !== window) {
+        window.parent.postMessage({ from: SELF, ...message }, window.location.origin);
+    }
+}
+
 onMounted(() => {
     window.addEventListener("message", onMessage);
-    if (window.parent !== window) {
-        window.parent.postMessage({ from: SELF, type: "ready" }, window.location.origin);
-    }
+    post({ type: "ready" });
 });
 
 onBeforeUnmount(() => window.removeEventListener("message", onMessage));
 </script>
 
 <template>
-    <Markdown :markdown-config="markdownConfig" read-only no-heading download-endpoint="" />
+    <Markdown
+        :markdown-config="markdownConfig"
+        read-only
+        no-heading
+        download-endpoint=""
+        @change="(index, cell) => post({ type: 'change', index, content: cell })" />
 </template>

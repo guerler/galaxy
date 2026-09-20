@@ -24,6 +24,11 @@ const props = defineProps<{
     editButtonConfig?: { tooltip?: string; icon?: IconDefinition; label: string; disabled?: boolean };
 }>();
 
+/** A cell rewrote its own content, e.g. a visualization whose settings changed. */
+const emit = defineEmits<{
+    (e: "change", index: number, content: string): void;
+}>();
+
 // Refs and data
 const markdownObjects = ref<any[]>([]);
 const markdownErrors = ref<any[]>([]);
@@ -140,7 +145,7 @@ onMounted(() => {
                     </div>
                 </b-alert>
                 <div v-for="(obj, index) in markdownObjects" :key="index" class="markdown-component">
-                    <SectionWrapper :name="obj.name" :content="obj.content" />
+                    <SectionWrapper :name="obj.name" :content="obj.content" @change="emit('change', index, $event)" />
                 </div>
                 <div class="markdown-scroll-overlay" />
             </div>

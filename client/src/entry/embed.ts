@@ -6,6 +6,8 @@
 //   <script type="module" src="{root}static/dist/embed.bundled.js"></script>
 //
 // The props are in place before this runs, so there is nothing to wait for and no handshake.
+// Mounting is immediate rather than on `load`: a host that writes this container into a frame it
+// already owns has passed that event long before the script arrives.
 import { initGalaxyInstance } from "@/app";
 import { replaceChildrenWithComponent } from "@/utils/mountVueComponent";
 
@@ -23,7 +25,7 @@ function fail(el: HTMLElement | null, message: string) {
     }
 }
 
-window.addEventListener("load", async () => {
+async function mount() {
     const el = document.getElementById(CONTAINER_ID);
     if (!el) {
         return fail(null, `no #${CONTAINER_ID} container on the page`);
@@ -46,4 +48,6 @@ window.addEventListener("load", async () => {
 
     await initGalaxyInstance();
     replaceChildrenWithComponent(el, (await load()).default as never, props);
-});
+}
+
+mount();

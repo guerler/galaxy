@@ -2,7 +2,7 @@
 import axios from "axios";
 import { BAlert } from "bootstrap-vue";
 import { debounce } from "lodash";
-import { onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 
 import { getAppRoot } from "@/onload/loadConfig";
 
@@ -27,6 +27,22 @@ const emitChange = debounce((newValue: Record<string, any>) => {
 
 const errorMessage = ref<string>("");
 const iframeRef = ref<HTMLIFrameElement | null>(null);
+
+function onFrameMessage(event: MessageEvent) {
+    if (event.data?.from === "galaxy-visualization") {
+        emitChange(event.data);
+    }
+}
+
+// A visualization that navigates its frame loses the frame listener, so it reports to us.
+function onWindowMessage(event: MessageEvent) {
+    if (event.source === iframeRef.value?.contentWindow) {
+        onFrameMessage(event);
+    }
+}
+
+window.addEventListener("message", onWindowMessage);
+onBeforeUnmount(() => window.removeEventListener("message", onWindowMessage));
 
 async function render() {
     if (props.name) {
@@ -67,11 +83,7 @@ async function render() {
                         iframeDocument.head.appendChild(link);
                     }
 
-                    iframe.contentWindow?.addEventListener("message", (event) => {
-                        if (event.data.from === "galaxy-visualization") {
-                            emitChange(event.data);
-                        }
-                    });
+                    iframe.contentWindow?.addEventListener("message", onFrameMessage);
 
                     emit("load");
                     errorMessage.value = "";

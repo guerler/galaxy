@@ -75,6 +75,9 @@ niivue:
 nora:
     package: "@galaxyproject/nora"
     version: 1.2.4
+olit:
+    package: "@galaxyproject/olit"
+    version: 0.0.11
 openlayers:
     package: "@galaxyproject/openlayers"
     version: 0.0.9
@@ -84,6 +87,9 @@ openseadragon:
 pca:
     package: "@galaxyproject/pca"
     version: 0.0.9
+pdf:
+    package: "@galaxyproject/pdf"
+    version: 0.0.0
 phylocanvas:
     package: "@galaxyproject/phylocanvas"
     version: 0.0.11
@@ -138,9 +144,6 @@ varri:
 venn:
     package: "@galaxyproject/venn"
     version: 0.0.8
-vintent:
-    package: "@galaxyproject/vintent"
-    version: 0.0.4
 vitessce:
     package: "@galaxyproject/vitessce"
     version: 0.0.5

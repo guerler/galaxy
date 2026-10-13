@@ -145,6 +145,7 @@ export default defineConfig(({ command }) => ({
                 libs: resolve(__dirname, "src/entry/libs.js"),
                 analysis: resolve(__dirname, "src/entry/analysis/index.ts"),
                 generic: resolve(__dirname, "src/entry/generic.js"),
+                embedded: resolve(__dirname, "src/entry/embedded/index.ts"),
             },
             output: {
                 entryFileNames: "[name].bundled.js",

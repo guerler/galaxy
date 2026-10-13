@@ -77,6 +77,12 @@ function transformGalaxyHtml(html) {
         '<script type="module" src="/src/entry/generic.js"></script>',
     );
 
+    // Rewrite embedded.bundled.js to dev entry point
+    html = html.replace(
+        /<script[^>]*src="[^"]*\/static\/dist\/embedded\.bundled\.js[^"]*"[^>]*><\/script>/gi,
+        '<script type="module" src="/src/entry/embedded/index.ts"></script>',
+    );
+
     // Remove production CSS link - Vite injects CSS via JS modules in dev mode
     html = html.replace(
         /<link[^>]*href="[^"]*\/static\/dist\/base\.css[^"]*"[^>]*>/gi,

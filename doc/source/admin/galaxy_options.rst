@@ -5947,6 +5947,23 @@
 :Type: str
 
 
+~~~~~~~~~~~~~~~~~~
+``ai_chat_plugin``
+~~~~~~~~~~~~~~~~~~
+
+:Description:
+    Name of a visualization plugin Galaxy mounts as its AI chat, in
+    place of the built-in GalaxyAI chat: in the center view and in the
+    right and bottom docks. The plugin stays an ordinary visualization
+    plugin, loaded, served and proxied as before. A plugin made only
+    for the chat sets ``hidden`` in its XML, so it is not also offered
+    in visualization lists. Its model settings come from
+    ``inference_services`` under the plugin's name. Unset, GalaxyAI's
+    own chat is used.
+:Default: ``None``
+:Type: str
+
+
 ~~~~~~~~~~~~~~~~~~~~~~
 ``inference_services``
 ~~~~~~~~~~~~~~~~~~~~~~

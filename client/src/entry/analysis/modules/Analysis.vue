@@ -5,6 +5,7 @@ import { storeToRefs } from "pinia";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
+import { useActiveChatPlugin } from "@/composables/useChatPlugin";
 import { usePanels } from "@/composables/usePanels";
 import { useChatStore } from "@/stores/chatStore";
 import { useUserStore } from "@/stores/userStore";
@@ -15,6 +16,7 @@ import ActivityBar from "@/components/ActivityBar/ActivityBar.vue";
 import GButton from "@/components/BaseComponents/GButton.vue";
 import GalaxyAI from "@/components/GalaxyAI.vue";
 import ChatPanel from "@/components/GalaxyAI/ChatPanel.vue";
+import PluginChat from "@/components/GalaxyAI/PluginChat.vue";
 import HistoryIndex from "@/components/History/Index.vue";
 import FlexPanel from "@/components/Panels/FlexPanel.vue";
 import DragAndDropModal from "@/components/Upload/DragAndDropModal.vue";
@@ -24,6 +26,7 @@ const { isRightPanelOpen, isBottomPanelOpen, activeChatId } = storeToRefs(chatSt
 const { historyPanelWidth, chatPanelWidth } = storeToRefs(useUserStore());
 
 const route = useRoute();
+const chatPlugin = useActiveChatPlugin();
 
 watch(
     () => route.path,
@@ -117,7 +120,8 @@ onUnmounted(() => {
             panel-id="chat-panel"
             side="right"
             @close="chatStore.hideChat()">
-            <GalaxyAI :exchange-id="activeChatId || undefined" docked />
+            <PluginChat v-if="chatPlugin" :plugin="chatPlugin" source="docked" />
+            <GalaxyAI v-else :exchange-id="activeChatId || undefined" docked />
         </FlexPanel>
         <DragAndDropModal />
     </div>

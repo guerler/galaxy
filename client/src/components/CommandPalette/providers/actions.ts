@@ -10,6 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Toast } from "@/composables/toast";
+import { useChatPlugin } from "@/composables/useChatPlugin";
 import { useChatStore } from "@/stores/chatStore";
 import { useHistoryStore } from "@/stores/historyStore";
 import { usePageStore } from "@/stores/pageStore";
@@ -101,7 +102,12 @@ async function galaxyAiItems(argQuery: string): Promise<PaletteItem[]> {
             console.debug("Command palette could not load the GalaxyAI history", error);
         }
     }
-    const existing = chatStore.chatHistory.map((chat) => ({
+    // With a chat plugin, its own chats: it opens those, and GalaxyAI's stay as they were.
+    const chatPlugin = useChatPlugin().value;
+    const chats = chatPlugin
+        ? chatStore.chatHistory.filter((chat) => chat.agent_type === chatPlugin)
+        : chatStore.chatHistory;
+    const existing = chats.map((chat) => ({
         id: `actions:galaxy-ai:${chat.id}`,
         icon: faComments,
         title: chat.query || "Untitled conversation",

@@ -28,13 +28,13 @@ vi.mock("@/stores/activityStore.js", () => ({
 
 const localVue = getLocalVue();
 
-function mountComponent(source: "center" | "docked" | "panel") {
+function mountComponent(source: "center" | "docked" | "panel", placementOnly = false) {
     const pinia = createTestingPinia({ createSpy: vi.fn, stubActions: false });
     setActivePinia(pinia);
     const wrapper = mount(ChatActions as object, {
         localVue,
         pinia,
-        propsData: { source },
+        propsData: { source, placementOnly },
         stubs: { FontAwesomeIcon: true },
     });
     const store = useChatStore();
@@ -229,5 +229,31 @@ describe("ChatActions", () => {
             await findButton(wrapper, "Close panel").trigger("click");
             expect(store.hideChat).toHaveBeenCalled();
         });
+    });
+});
+
+describe("ChatActions for a chat plugin", () => {
+    const titles = (wrapper: VueWrapper) =>
+        wrapper.findAllComponents(GButton).map((button) => button.props("title") as string);
+
+    it("places the chat and shows its list: the plugin starts its own conversations and runs once", () => {
+        const { wrapper } = mountComponent("docked", true);
+        expect(titles(wrapper)).toEqual([
+            "Show Chats Panel",
+            "Open in center view",
+            "Dock to bottom panel",
+            "Close panel",
+        ]);
+    });
+
+    it("keeps the bottom panel's collapse toggle", () => {
+        const { wrapper } = mountComponent("panel", true);
+        expect(titles(wrapper)).toEqual([
+            "Show Chats Panel",
+            "Open in center view",
+            "Dock to side panel",
+            "Toggle panel",
+            "Close panel",
+        ]);
     });
 });

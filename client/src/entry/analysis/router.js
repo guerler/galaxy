@@ -36,7 +36,7 @@ import ManageFileSourceIndex from "@/components/FileSources/Instances/ManageInde
 import UpgradeFileSourceInstance from "@/components/FileSources/Instances/UpgradeInstance.vue";
 import CreateUserFileSource from "@/components/FileSources/Templates/CreateUserFileSource.vue";
 import FormGeneric from "@/components/Form/FormGeneric.vue";
-import GalaxyAI from "@/components/GalaxyAI.vue";
+import GalaxyAIRoute from "@/components/GalaxyAI/GalaxyAIRoute.vue";
 import GalaxyWizard from "@/components/GalaxyWizard.vue";
 import GridInvocation from "@/components/Grid/GridInvocation.vue";
 import GridPage from "@/components/Grid/GridPage.vue";
@@ -592,7 +592,7 @@ export function getRouter(Galaxy) {
                     },
                     {
                         path: "galaxyai/:exchangeId?",
-                        component: GalaxyAI,
+                        component: GalaxyAIRoute,
                         redirect: redirectAnon(),
                         props: (route) => ({
                             exchangeId: route.params.exchangeId || undefined,

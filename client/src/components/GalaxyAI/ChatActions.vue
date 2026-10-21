@@ -27,6 +27,8 @@ const props = defineProps<{
     source: "docked" | "panel" | "center";
     collapsed?: boolean;
     enableDelete?: boolean;
+    /** Where the chat sits and its list only: a chat plugin starts its own conversations, and runs once. */
+    placementOnly?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -94,12 +96,18 @@ function onDockTo(location: "right" | "bottom") {
                 Chats
             </span>
         </GButton>
-        <GButton data-description="new chat button" size="small" transparent title="Start New Chat" @click="startNew">
+        <GButton
+            v-if="!props.placementOnly"
+            data-description="new chat button"
+            size="small"
+            transparent
+            title="Start New Chat"
+            @click="startNew">
             <FontAwesomeIcon :icon="faPlus" fixed-width />
             <span class="btn-label">New</span>
         </GButton>
         <GButton
-            v-if="(props.source === 'center' || props.source === 'docked') && !props.collapsed"
+            v-if="(props.source === 'center' || props.source === 'docked') && !props.collapsed && !props.placementOnly"
             data-description="delete chat button"
             :disabled="!props.enableDelete"
             size="small"
@@ -132,7 +140,7 @@ function onDockTo(location: "right" | "bottom") {
             @click="onDockTo('bottom')">
             <FontAwesomeIcon :icon="faAngleDoubleDown" fixed-width />
         </GButton>
-        <GButton size="small" transparent title="Open in floating window" @click="popOut">
+        <GButton v-if="!props.placementOnly" size="small" transparent title="Open in floating window" @click="popOut">
             <FontAwesomeIcon :icon="faExternalLinkAlt" fixed-width />
         </GButton>
         <GButton

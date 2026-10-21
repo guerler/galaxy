@@ -53,6 +53,14 @@
                 <WindowManagerWindow v-for="win in windowManagerStore.windows" :key="win.id" :window="win" />
             </template>
             <TourRunner v-if="currentTour?.id" :key="currentTour.id" :tour-id="currentTour.id" />
+            <!-- Mounted once for the whole app, so the chat keeps running as its place changes. -->
+            <PinnedVisualization
+                v-if="chatPlugin"
+                :key="pluginChatKey"
+                :name="chatPlugin"
+                :config="pluginChatConfig"
+                frame-id="galaxy_ai_chat"
+                @saved="onChatSaved" />
         </template>
     </div>
 </template>
@@ -65,8 +73,10 @@ import { getGalaxyInstance } from "@/app";
 import { setConfirmDialogComponentRef } from "@/composables/confirmDialog";
 import { useRouteQueryBool } from "@/composables/route";
 import { useHasStagedUploads } from "@/composables/upload/useUploadStaging";
+import { useChatPlugin } from "@/composables/useChatPlugin";
 import { useCommandPalette } from "@/composables/useCommandPalette";
 import { getAppRoot } from "@/onload";
+import { useChatStore } from "@/stores/chatStore";
 import { useConfigStore } from "@/stores/configurationStore";
 import { useEntryPointStore } from "@/stores/entryPointStore";
 import { useHistoryStore } from "@/stores/historyStore";
@@ -85,6 +95,7 @@ import ExportToAnotherGalaxyDialog from "@/components/History/Content/ExportToAn
 import Masthead from "@/components/Masthead/Masthead.vue";
 import BroadcastsOverlay from "@/components/Notifications/Broadcasts/BroadcastsOverlay.vue";
 import TourRunner from "@/components/Tour/TourRunner.vue";
+import PinnedVisualization from "@/components/Visualizations/PinnedVisualization.vue";
 import WindowManagerWindow from "@/components/WindowManager/WindowManagerWindow.vue";
 
 // router.js reads this before each navigation to decide whether to prompt about unsaved changes.
@@ -102,6 +113,16 @@ const { currentTour } = storeToRefs(tourStore);
 
 const userStore = useUserStore();
 const { currentTheme } = storeToRefs(userStore);
+const chatPlugin = useChatPlugin();
+const chatStore = useChatStore();
+const { pluginChatConfig, pluginChatKey } = storeToRefs(chatStore);
+
+/** A chat the plugin saved shows in the chat list. */
+function onChatSaved(saved: boolean) {
+    if (saved) {
+        chatStore.loadHistory().catch(() => {});
+    }
+}
 
 const confirmDialogRef = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 // Vue 3 doesn't unwrap a ref stored in a ref, so pass the instance, not the ref.

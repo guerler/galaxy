@@ -3,9 +3,11 @@ import { storeToRefs } from "pinia";
 import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
+import { useActiveChatPlugin } from "@/composables/useChatPlugin";
 import { useChatStore } from "@/stores/chatStore";
 
 import ChatActions from "./ChatActions.vue";
+import PluginChat from "./PluginChat.vue";
 import GalaxyAI from "@/components/GalaxyAI.vue";
 
 const chatStore = useChatStore();
@@ -15,6 +17,7 @@ const route = useRoute();
 const router = useRouter();
 
 const collapsed = ref(false);
+const chatPlugin = useActiveChatPlugin();
 
 function dockTo(location: "right" | "bottom") {
     chatStore.dockChat(location, activeChatId.value);
@@ -39,10 +42,15 @@ watch(
     <div class="chat-panel" :class="collapsed ? 'collapsed' : 'expanded'">
         <div class="chat-panel-header">
             <span class="chat-panel-title">GalaxyAI</span>
-            <ChatActions v-model:collapsed="collapsed" source="panel" @dock-to="dockTo" />
+            <ChatActions
+                v-model:collapsed="collapsed"
+                source="panel"
+                :placement-only="!!chatPlugin"
+                @dock-to="dockTo" />
         </div>
         <div v-show="!collapsed" class="chat-panel-body">
-            <GalaxyAI :exchange-id="activeChatId || undefined" panel />
+            <PluginChat v-if="chatPlugin" :plugin="chatPlugin" source="panel" />
+            <GalaxyAI v-else :exchange-id="activeChatId || undefined" panel />
         </div>
     </div>
 </template>

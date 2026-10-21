@@ -15,6 +15,10 @@ export const useChatStore = defineStore("chatStore", () => {
     const chatHistory = ref<ChatHistoryItem[]>([]);
     const loading = ref(false);
     const newChatRequestCount = ref(0);
+    /** What the chat plugin was last asked to start with; the plugin is mounted again for each ask. */
+    const pluginChatConfig = ref<{ exchange_id?: string; question?: string }>({});
+    const pluginChatKey = ref(0);
+    const pluginChatId = computed(() => pluginChatConfig.value.exchange_id ?? null);
 
     const isRightPanelOpen = computed(() => chatLocation.value === "right" && chatVisible.value);
     const isBottomPanelOpen = computed(() => chatLocation.value === "bottom" && chatVisible.value);
@@ -127,6 +131,20 @@ export const useChatStore = defineStore("chatStore", () => {
         newChatRequestCount.value++;
     }
 
+    /** Open a chat the plugin saved; the one already open stays as it is. */
+    function openPluginChat(id: string) {
+        if (pluginChatId.value !== id) {
+            pluginChatConfig.value = { exchange_id: id };
+            pluginChatKey.value++;
+        }
+    }
+
+    /** Start a new chat in the plugin with a question. */
+    function askPluginChat(question: string) {
+        pluginChatConfig.value = { question };
+        pluginChatKey.value++;
+    }
+
     /** Returns the active chat id, falling back to the most recent history item, or null. */
     function resolveDockChatId(): string | null {
         return activeChatId.value ?? chatHistory.value[0]?.id ?? null;
@@ -154,6 +172,11 @@ export const useChatStore = defineStore("chatStore", () => {
         loadHistory,
         loading,
         newChatRequestCount,
+        askPluginChat,
+        openPluginChat,
+        pluginChatConfig,
+        pluginChatId,
+        pluginChatKey,
         requestNewChat,
         toggleChat,
         setLocation,

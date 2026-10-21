@@ -9,6 +9,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useConfirmDialog } from "@/composables/confirmDialog";
 import { useToast } from "@/composables/toast";
 import { useActiveContext } from "@/composables/useActiveContext";
+import { useActiveChatPlugin } from "@/composables/useChatPlugin";
 import { useSidebarSelection } from "@/composables/useSidebarSelection";
 import { useChatStore } from "@/stores/chatStore";
 import { errorMessageAsString } from "@/utils/simple-error";
@@ -38,6 +39,12 @@ const notebookPageId = computed(() => {
 const newChat = useStartNewChat();
 
 const { chatHistory, loading } = storeToRefs(chatStore);
+const chatPlugin = useActiveChatPlugin();
+
+/** With a chat plugin, the chats it saved: it continues those, and GalaxyAI's own stay as they were. */
+const chats = computed(() =>
+    chatPlugin.value ? chatHistory.value.filter((item) => item.agent_type === chatPlugin.value) : chatHistory.value,
+);
 
 const {
     selectionMode,
@@ -47,10 +54,12 @@ const {
     toggleSelectAll,
     handleSelectionClick,
     pruneAfterDelete,
-} = useSidebarSelection(chatHistory, (item) => item.id);
+} = useSidebarSelection(chats, (item) => item.id);
 
 const currentExchangeId = computed(() => {
-    if (chatStore.isCenterMode) {
+    if (chatPlugin.value) {
+        return chatStore.pluginChatId;
+    } else if (chatStore.isCenterMode) {
         // The galaxyai/:exchangeId route param is never repeated, but vue-router's generic
         // params type always allows string[] -- narrow to the single value it actually is.
         const param = route.params["exchangeId"];
@@ -75,6 +84,9 @@ watch(
 function handleItemClick(item: ChatHistoryItem, index: number, event: MouseEvent) {
     if (handleSelectionClick(item, index, event)) {
         return;
+    }
+    if (chatPlugin.value) {
+        chatStore.openPluginChat(item.id);
     }
     if (chatStore.isCenterMode) {
         router.push(`/galaxyai/${item.id}`);
@@ -122,11 +134,11 @@ async function deleteSelected() {
 <template>
     <ActivityPanel title="GalaxyAI">
         <template v-slot:header-buttons>
-            <GButton color="blue" transparent size="small" title="New Chat" @click="startNewChat">
+            <GButton v-if="!chatPlugin" color="blue" transparent size="small" title="New Chat" @click="startNewChat">
                 <FontAwesomeIcon :icon="faPlus" fixed-width />
             </GButton>
             <GButton
-                :disabled="chatHistory.length === 0"
+                :disabled="chats.length === 0"
                 transparent
                 size="small"
                 :pressed="selectionMode"
@@ -140,7 +152,7 @@ async function deleteSelected() {
             <ChatModeSelector class="pt-1" />
         </template>
 
-        <div v-if="selectionMode && chatHistory.length > 0" class="selection-toolbar">
+        <div v-if="selectionMode && chats.length > 0" class="selection-toolbar">
             <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events vuejs-accessibility/no-static-element-interactions -->
             <span class="select-all-toggle" @click="toggleSelectAll">
                 <FontAwesomeIcon :icon="allSelected ? faCheckSquare : faSquare" fixed-width />
@@ -157,9 +169,9 @@ async function deleteSelected() {
         </div>
 
         <ScrollList
-            :prop-items="chatHistory"
+            :prop-items="chats"
             :prop-busy="loading"
-            :prop-total-count="chatHistory.length"
+            :prop-total-count="chats.length"
             :item-key="(item) => item.id"
             load-disabled
             in-panel

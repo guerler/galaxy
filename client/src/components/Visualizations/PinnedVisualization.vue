@@ -14,6 +14,10 @@ const props = withDefaults(defineProps<{ name: string; frameId?: string; config?
     config: () => ({}),
 });
 
+const emit = defineEmits<{
+    (e: "saved", saved: boolean): void;
+}>();
+
 interface Box {
     top: number;
     left: number;
@@ -64,7 +68,7 @@ const style = computed(() => {
 
 <template>
     <div class="pinned-visualization" :class="{ 'pinned-visualization-hidden': !visible }" :style="style">
-        <VisualizationFrame :name="name" :config="config" :frame-id="frameId" />
+        <VisualizationFrame :name="name" :config="config" :frame-id="frameId" @saved="emit('saved', $event)" />
     </div>
 </template>
 

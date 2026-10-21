@@ -38,13 +38,9 @@ const notebookPageId = computed(() => {
 
 const newChat = useStartNewChat();
 
-const { chatHistory, loading } = storeToRefs(chatStore);
+/** Every saved chat: with a chat plugin, also those GalaxyAI held, which the plugin opens as far as they go. */
+const { chatHistory: chats, loading } = storeToRefs(chatStore);
 const chatPlugin = useActiveChatPlugin();
-
-/** With a chat plugin, the chats it saved: it continues those, and GalaxyAI's own stay as they were. */
-const chats = computed(() =>
-    chatPlugin.value ? chatHistory.value.filter((item) => item.agent_type === chatPlugin.value) : chatHistory.value,
-);
 
 const {
     selectionMode,
@@ -58,7 +54,7 @@ const {
 
 const currentExchangeId = computed(() => {
     if (chatPlugin.value) {
-        return chatStore.pluginChatId;
+        return chatStore.activeChatId;
     } else if (chatStore.isCenterMode) {
         // The galaxyai/:exchangeId route param is never repeated, but vue-router's generic
         // params type always allows string[] -- narrow to the single value it actually is.
@@ -85,11 +81,12 @@ function handleItemClick(item: ChatHistoryItem, index: number, event: MouseEvent
     if (handleSelectionClick(item, index, event)) {
         return;
     }
-    if (chatPlugin.value) {
-        chatStore.openPluginChat(item.id);
-    }
+    // In the center the address opens it, as a link or a reload would; docked, the store does.
     if (chatStore.isCenterMode) {
         router.push(`/galaxyai/${item.id}`);
+    } else if (chatPlugin.value) {
+        chatStore.openChat(item.id);
+        chatStore.showChat();
     } else {
         chatStore.showChat(item.id);
     }
@@ -119,10 +116,10 @@ async function deleteSelected() {
         try {
             await chatStore.deleteChatsByIds(deletedIds);
             pruneAfterDelete();
-            // In center mode the visible chat is driven by the route, not activeChatId, so if we
-            // just deleted the one on screen, move to a fresh chat rather than a dead route.
+            // In center mode the address names the chat on screen, so leave a deleted one. The brain
+            // keeps what it shows until it saves anew; GalaxyAI's own chat starts a fresh one.
             if (chatStore.isCenterMode && routedChatId && deletedIds.has(routedChatId)) {
-                router.push("/galaxyai/new");
+                router.push(chatPlugin.value ? "/galaxyai" : "/galaxyai/new");
             }
         } catch (e) {
             Toast.error(errorMessageAsString(e, "Failed to delete conversations."), "Error deleting conversations");

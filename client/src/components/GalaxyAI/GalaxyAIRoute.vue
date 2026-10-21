@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -15,6 +16,7 @@ const props = defineProps<{ exchangeId?: string; compact?: boolean; initialQuest
 const { isConfigLoaded } = useConfig();
 const chatPlugin = useChatPlugin();
 const chatStore = useChatStore();
+const { activeChatId } = storeToRefs(chatStore);
 const route = useRoute();
 const router = useRouter();
 
@@ -22,15 +24,24 @@ watch(
     [chatPlugin, () => props.exchangeId, () => props.initialQuestion],
     ([plugin, exchangeId, question]) => {
         if (plugin && question) {
-            chatStore.askPluginChat(question);
+            chatStore.askChat(question);
             // Asked once: a reload of the page does not ask again.
             router.replace({ path: route.path, query: {} });
         } else if (plugin && exchangeId && exchangeId !== "new") {
-            chatStore.openPluginChat(exchangeId);
+            chatStore.openChat(exchangeId);
         }
     },
     { immediate: true },
 );
+
+// The address follows the conversation the brain reports, so a reload reopens it. GalaxyAI's own
+// chat keeps its address itself.
+watch(activeChatId, (id) => {
+    const path = id ? `/galaxyai/${id}` : "/galaxyai";
+    if (chatPlugin.value && route.path !== path && !props.initialQuestion) {
+        router.replace(path);
+    }
+});
 </script>
 
 <template>

@@ -124,7 +124,7 @@ describe("ChatActions", () => {
 
         it("routes to /galaxyai/{id} when activeChatId is set", async () => {
             const { wrapper, store } = mountComponent("docked");
-            store.activeChatId = "chat-42";
+            store.activeChanged("chat-42");
             await findButton(wrapper, "Open in center view").trigger("click");
             expect(mockPush).toHaveBeenCalledWith("/galaxyai/chat-42");
         });

@@ -1,6 +1,6 @@
 import { createTestingPinia } from "@pinia/testing";
 import { getLocalVue } from "@tests/vitest/helpers";
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
@@ -76,19 +76,31 @@ describe("ChatHistoryPanel", () => {
         expect(wrapper.find("[title='New Chat']").exists()).toBe(true);
     });
 
-    it("lists only the chat plugin's chats, and leaves starting one to the plugin", async () => {
+    it("lists every saved chat with a chat plugin, GalaxyAI's included, and leaves starting one to the plugin", async () => {
         const { wrapper } = mountPanel("olit");
-        await wrapper.vm.$nextTick();
-        expect(queries(wrapper)).toEqual(["Plot the counts"]);
+        await flushPromises();
+        expect(queries(wrapper)).toEqual(["Plot the counts", "What is a BAM file?"]);
         expect(wrapper.find("[title='New Chat']").exists()).toBe(false);
     });
 
-    it("opens a saved chat in the plugin", async () => {
+    it("opens a saved chat through the address in the center, and marks the one the brain reports", async () => {
         const { wrapper, store } = mountPanel("olit");
-        await wrapper.vm.$nextTick();
+        await flushPromises();
         await wrapper.find(".chat-history-item").trigger("click");
-        expect(store.pluginChatId).toBe("a1");
         expect(mockPush).toHaveBeenCalledWith("/galaxyai/a1");
+        store.activeChanged("a1");
+        await flushPromises();
         expect(wrapper.find(".chat-history-item").classes()).toContain("current");
+    });
+
+    it("opens a saved chat in the brain when docked", async () => {
+        const { wrapper, store } = mountPanel("olit");
+        store.setLocation("right");
+        const brain = { open: vi.fn(async (_params: object) => {}), ask: vi.fn(async (_params: object) => {}) };
+        store.brainReady(brain as never);
+        await flushPromises();
+        await wrapper.find(".chat-history-item").trigger("click");
+        expect(brain.open).toHaveBeenLastCalledWith({ exchange_id: "a1" });
+        expect(mockPush).not.toHaveBeenCalled();
     });
 });

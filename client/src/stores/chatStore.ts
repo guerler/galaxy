@@ -1,12 +1,16 @@
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { computed, ref, shallowRef } from "vue";
 
 import { GalaxyApi } from "@/api/client";
+import type { BrainSession } from "@/components/GalaxyAI/brain/host";
 import type { ChatHistoryItem } from "@/components/GalaxyAI/chatTypes";
+import { Toast } from "@/composables/toast";
 import { useUserLocalStorage } from "@/composables/userLocalStorage";
-import { rethrowSimple } from "@/utils/simple-error";
+import { errorMessageAsString, rethrowSimple } from "@/utils/simple-error";
 
 export type ChatLocation = "center" | "right" | "bottom";
+
+type Command = { method: "open"; params: { exchange_id?: string } } | { method: "ask"; params: { question: string } };
 
 export const useChatStore = defineStore("chatStore", () => {
     const chatLocation = useUserLocalStorage<ChatLocation>("chat-location", "center");
@@ -15,10 +19,10 @@ export const useChatStore = defineStore("chatStore", () => {
     const chatHistory = ref<ChatHistoryItem[]>([]);
     const loading = ref(false);
     const newChatRequestCount = ref(0);
-    /** What the chat plugin was last asked to start with; the plugin is mounted again for each ask. */
-    const pluginChatConfig = ref<{ exchange_id?: string; question?: string }>({});
-    const pluginChatKey = ref(0);
-    const pluginChatId = computed(() => pluginChatConfig.value.exchange_id ?? null);
+    /** The initialized brain, while there is one. */
+    const brain = shallowRef<BrainSession | null>(null);
+    /** The latest command given while no brain was ready, for the next one that is. */
+    let pending: Command | null = null;
 
     const isRightPanelOpen = computed(() => chatLocation.value === "right" && chatVisible.value);
     const isBottomPanelOpen = computed(() => chatLocation.value === "bottom" && chatVisible.value);
@@ -131,18 +135,53 @@ export const useChatStore = defineStore("chatStore", () => {
         newChatRequestCount.value++;
     }
 
-    /** Open a chat the plugin saved; the one already open stays as it is. */
-    function openPluginChat(id: string) {
-        if (pluginChatId.value !== id) {
-            pluginChatConfig.value = { exchange_id: id };
-            pluginChatKey.value++;
+    /** Give the brain a command now, or keep it for the brain that is ready next. */
+    function command(next: Command) {
+        if (brain.value) {
+            send(brain.value, next);
+        } else {
+            pending = next;
         }
     }
 
-    /** Start a new chat in the plugin with a question. */
-    function askPluginChat(question: string) {
-        pluginChatConfig.value = { question };
-        pluginChatKey.value++;
+    function send(session: BrainSession, next: Command) {
+        const given = next.method === "open" ? session.open(next.params) : session.ask(next.params);
+        given.catch((e) => Toast.error(errorMessageAsString(e), "GalaxyAI did not take that"));
+    }
+
+    /** Show a saved chat in the brain; the one it already shows stays as it is. */
+    function openChat(id: string) {
+        if (activeChatId.value !== id) {
+            command({ method: "open", params: { exchange_id: id } });
+        }
+    }
+
+    /** Start a new conversation in the brain with a question. */
+    function askChat(question: string) {
+        command({ method: "ask", params: { question } });
+    }
+
+    /** A brain is ready: it is given the command kept for it, or told to show what was shown. */
+    function brainReady(session: BrainSession) {
+        brain.value = session;
+        const initial = pending ?? {
+            method: "open",
+            params: activeChatId.value ? { exchange_id: activeChatId.value } : {},
+        };
+        pending = null;
+        send(session, initial);
+    }
+
+    function brainClosed() {
+        brain.value = null;
+    }
+
+    /** The brain reports the conversation it shows; a newly saved one is listed. */
+    function activeChanged(id: string | null) {
+        activeChatId.value = id;
+        if (id && !chatHistory.value.some((item) => item.id === id)) {
+            loadHistory().catch(() => {});
+        }
     }
 
     /** Returns the active chat id, falling back to the most recent history item, or null. */
@@ -172,11 +211,11 @@ export const useChatStore = defineStore("chatStore", () => {
         loadHistory,
         loading,
         newChatRequestCount,
-        askPluginChat,
-        openPluginChat,
-        pluginChatConfig,
-        pluginChatId,
-        pluginChatKey,
+        activeChanged,
+        askChat,
+        brainClosed,
+        brainReady,
+        openChat,
         requestNewChat,
         toggleChat,
         setLocation,

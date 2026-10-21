@@ -54,13 +54,7 @@
             </template>
             <TourRunner v-if="currentTour?.id" :key="currentTour.id" :tour-id="currentTour.id" />
             <!-- Mounted once for the whole app, so the chat keeps running as its place changes. -->
-            <PinnedVisualization
-                v-if="chatPlugin"
-                :key="pluginChatKey"
-                :name="chatPlugin"
-                :config="pluginChatConfig"
-                frame-id="galaxy_ai_chat"
-                @saved="onChatSaved" />
+            <AiChatBrain v-if="chatPlugin" :plugin="chatPlugin" />
         </template>
     </div>
 </template>
@@ -76,7 +70,6 @@ import { useHasStagedUploads } from "@/composables/upload/useUploadStaging";
 import { useChatPlugin } from "@/composables/useChatPlugin";
 import { useCommandPalette } from "@/composables/useCommandPalette";
 import { getAppRoot } from "@/onload";
-import { useChatStore } from "@/stores/chatStore";
 import { useConfigStore } from "@/stores/configurationStore";
 import { useEntryPointStore } from "@/stores/entryPointStore";
 import { useHistoryStore } from "@/stores/historyStore";
@@ -91,11 +84,11 @@ import GToast from "@/components/BaseComponents/GToast.vue";
 import CommandPalette from "@/components/CommandPalette/CommandPalette.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
 import DragGhost from "@/components/DragGhost.vue";
+import AiChatBrain from "@/components/GalaxyAI/AiChatBrain.vue";
 import ExportToAnotherGalaxyDialog from "@/components/History/Content/ExportToAnotherGalaxyDialog.vue";
 import Masthead from "@/components/Masthead/Masthead.vue";
 import BroadcastsOverlay from "@/components/Notifications/Broadcasts/BroadcastsOverlay.vue";
 import TourRunner from "@/components/Tour/TourRunner.vue";
-import PinnedVisualization from "@/components/Visualizations/PinnedVisualization.vue";
 import WindowManagerWindow from "@/components/WindowManager/WindowManagerWindow.vue";
 
 // router.js reads this before each navigation to decide whether to prompt about unsaved changes.
@@ -114,15 +107,6 @@ const { currentTour } = storeToRefs(tourStore);
 const userStore = useUserStore();
 const { currentTheme } = storeToRefs(userStore);
 const chatPlugin = useChatPlugin();
-const chatStore = useChatStore();
-const { pluginChatConfig, pluginChatKey } = storeToRefs(chatStore);
-
-/** A chat the plugin saved shows in the chat list. */
-function onChatSaved(saved: boolean) {
-    if (saved) {
-        chatStore.loadHistory().catch(() => {});
-    }
-}
 
 const confirmDialogRef = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 // Vue 3 doesn't unwrap a ref stored in a ref, so pass the instance, not the ref.

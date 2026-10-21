@@ -149,7 +149,7 @@ describe("chatStore", () => {
     });
 
     describe("deleteChatsByIds", () => {
-        it("deletes via the batch endpoint and drops the open chat if included", async () => {
+        it("deletes via the batch endpoint", async () => {
             mockPut.mockResolvedValue({ error: undefined });
             const store = useChatStore();
             store.chatHistory = [{ id: "a" }, { id: "b" }, { id: "c" }] as ChatHistoryItem[];

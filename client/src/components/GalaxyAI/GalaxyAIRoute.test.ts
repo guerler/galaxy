@@ -36,23 +36,29 @@ function mountRoute(plugin: string | null, propsData: { exchangeId?: string; ini
     return useChatStore();
 }
 
-const openedFor = (plugin: string | null, exchangeId?: string) => mountRoute(plugin, { exchangeId }).pluginChatId;
+/** The commands a brain is given once ready, after the route was mounted. */
+function commanded(plugin: string | null, propsData: { exchangeId?: string; initialQuestion?: string }) {
+    const store = mountRoute(plugin, propsData);
+    const brain = { open: vi.fn(async (_params: object) => {}), ask: vi.fn(async (_params: object) => {}) };
+    store.brainReady(brain as never);
+    return { open: brain.open.mock.calls.map(([params]) => params), ask: brain.ask.mock.calls.map(([p]) => p) };
+}
 
 describe("GalaxyAIRoute", () => {
-    it("opens a saved chat named in the URL in the chat plugin", () => {
-        expect(openedFor("olit", "a1")).toBe("a1");
+    it("opens a saved chat named in the URL in the brain", () => {
+        expect(commanded("olit", { exchangeId: "a1" }).open).toEqual([{ exchange_id: "a1" }]);
     });
 
-    it("leaves the plugin as it is for a new chat, no chat, or no plugin", () => {
-        expect(openedFor("olit", "new")).toBeNull();
-        expect(openedFor("olit")).toBeNull();
-        expect(openedFor(null, "a1")).toBeNull();
+    it("leaves the brain its own default for a new chat, no chat, or no plugin", () => {
+        expect(commanded("olit", { exchangeId: "new" }).open).toEqual([{}]);
+        expect(commanded("olit", {}).open).toEqual([{}]);
+        expect(commanded(null, { exchangeId: "a1" }).open).toEqual([{}]);
     });
 
     it("starts a new chat in the plugin with a question handed over in the URL, once", () => {
         mockReplace.mockClear();
-        const store = mountRoute("olit", { exchangeId: "new", initialQuestion: "What is in my history?" });
-        expect(store.pluginChatConfig).toEqual({ question: "What is in my history?" });
+        const { ask } = commanded("olit", { exchangeId: "new", initialQuestion: "What is in my history?" });
+        expect(ask).toEqual([{ question: "What is in my history?" }]);
         expect(mockReplace).toHaveBeenCalledWith({ path: "/galaxyai/new", query: {} });
     });
 });

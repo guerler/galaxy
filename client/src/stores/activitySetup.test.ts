@@ -4,7 +4,7 @@ import { isActivityAvailable } from "./activitySetup";
 
 const OPEN = {
     canUseUnprivilegedTools: true,
-    config: { interactivetools_enable: true, llm_api_configured: true },
+    config: { interactivetools_enable: true, llm_api_configured: true, ai_chat_plugin: "olit" },
 };
 
 describe("isActivityAvailable", () => {
@@ -24,9 +24,12 @@ describe("isActivityAvailable", () => {
         );
     });
 
-    it("hides GalaxyAI unless an LLM api is configured", () => {
+    it("hides GalaxyAI unless an LLM api and a chat plugin are configured", () => {
         expect(isActivityAvailable("galaxyai", OPEN)).toBe(true);
-        expect(isActivityAvailable("galaxyai", { ...OPEN, config: { llm_api_configured: false } })).toBe(false);
+        expect(
+            isActivityAvailable("galaxyai", { ...OPEN, config: { llm_api_configured: false, ai_chat_plugin: "olit" } }),
+        ).toBe(false);
+        expect(isActivityAvailable("galaxyai", { ...OPEN, config: { llm_api_configured: true } })).toBe(false);
     });
 
     it("treats a configuration that has not loaded yet as closed", () => {

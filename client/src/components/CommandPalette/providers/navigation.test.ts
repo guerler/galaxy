@@ -32,11 +32,14 @@ describe("navigationProvider", () => {
         expect(enabled.some((i) => i.id === "navigation:interactivetools")).toBe(true);
     });
 
-    it("hides GalaxyAI unless an LLM api is configured", async () => {
-        const disabled = await search("galaxyai", makeCtx());
+    it("hides GalaxyAI unless an LLM api and a chat plugin are configured", async () => {
+        const disabled = await search("galaxyai", makeCtx({ config: { llm_api_configured: true } }));
         expect(disabled.some((i) => i.id === "navigation:galaxyai")).toBe(false);
 
-        const enabled = await search("galaxyai", makeCtx({ config: { llm_api_configured: true } }));
+        const enabled = await search(
+            "galaxyai",
+            makeCtx({ config: { llm_api_configured: true, ai_chat_plugin: "olit" } }),
+        );
         expect(enabled.some((i) => i.id === "navigation:galaxyai")).toBe(true);
     });
 

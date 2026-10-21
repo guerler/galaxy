@@ -19,6 +19,7 @@ export interface PaletteContext {
         enable_notification_system?: boolean;
         interactivetools_enable?: boolean;
         llm_api_configured?: boolean;
+        ai_chat_plugin?: string | null;
     };
     /** Whether no user is logged in */
     isAnonymous: boolean;
@@ -27,11 +28,6 @@ export interface PaletteContext {
      * came back (creating a page, for instance). Supplied by the palette.
      */
     navigate?: (to: string) => void;
-    /**
-     * Opens a fresh GalaxyAI conversation (`useStartNewChat`). Supplied by the
-     * palette because the composable needs a component instance.
-     */
-    startNewChat?: (center: boolean) => void;
     /**
      * Upload methods available to the current user, already filtered by config
      * and login. Supplied by the palette because `useFilteredUploadMethods`

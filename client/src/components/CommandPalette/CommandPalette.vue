@@ -12,7 +12,6 @@ import { watchImmediate } from "@vueuse/core";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { useStartNewChat } from "@/components/GalaxyAI/useStartNewChat";
 import { useFilteredUploadMethods } from "@/components/Panels/Upload/uploadMethodRegistry";
 import { useConfig } from "@/composables/config";
 import { Toast } from "@/composables/toast";
@@ -47,7 +46,6 @@ const { addRecentItem } = useRecentPaletteItems();
 // these composables need a component instance, so the palette resolves them once
 // and hands them to the providers through the context
 const uploadMethods = useFilteredUploadMethods();
-const startNewChat = useStartNewChat();
 const route = useRoute();
 const router = useRouter();
 const { config } = useConfig();
@@ -64,6 +62,7 @@ const paletteContext = computed<PaletteContext>(() => ({
         enable_notification_system: config.value?.enable_notification_system,
         interactivetools_enable: config.value?.interactivetools_enable,
         llm_api_configured: config.value?.llm_api_configured,
+        ai_chat_plugin: config.value?.ai_chat_plugin,
     },
     isAnonymous: userStore.isAnonymous,
     navigate: (to: string) => {
@@ -71,7 +70,6 @@ const paletteContext = computed<PaletteContext>(() => ({
             // duplicate navigation to the current route is fine
         });
     },
-    startNewChat,
     uploadMethods: uploadMethods.value,
 }));
 

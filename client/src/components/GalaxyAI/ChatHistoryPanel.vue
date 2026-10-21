@@ -1,22 +1,19 @@
 <script setup lang="ts">
 import { faCheckSquare, faSquare } from "@fortawesome/free-regular-svg-icons";
-import { faClock, faPlus, faTimes, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faClock, faTimes, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { storeToRefs } from "pinia";
-import { computed, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { onMounted } from "vue";
+import { useRouter } from "vue-router";
 
 import { useConfirmDialog } from "@/composables/confirmDialog";
 import { useToast } from "@/composables/toast";
-import { useActiveContext } from "@/composables/useActiveContext";
-import { useActiveChatPlugin } from "@/composables/useChatPlugin";
 import { useSidebarSelection } from "@/composables/useSidebarSelection";
 import { useChatStore } from "@/stores/chatStore";
 import { errorMessageAsString } from "@/utils/simple-error";
 
 import { getAgentIcon } from "./agentTypes";
 import type { ChatHistoryItem } from "./chatTypes";
-import { useStartNewChat } from "./useStartNewChat";
 
 import GButton from "../BaseComponents/GButton.vue";
 import ChatModeSelector from "./ChatModeSelector.vue";
@@ -26,21 +23,11 @@ import UtcDate from "@/components/UtcDate.vue";
 
 const { confirm } = useConfirmDialog();
 const Toast = useToast();
-const route = useRoute();
 const router = useRouter();
 const chatStore = useChatStore();
-const { activeContext } = useActiveContext();
 
-const notebookPageId = computed(() => {
-    const ctx = activeContext.value;
-    return ctx?.contextType === "notebook" ? ctx.pageId : undefined;
-});
-
-const newChat = useStartNewChat();
-
-/** Every saved chat: with a chat plugin, also those GalaxyAI held, which the plugin opens as far as they go. */
-const { chatHistory: chats, loading } = storeToRefs(chatStore);
-const chatPlugin = useActiveChatPlugin();
+/** Every saved chat: the plugin's own, and those GalaxyAI held, which the plugin opens as far as they go. */
+const { chatHistory: chats, loading, activeChatId: currentExchangeId } = storeToRefs(chatStore);
 
 const {
     selectionMode,
@@ -52,30 +39,13 @@ const {
     pruneAfterDelete,
 } = useSidebarSelection(chats, (item) => item.id);
 
-const currentExchangeId = computed(() => {
-    if (chatPlugin.value) {
-        return chatStore.activeChatId;
-    } else if (chatStore.isCenterMode) {
-        // The galaxyai/:exchangeId route param is never repeated, but vue-router's generic
-        // params type always allows string[] -- narrow to the single value it actually is.
-        const param = route.params["exchangeId"];
-        return (Array.isArray(param) ? param[0] : param) || null;
-    } else {
-        return chatStore.activeChatId;
+onMounted(async () => {
+    try {
+        await chatStore.loadHistory();
+    } catch (e) {
+        Toast.error(errorMessageAsString(e), "Failed to load chat history");
     }
 });
-
-watch(
-    notebookPageId,
-    async (pageId) => {
-        try {
-            await chatStore.loadHistory(pageId);
-        } catch (e) {
-            Toast.error(errorMessageAsString(e), "Failed to load chat history");
-        }
-    },
-    { immediate: true },
-);
 
 function handleItemClick(item: ChatHistoryItem, index: number, event: MouseEvent) {
     if (handleSelectionClick(item, index, event)) {
@@ -84,17 +54,11 @@ function handleItemClick(item: ChatHistoryItem, index: number, event: MouseEvent
     // In the center the address opens it, as a link or a reload would; docked, the store does.
     if (chatStore.isCenterMode) {
         router.push(`/galaxyai/${item.id}`);
-    } else if (chatPlugin.value) {
+    } else {
         if (chatStore.openChat(item.id)) {
             chatStore.showChat();
         }
-    } else {
-        chatStore.showChat(item.id);
     }
-}
-
-function startNewChat() {
-    newChat(chatStore.isCenterMode);
 }
 
 async function deleteSelected() {
@@ -117,10 +81,9 @@ async function deleteSelected() {
         try {
             await chatStore.deleteChatsByIds(deletedIds);
             pruneAfterDelete();
-            // In center mode the address names the chat on screen, so leave a deleted one. The brain
-            // keeps what it shows until it saves anew; GalaxyAI's own chat starts a fresh one.
+            // The address no longer names a chat that is gone; the brain keeps what it shows until it saves anew.
             if (chatStore.isCenterMode && routedChatId && deletedIds.has(routedChatId)) {
-                router.push(chatPlugin.value ? "/galaxyai" : "/galaxyai/new");
+                router.push("/galaxyai");
             }
         } catch (e) {
             Toast.error(errorMessageAsString(e, "Failed to delete conversations."), "Error deleting conversations");
@@ -132,9 +95,6 @@ async function deleteSelected() {
 <template>
     <ActivityPanel title="GalaxyAI">
         <template v-slot:header-buttons>
-            <GButton v-if="!chatPlugin" color="blue" transparent size="small" title="New Chat" @click="startNewChat">
-                <FontAwesomeIcon :icon="faPlus" fixed-width />
-            </GButton>
             <GButton
                 :disabled="chats.length === 0"
                 transparent

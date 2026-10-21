@@ -9,8 +9,8 @@ import Heading from "@/components/Common/Heading.vue";
 import VisualizationSlot from "@/components/Visualizations/VisualizationSlot.vue";
 
 /**
- * GalaxyAI's place, holding the chat plugin instead of GalaxyAI's own chat. The plugin keeps its
- * conversations, so the header only places it; the bottom panel draws its own header.
+ * A place for the chat plugin. The plugin keeps its conversations, so the header only places it and
+ * opens the chat list; the bottom panel draws its own header.
  */
 const props = defineProps<{ plugin: string; source: "docked" | "panel" | "center" }>();
 
@@ -32,7 +32,7 @@ function dockTo(location: "right" | "bottom") {
             <Heading :icon="faMagic" :size="props.source === 'docked' ? 'sm' : 'lg'">
                 <span class="heading-label">GalaxyAI</span>
             </Heading>
-            <ChatActions :source="props.source" placement-only @dock-to="dockTo" />
+            <ChatActions :source="props.source" @dock-to="dockTo" />
         </div>
         <div class="plugin-chat-body">
             <VisualizationSlot :name="props.plugin" />
@@ -43,7 +43,6 @@ function dockTo(location: "right" | "bottom") {
 <style scoped lang="scss">
 @import "@/style/scss/theme/blue.scss";
 
-/* GalaxyAI's header, so the place looks the same whichever chat fills it. */
 .plugin-chat {
     display: flex;
     flex-direction: column;

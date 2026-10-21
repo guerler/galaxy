@@ -15,7 +15,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { AGENT_LABELS } from "@/components/Page/constants";
-import type { AgentResponse } from "@/composables/agentActions";
 
 export interface AgentType {
     value: string;
@@ -50,23 +49,4 @@ export const agentTypes: AgentType[] = [
 
 export function getAgentIcon(agentType?: string): IconDefinition {
     return agentTypes.find((a) => a.value === agentType)?.icon || faRobot;
-}
-
-export function getAgentLabel(agentType?: string): string {
-    const agent = agentTypes.find((a) => a.value === agentType);
-    return agent?.label || agentType || "AI Assistant";
-}
-
-export function formatModelName(model?: string): string {
-    if (!model) {
-        return "";
-    }
-    const parts = model.split("/");
-    return parts[parts.length - 1] || model;
-}
-
-export function getAgentResponseOrEmpty(response?: AgentResponse): AgentResponse {
-    return (
-        response || ({ content: "", agent_type: "", confidence: "low", suggestions: [], metadata: {} } as AgentResponse)
-    );
 }

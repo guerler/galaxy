@@ -178,22 +178,25 @@ describe("actionsProvider", () => {
         expect(items[0]?.to).toBe("/workflows/run?id=wf1");
     });
 
-    it("hides GalaxyAI unless the assistant is configured", async () => {
+    it("hides GalaxyAI unless the assistant and its chat plugin are configured", async () => {
         const ids = (ctx: PaletteContext) => (actionsProvider.emptyQueryItems?.(ctx) ?? []).map((item) => item.id);
         expect(ids(makeCtx())).not.toContain("actions:galaxy-ai");
-        expect(ids(makeCtx({ config: { llm_api_configured: true } }))).toContain("actions:galaxy-ai");
-        expect(ids(makeCtx({ config: { llm_api_configured: true }, isAnonymous: true }))).not.toContain(
+        expect(ids(makeCtx({ config: { llm_api_configured: true } }))).not.toContain("actions:galaxy-ai");
+        expect(ids(makeCtx({ config: { llm_api_configured: true, ai_chat_plugin: "olit" } }))).toContain(
             "actions:galaxy-ai",
         );
+        expect(
+            ids(makeCtx({ config: { llm_api_configured: true, ai_chat_plugin: "olit" }, isAnonymous: true })),
+        ).not.toContain("actions:galaxy-ai");
     });
 
-    it("starts a GalaxyAI conversation and seeds one from the typed question", async () => {
-        const startNewChat = vi.fn();
-        const ctx = makeCtx({ config: { llm_api_configured: true }, startNewChat });
+    it("opens the chat and seeds a new one from the typed question", async () => {
+        const navigate = vi.fn();
+        const ctx = makeCtx({ config: { llm_api_configured: true, ai_chat_plugin: "olit" }, navigate });
         const galaxyAi = await action("actions:galaxy-ai", ctx);
 
         galaxyAi.handler?.(ctx);
-        expect(startNewChat).toHaveBeenCalledWith(true);
+        expect(navigate).toHaveBeenCalledWith("/galaxyai");
 
         const chatStore = useChatStore();
         chatStore.chatHistory = [
@@ -209,7 +212,7 @@ describe("actionsProvider", () => {
     });
 
     it("loads the GalaxyAI history into the store and encodes the seeded question", async () => {
-        const ctx = makeCtx({ config: { llm_api_configured: true } });
+        const ctx = makeCtx({ config: { llm_api_configured: true, ai_chat_plugin: "olit" } });
         const chatStore = useChatStore();
         const loadHistory = vi.spyOn(chatStore, "loadHistory").mockResolvedValue(undefined);
 

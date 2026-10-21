@@ -3,22 +3,17 @@ import { getLocalVue } from "@tests/vitest/helpers";
 import { flushPromises, mount } from "@vue/test-utils";
 import { setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { defineComponent, h, ref } from "vue";
+import { defineComponent, h } from "vue";
 
 import { useChatStore } from "@/stores/chatStore";
 
 import ChatHistoryPanel from "./ChatHistoryPanel.vue";
 
 const mockPush = vi.fn();
-const mockPlugin = ref<string | null>(null);
 
 vi.mock("vue-router", () => ({
     useRouter: () => ({ push: mockPush }),
-    useRoute: () => ({ path: "/galaxyai", params: {} }),
 }));
-
-vi.mock("@/composables/useChatPlugin", () => ({ useActiveChatPlugin: () => mockPlugin }));
-vi.mock("@/composables/useActiveContext", () => ({ useActiveContext: () => ({ activeContext: ref(null) }) }));
 
 const localVue = getLocalVue();
 
@@ -27,8 +22,7 @@ const CHATS = [
     { id: "g1", query: "What is a BAM file?", response: "A format", agent_type: "router", message_count: 2 },
 ];
 
-function mountPanel(plugin: string | null) {
-    mockPlugin.value = plugin;
+function mountPanel() {
     const pinia = createTestingPinia({ createSpy: vi.fn, stubActions: false });
     setActivePinia(pinia);
     const store = useChatStore();
@@ -69,22 +63,15 @@ const queries = (wrapper: ReturnType<typeof mountPanel>["wrapper"]) =>
 describe("ChatHistoryPanel", () => {
     beforeEach(() => mockPush.mockClear());
 
-    it("lists GalaxyAI's chats and offers a new one without a chat plugin", async () => {
-        const { wrapper } = mountPanel(null);
-        await wrapper.vm.$nextTick();
-        expect(queries(wrapper)).toEqual(["Plot the counts", "What is a BAM file?"]);
-        expect(wrapper.find("[title='New Chat']").exists()).toBe(true);
-    });
-
-    it("lists every saved chat with a chat plugin, GalaxyAI's included, and leaves starting one to the plugin", async () => {
-        const { wrapper } = mountPanel("olit");
+    it("lists every saved chat, GalaxyAI's included, and leaves starting one to the plugin", async () => {
+        const { wrapper } = mountPanel();
         await flushPromises();
         expect(queries(wrapper)).toEqual(["Plot the counts", "What is a BAM file?"]);
         expect(wrapper.find("[title='New Chat']").exists()).toBe(false);
     });
 
     it("opens a saved chat through the address in the center, and marks the one the brain reports", async () => {
-        const { wrapper, store } = mountPanel("olit");
+        const { wrapper, store } = mountPanel();
         await flushPromises();
         await wrapper.find(".chat-history-item").trigger("click");
         expect(mockPush).toHaveBeenCalledWith("/galaxyai/a1");
@@ -94,7 +81,7 @@ describe("ChatHistoryPanel", () => {
     });
 
     it("opens a saved chat in the brain when docked", async () => {
-        const { wrapper, store } = mountPanel("olit");
+        const { wrapper, store } = mountPanel();
         store.setLocation("right");
         const brain = {
             capabilities: { chat: {} },

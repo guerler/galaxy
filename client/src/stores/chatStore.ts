@@ -15,10 +15,10 @@ type Command = { method: "open"; params: { exchange_id?: string } } | { method: 
 export const useChatStore = defineStore("chatStore", () => {
     const chatLocation = useUserLocalStorage<ChatLocation>("chat-location", "center");
     const chatVisible = useUserLocalStorage("chat-visible", false);
-    const cachedActiveChatId = useUserLocalStorage<string>("active-chat-id", "");
     const chatHistory = ref<ChatHistoryItem[]>([]);
     const loading = ref(false);
-    const newChatRequestCount = ref(0);
+    /** The saved chat the brain shows, as the brain last reported it; null while it shows none. */
+    const activeChatId = ref<string | null>(null);
     /** The initialized brain, while there is one. */
     const brain = shallowRef<BrainSession | null>(null);
     /** The latest command given while no brain was ready, for the next one that is. */
@@ -37,24 +37,8 @@ export const useChatStore = defineStore("chatStore", () => {
     /** The brain's pane is mounted apart while the chat is docked beside other content. */
     const isPaneApart = computed(() => brainPane.value && !isCenterMode.value);
 
-    const activeChatId = computed({
-        get: () => cachedActiveChatId.value || null,
-        set: (id: string | null) => {
-            if (id) {
-                cachedActiveChatId.value = id;
-            } else {
-                cachedActiveChatId.value = "";
-            }
-        },
-    });
-
     function deleteChats(ids: Set<string>) {
         chatHistory.value = chatHistory.value.filter((item) => !ids.has(item.id));
-        // If the chat currently in view was deleted, drop the reference so we don't
-        // leave the UI pointing at a conversation that no longer exists.
-        if (activeChatId.value && ids.has(activeChatId.value)) {
-            activeChatId.value = null;
-        }
     }
 
     async function deleteChatById(chatId: string) {
@@ -85,10 +69,7 @@ export const useChatStore = defineStore("chatStore", () => {
         deleteChats(ids);
     }
 
-    function showChat(chatId?: string | null) {
-        if (chatId !== undefined) {
-            setActiveChatId(chatId);
-        }
+    function showChat() {
         if (!chatVisible.value) {
             chatVisible.value = true;
         }
@@ -100,16 +81,12 @@ export const useChatStore = defineStore("chatStore", () => {
         }
     }
 
-    async function loadHistory(pageId?: string) {
+    async function loadHistory() {
         loading.value = true;
 
-        const { data, error } = pageId
-            ? await GalaxyApi().GET("/api/chat/page/{page_id}/history", {
-                  params: { path: { page_id: pageId }, query: { limit: 50 } },
-              })
-            : await GalaxyApi().GET("/api/chat/history", {
-                  params: { query: { limit: 50 } },
-              });
+        const { data, error } = await GalaxyApi().GET("/api/chat/history", {
+            params: { query: { limit: 50 } },
+        });
 
         loading.value = false;
 
@@ -128,20 +105,6 @@ export const useChatStore = defineStore("chatStore", () => {
         if (chatLocation.value !== loc) {
             chatLocation.value = loc;
         }
-    }
-
-    function setActiveChatId(id: string | null) {
-        if (activeChatId.value !== id) {
-            activeChatId.value = id;
-        }
-    }
-
-    /** Ask chat surfaces to reset to a fresh conversation. A counter bump rather than
-     * an id change, so the reset also fires for an unsaved conversation whose identity
-     * (activeChatId / route param) wouldn't change. */
-    function requestNewChat() {
-        setActiveChatId(null);
-        newChatRequestCount.value++;
     }
 
     /** Give the brain a command now, or keep it for the brain that is ready next. */
@@ -224,22 +187,16 @@ export const useChatStore = defineStore("chatStore", () => {
         }
     }
 
-    /** Returns the active chat id, falling back to the most recent history item, or null. */
-    function resolveDockChatId(): string | null {
-        return activeChatId.value ?? chatHistory.value[0]?.id ?? null;
-    }
-
-    /** Sets the chat location and shows the chat with the given id in one step. */
-    function dockChat(location: ChatLocation, chatId?: string | null) {
+    /** Sets the chat location and shows the chat in one step. */
+    function dockChat(location: ChatLocation) {
         setLocation(location);
-        showChat(chatId);
+        showChat();
     }
 
     return {
         chatHistory,
         chatLocation,
         chatVisible,
-        activeChatId,
         isRightPanelOpen,
         isBottomPanelOpen,
         isCenterMode,
@@ -251,8 +208,8 @@ export const useChatStore = defineStore("chatStore", () => {
         hideChat,
         loadHistory,
         loading,
-        newChatRequestCount,
         activeChanged,
+        activeChatId,
         askChat,
         brainClosed,
         brainReady,
@@ -260,11 +217,8 @@ export const useChatStore = defineStore("chatStore", () => {
         unsaved,
         unsavedChanged,
         openChat,
-        requestNewChat,
         toggleChat,
         setLocation,
-        setActiveChatId,
-        resolveDockChatId,
         dockChat,
     };
 });

@@ -3,12 +3,13 @@ import { storeToRefs } from "pinia";
 import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { useActiveChatPlugin } from "@/composables/useChatPlugin";
 import { useChatStore } from "@/stores/chatStore";
 
 import ChatActions from "./ChatActions.vue";
 import PluginChat from "./PluginChat.vue";
-import GalaxyAI from "@/components/GalaxyAI.vue";
+
+/** The bottom panel's chat. */
+const props = defineProps<{ plugin: string }>();
 
 const chatStore = useChatStore();
 const { activeChatId } = storeToRefs(chatStore);
@@ -17,40 +18,28 @@ const route = useRoute();
 const router = useRouter();
 
 const collapsed = ref(false);
-const chatPlugin = useActiveChatPlugin();
 
 function dockTo(location: "right" | "bottom") {
-    chatStore.dockChat(location, activeChatId.value);
+    chatStore.dockChat(location);
     if (route.path.startsWith("/galaxyai")) {
         router.push("/");
     }
 }
 
-// Expand collapsed panel if a chat is selected from the sidebar
-watch(
-    activeChatId,
-    (chatId) => {
-        if (chatId && collapsed.value) {
-            collapsed.value = false;
-        }
-    },
-    { immediate: true },
-);
+// Expand the collapsed panel when a chat is opened from the list
+watch(activeChatId, () => {
+    collapsed.value = false;
+});
 </script>
 
 <template>
     <div class="chat-panel" :class="collapsed ? 'collapsed' : 'expanded'">
         <div class="chat-panel-header">
             <span class="chat-panel-title">GalaxyAI</span>
-            <ChatActions
-                v-model:collapsed="collapsed"
-                source="panel"
-                :placement-only="!!chatPlugin"
-                @dock-to="dockTo" />
+            <ChatActions v-model:collapsed="collapsed" source="panel" @dock-to="dockTo" />
         </div>
         <div v-show="!collapsed" class="chat-panel-body">
-            <PluginChat v-if="chatPlugin" :plugin="chatPlugin" source="panel" />
-            <GalaxyAI v-else :exchange-id="activeChatId || undefined" panel />
+            <PluginChat :plugin="props.plugin" source="panel" />
         </div>
     </div>
 </template>

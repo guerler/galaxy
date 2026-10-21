@@ -35,28 +35,6 @@ describe("chatStore", () => {
             store.showChat();
             expect(store.chatVisible).toBe(true);
         });
-
-        it("sets chat ID when provided", () => {
-            const store = useChatStore();
-            store.showChat("chat-42");
-            expect(store.chatVisible).toBe(true);
-            expect(store.activeChatId).toBe("chat-42");
-        });
-
-        it("preserves existing chat ID when called without argument", () => {
-            const store = useChatStore();
-            store.setActiveChatId("existing-id");
-            store.showChat();
-            expect(store.activeChatId).toBe("existing-id");
-        });
-
-        it("clears chat ID when called with null", () => {
-            const store = useChatStore();
-            store.setActiveChatId("old-id");
-            store.showChat(null);
-            expect(store.chatVisible).toBe(true);
-            expect(store.activeChatId).toBeNull();
-        });
     });
 
     describe("hideChat", () => {
@@ -95,56 +73,12 @@ describe("chatStore", () => {
         });
     });
 
-    describe("setActiveChatId", () => {
-        it("sets and clears the active chat ID", () => {
-            const store = useChatStore();
-            store.setActiveChatId("abc");
-            expect(store.activeChatId).toBe("abc");
-            store.setActiveChatId(null);
-            expect(store.activeChatId).toBeNull();
-        });
-    });
-
-    describe("requestNewChat", () => {
-        it("bumps the request counter so chat surfaces reset even when the id would not change", () => {
-            const store = useChatStore();
-            expect(store.newChatRequestCount).toBe(0);
-            store.requestNewChat();
-            expect(store.newChatRequestCount).toBe(1);
-            store.requestNewChat();
-            expect(store.newChatRequestCount).toBe(2);
-        });
-
-        it("clears the active chat id", () => {
-            const store = useChatStore();
-            store.setActiveChatId("abc");
-            store.requestNewChat();
-            expect(store.activeChatId).toBeNull();
-        });
-    });
-
     describe("deleteChats", () => {
         it("removes the given ids from history", () => {
             const store = useChatStore();
             store.chatHistory = [{ id: "a" }, { id: "b" }, { id: "c" }] as ChatHistoryItem[];
             store.deleteChats(new Set(["a", "c"]));
             expect(store.chatHistory.map((item) => item.id)).toEqual(["b"]);
-        });
-
-        it("clears activeChatId when the open chat is among the deleted ids", () => {
-            const store = useChatStore();
-            store.chatHistory = [{ id: "a" }, { id: "b" }] as ChatHistoryItem[];
-            store.setActiveChatId("a");
-            store.deleteChats(new Set(["a"]));
-            expect(store.activeChatId).toBeNull();
-        });
-
-        it("preserves activeChatId when the open chat is not deleted", () => {
-            const store = useChatStore();
-            store.chatHistory = [{ id: "a" }, { id: "b" }] as ChatHistoryItem[];
-            store.setActiveChatId("b");
-            store.deleteChats(new Set(["a"]));
-            expect(store.activeChatId).toBe("b");
         });
     });
 
@@ -153,13 +87,10 @@ describe("chatStore", () => {
             mockPut.mockResolvedValue({ error: undefined });
             const store = useChatStore();
             store.chatHistory = [{ id: "a" }, { id: "b" }, { id: "c" }] as ChatHistoryItem[];
-            store.setActiveChatId("a");
-
             await store.deleteChatsByIds(new Set(["a", "b"]));
 
             expect(mockPut).toHaveBeenCalledWith("/api/chat/exchanges/batch/delete", { body: { ids: ["a", "b"] } });
             expect(store.chatHistory.map((item) => item.id)).toEqual(["c"]);
-            expect(store.activeChatId).toBeNull();
         });
 
         it("does nothing for an empty set", async () => {

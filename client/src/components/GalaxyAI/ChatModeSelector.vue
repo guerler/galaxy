@@ -19,36 +19,25 @@ const { activeContext } = useActiveContext();
 
 const isNotebookContext = computed(() => activeContext.value?.contextType === "notebook");
 
-const { activeChatId, isBottomPanelOpen, isCenterMode, isRightPanelOpen } = storeToRefs(chatStore);
+const { isBottomPanelOpen, isCenterMode, isRightPanelOpen } = storeToRefs(chatStore);
 
 const isOnGalaxyAIRoute = computed(() => route.path.startsWith("/galaxyai"));
 
 const isOnCenter = computed(() => isCenterMode.value && isOnGalaxyAIRoute.value);
 
 function openCenterChat() {
-    const chatId = activeChatId.value;
+    const chatId = chatStore.activeChatId;
     chatStore.setLocation("center");
     chatStore.hideChat();
     router.push(chatId ? `/galaxyai/${chatId}` : "/galaxyai");
 }
 
+/** The plugin runs once and keeps its chat wherever it is placed. */
 function openDockedChat(location: "right" | "bottom") {
-    /** Stores an id if there is a `/galaxyai/:exchangeId` route param */
-    // The galaxyai/:exchangeId route param is never repeated, but vue-router's generic params
-    // type always allows string[] -- narrow to the single value it actually is.
-    const exchangeIdParam = route.params["exchangeId"];
-    const routedChatId = route.path.includes("galaxyai")
-        ? (Array.isArray(exchangeIdParam) ? exchangeIdParam[0] : exchangeIdParam) || null
-        : null;
-    const wasCenterMode = chatStore.isCenterMode;
-
     if (isOnGalaxyAIRoute.value) {
         router.push("/");
     }
-
-    // TODO: What if we just looked at a chat, maybe add a chatId to localStorage for last opened chat?
-    const chatId = wasCenterMode && routedChatId ? routedChatId : chatStore.resolveDockChatId();
-    chatStore.dockChat(location, chatId);
+    chatStore.dockChat(location);
 }
 </script>
 

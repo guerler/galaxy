@@ -1816,23 +1816,6 @@ job_details:
 galaxyai:
   selectors:
     activity: '#activity-galaxyai'
-    _: '.galaxyai-container'
-    header: '.galaxyai-header'
-    new_chat_button: '.galaxyai-header [data-description="new chat button"]'
-    delete_chat_button: '.galaxyai-header [data-description="delete chat button"]'
-    messages: '.chat-messages'
-    input: '#chat-input'
-    send_button: '.send-button'
-    welcome_message: '.system-notice'
-    query_cell: '.entry-query .query-text'
-    response_cell: '.entry-response'
-    response_content: '.entry-response .response-content'
-    agent_indicator: '.entry-response .agent-indicator'
-    loading: '.loading-entry'
-    feedback_up: '.entry-response .feedback-btn[title="Helpful"]'
-    feedback_down: '.entry-response .feedback-btn[title="Not helpful"]'
-    feedback_ack: '.entry-response .feedback-ack'
-    meta_tag: '.entry-response .meta-tag'
 
   history_panel:
     selectors:

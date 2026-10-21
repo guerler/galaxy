@@ -7,8 +7,6 @@ import { nextTick } from "vue";
 
 import { useChatStore } from "@/stores/chatStore";
 
-import type { ChatHistoryItem } from "./chatTypes";
-
 import ChatModeSelector from "./ChatModeSelector.vue";
 import GButton from "@/components/BaseComponents/GButton.vue";
 
@@ -147,14 +145,14 @@ describe("ChatModeSelector", () => {
             expect(store.hideChat).toHaveBeenCalled();
         });
 
-        it("routes to /galaxyai/{id} when activeChatId is set", async () => {
+        it("routes to /galaxyai/{id} when the plugin has a saved chat open", async () => {
             const { wrapper, store } = mountComponent();
             store.activeChatId = "chat-42";
             await nth(getButtons(wrapper), 0).trigger("click");
             expect(mockPush).toHaveBeenCalledWith("/galaxyai/chat-42");
         });
 
-        it("routes to /galaxyai when activeChatId is null", async () => {
+        it("routes to /galaxyai when the plugin's chat is not saved", async () => {
             const { wrapper, store } = mountComponent();
             store.activeChatId = null;
             await nth(getButtons(wrapper), 0).trigger("click");
@@ -192,75 +190,14 @@ describe("ChatModeSelector", () => {
     describe("openDockedChat — dockChat call", () => {
         it("calls dockChat with 'right' for side panel button", async () => {
             const { wrapper, store } = mountComponent();
-            store.activeChatId = "active-chat";
             await nth(getButtons(wrapper), 1).trigger("click");
-            expect(store.dockChat).toHaveBeenCalledWith("right", "active-chat");
+            expect(store.dockChat).toHaveBeenCalledWith("right");
         });
 
         it("calls dockChat with 'bottom' for bottom panel button", async () => {
             const { wrapper, store } = mountComponent();
-            store.activeChatId = "active-chat";
             await nth(getButtons(wrapper), 2).trigger("click");
-            expect(store.dockChat).toHaveBeenCalledWith("bottom", "active-chat");
-        });
-
-        it("uses routedChatId when coming from center mode with exchangeId in route", async () => {
-            mockRoute = { path: "/galaxyai/routed-chat", params: { exchangeId: "routed-chat" }, query: {} };
-            const { wrapper, store } = mountComponent();
-            store.chatLocation = "center";
-            await nth(getButtons(wrapper), 1).trigger("click");
-            expect(store.dockChat).toHaveBeenCalledWith("right", "routed-chat");
-        });
-
-        it("uses activeChatId fallback when in center mode but no exchangeId in route", async () => {
-            mockRoute = { path: "/galaxyai", params: {}, query: {} };
-            const { wrapper, store } = mountComponent();
-            store.chatLocation = "center";
-            store.activeChatId = "active-chat";
-            await nth(getButtons(wrapper), 1).trigger("click");
-            expect(store.dockChat).toHaveBeenCalledWith("right", "active-chat");
-        });
-
-        it("uses activeChatId when not in center mode", async () => {
-            const { wrapper, store } = mountComponent();
-            store.chatLocation = "right";
-            store.activeChatId = "active-chat";
-            await nth(getButtons(wrapper), 1).trigger("click");
-            expect(store.dockChat).toHaveBeenCalledWith("right", "active-chat");
-        });
-
-        it("uses first history item when activeChatId is null but history exists", async () => {
-            const { wrapper, store } = mountComponent();
-            store.activeChatId = null;
-            store.chatHistory = [{ id: "hist-1" } as ChatHistoryItem, { id: "hist-2" } as ChatHistoryItem];
-            await nth(getButtons(wrapper), 1).trigger("click");
-            expect(store.dockChat).toHaveBeenCalledWith("right", "hist-1");
-        });
-
-        it("uses null when no activeChatId and empty history", async () => {
-            const { wrapper, store } = mountComponent();
-            store.activeChatId = null;
-            store.chatHistory = [];
-            await nth(getButtons(wrapper), 1).trigger("click");
-            expect(store.dockChat).toHaveBeenCalledWith("right", null);
-        });
-
-        it("prefers activeChatId over first history item when both present", async () => {
-            const { wrapper, store } = mountComponent();
-            store.activeChatId = "active-chat";
-            store.chatHistory = [{ id: "hist-1" } as ChatHistoryItem];
-            await nth(getButtons(wrapper), 1).trigger("click");
-            expect(store.dockChat).toHaveBeenCalledWith("right", "active-chat");
-        });
-
-        it("does NOT use routedChatId when not in center mode even with exchangeId in route", async () => {
-            mockRoute = { path: "/galaxyai/some-chat", params: { exchangeId: "some-chat" }, query: {} };
-            const { wrapper, store } = mountComponent();
-            store.chatLocation = "right";
-            store.activeChatId = "active-chat";
-            await nth(getButtons(wrapper), 1).trigger("click");
-            expect(store.dockChat).toHaveBeenCalledWith("right", "active-chat");
-            expect(store.dockChat).not.toHaveBeenCalledWith("right", "some-chat");
+            expect(store.dockChat).toHaveBeenCalledWith("bottom");
         });
     });
 });

@@ -10,16 +10,9 @@ import ChatActions from "./ChatActions.vue";
 import GButton from "@/components/BaseComponents/GButton.vue";
 
 const mockPush = vi.fn();
-const mockFrameAdd = vi.fn();
-let mockRoute: { path: string; params: Record<string, string> } = { path: "/", params: {} };
 
 vi.mock("vue-router", () => ({
     useRouter: () => ({ push: mockPush }),
-    useRoute: () => mockRoute,
-}));
-
-vi.mock("@/app", () => ({
-    getGalaxyInstance: () => ({ frame: { add: mockFrameAdd } }),
 }));
 
 vi.mock("@/stores/activityStore.js", () => ({
@@ -28,23 +21,21 @@ vi.mock("@/stores/activityStore.js", () => ({
 
 const localVue = getLocalVue();
 
-function mountComponent(source: "center" | "docked" | "panel", placementOnly = false) {
+function mountComponent(source: "center" | "docked" | "panel") {
     const pinia = createTestingPinia({ createSpy: vi.fn, stubActions: false });
     setActivePinia(pinia);
     const wrapper = mount(ChatActions as object, {
         localVue,
         pinia,
-        propsData: { source, placementOnly },
+        propsData: { source },
         stubs: { FontAwesomeIcon: true },
     });
     const store = useChatStore();
     // chatStore is a setup-syntax store, so @pinia/testing's automatic action
     // spying (which relies on the options-API `actions` map) doesn't apply --
     // spy on the actions these tests assert against explicitly.
-    vi.spyOn(store, "requestNewChat");
     vi.spyOn(store, "setLocation");
     vi.spyOn(store, "hideChat");
-    vi.spyOn(store, "setActiveChatId");
     return { wrapper, store };
 }
 
@@ -59,57 +50,10 @@ function findButton(wrapper: VueWrapper, title: string) {
 
 describe("ChatActions", () => {
     beforeEach(() => {
-        mockRoute = { path: "/", params: {} };
         vi.clearAllMocks();
     });
     afterEach(() => {
         vi.restoreAllMocks();
-    });
-
-    // ── startNew ──────────────────────────────────────────────────────────────
-
-    describe("startNew", () => {
-        it("routes to /galaxyai/new in center mode", async () => {
-            const { wrapper } = mountComponent("center");
-            await findButton(wrapper, "Start New Chat").trigger("click");
-            expect(mockPush).toHaveBeenCalledWith("/galaxyai/new");
-        });
-
-        it("requests a new chat in all modes", async () => {
-            for (const source of ["center", "docked", "panel"] as const) {
-                const { wrapper, store } = mountComponent(source);
-                await findButton(wrapper, "Start New Chat").trigger("click");
-                expect(store.requestNewChat).toHaveBeenCalled();
-            }
-        });
-
-        it("still requests a new chat when already at /galaxyai/new, without re-routing", async () => {
-            mockRoute = { path: "/galaxyai/new", params: { exchangeId: "new" } };
-            const { wrapper, store } = mountComponent("center");
-            await findButton(wrapper, "Start New Chat").trigger("click");
-            expect(mockPush).not.toHaveBeenCalled();
-            expect(store.requestNewChat).toHaveBeenCalled();
-        });
-
-        it("does not route in docked mode", async () => {
-            const { wrapper } = mountComponent("docked");
-            await findButton(wrapper, "Start New Chat").trigger("click");
-            expect(mockPush).not.toHaveBeenCalled();
-        });
-
-        it("does not route in panel mode", async () => {
-            const { wrapper } = mountComponent("panel");
-            await findButton(wrapper, "Start New Chat").trigger("click");
-            expect(mockPush).not.toHaveBeenCalled();
-        });
-
-        it("emits update:collapsed false in all modes", async () => {
-            for (const source of ["center", "docked", "panel"] as const) {
-                const { wrapper } = mountComponent(source);
-                await findButton(wrapper, "Start New Chat").trigger("click");
-                expect(wrapper.emitted("update:collapsed")).toEqual([[false]]);
-            }
-        });
     });
 
     // ── maximize ──────────────────────────────────────────────────────────────
@@ -122,80 +66,17 @@ describe("ChatActions", () => {
             expect(store.hideChat).toHaveBeenCalled();
         });
 
-        it("routes to /galaxyai/{id} when activeChatId is set", async () => {
+        it("routes to /galaxyai/{id} when the plugin has a saved chat open", async () => {
             const { wrapper, store } = mountComponent("docked");
             store.activeChanged("chat-42");
             await findButton(wrapper, "Open in center view").trigger("click");
             expect(mockPush).toHaveBeenCalledWith("/galaxyai/chat-42");
         });
 
-        it("routes to /galaxyai when activeChatId is null", async () => {
-            const { wrapper, store } = mountComponent("docked");
-            store.activeChatId = null;
+        it("routes to /galaxyai when the plugin's chat is not saved", async () => {
+            const { wrapper } = mountComponent("docked");
             await findButton(wrapper, "Open in center view").trigger("click");
             expect(mockPush).toHaveBeenCalledWith("/galaxyai");
-        });
-    });
-
-    // ── popOut ────────────────────────────────────────────────────────────────
-
-    describe("popOut — center", () => {
-        it("uses route.params.exchangeId for the window manager url", async () => {
-            mockRoute = { path: "/galaxyai/chat-99", params: { exchangeId: "chat-99" } };
-            const { wrapper } = mountComponent("center");
-            await findButton(wrapper, "Open in floating window").trigger("click");
-            expect(mockFrameAdd).toHaveBeenCalledWith(
-                expect.objectContaining({ url: "/galaxyai/chat-99?compact=true" }),
-            );
-        });
-
-        it("falls back to /galaxyai/new when no exchangeId in route", async () => {
-            mockRoute = { path: "/galaxyai", params: {} };
-            const { wrapper } = mountComponent("center");
-            await findButton(wrapper, "Open in floating window").trigger("click");
-            expect(mockFrameAdd).toHaveBeenCalledWith(expect.objectContaining({ url: "/galaxyai/new?compact=true" }));
-        });
-
-        it("navigates to /galaxyai/new to start a fresh chat in place", async () => {
-            const { wrapper } = mountComponent("center");
-            await findButton(wrapper, "Open in floating window").trigger("click");
-            expect(mockPush).toHaveBeenCalledWith("/galaxyai/new");
-        });
-    });
-
-    describe("popOut — docked", () => {
-        it("uses chatStore.activeChatId for the window manager url", async () => {
-            const { wrapper, store } = mountComponent("docked");
-            store.activeChatId = "chat-55";
-            await findButton(wrapper, "Open in floating window").trigger("click");
-            expect(mockFrameAdd).toHaveBeenCalledWith(
-                expect.objectContaining({ url: "/galaxyai/chat-55?compact=true" }),
-            );
-        });
-
-        it("clears activeChatId and hides the panel", async () => {
-            const { wrapper, store } = mountComponent("docked");
-            await findButton(wrapper, "Open in floating window").trigger("click");
-            expect(store.setActiveChatId).toHaveBeenCalledWith(null);
-            expect(store.hideChat).toHaveBeenCalled();
-        });
-    });
-
-    describe("popOut — panel", () => {
-        it("uses chatStore.activeChatId for the window manager url", async () => {
-            const { wrapper, store } = mountComponent("panel");
-            store.activeChatId = "chat-77";
-            await findButton(wrapper, "Open in floating window").trigger("click");
-            expect(mockFrameAdd).toHaveBeenCalledWith(
-                expect.objectContaining({ url: "/galaxyai/chat-77?compact=true" }),
-            );
-        });
-
-        it("only hides the panel — does not clear activeChatId", async () => {
-            const { wrapper, store } = mountComponent("panel");
-            await findButton(wrapper, "Open in floating window").trigger("click");
-            expect(store.hideChat).toHaveBeenCalled();
-            expect(store.setActiveChatId).not.toHaveBeenCalled();
         });
     });
 
@@ -232,12 +113,12 @@ describe("ChatActions", () => {
     });
 });
 
-describe("ChatActions for a chat plugin", () => {
+describe("ChatActions buttons", () => {
     const titles = (wrapper: VueWrapper) =>
         wrapper.findAllComponents(GButton).map((button) => button.props("title") as string);
 
     it("places the chat and shows its list: the plugin starts its own conversations and runs once", () => {
-        const { wrapper } = mountComponent("docked", true);
+        const { wrapper } = mountComponent("docked");
         expect(titles(wrapper)).toEqual([
             "Show Chats Panel",
             "Open in center view",
@@ -247,7 +128,7 @@ describe("ChatActions for a chat plugin", () => {
     });
 
     it("keeps the bottom panel's collapse toggle", () => {
-        const { wrapper } = mountComponent("panel", true);
+        const { wrapper } = mountComponent("panel");
         expect(titles(wrapper)).toEqual([
             "Show Chats Panel",
             "Open in center view",

@@ -10,7 +10,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Toast } from "@/composables/toast";
-import { useChatPlugin } from "@/composables/useChatPlugin";
 import { useChatStore } from "@/stores/chatStore";
 import { useHistoryStore } from "@/stores/historyStore";
 import { usePageStore } from "@/stores/pageStore";
@@ -102,12 +101,7 @@ async function galaxyAiItems(argQuery: string): Promise<PaletteItem[]> {
             console.debug("Command palette could not load the GalaxyAI history", error);
         }
     }
-    // With a chat plugin, its own chats: it opens those, and GalaxyAI's stay as they were.
-    const chatPlugin = useChatPlugin().value;
-    const chats = chatPlugin
-        ? chatStore.chatHistory.filter((chat) => chat.agent_type === chatPlugin)
-        : chatStore.chatHistory;
-    const existing = chats.map((chat) => ({
+    const existing = chatStore.chatHistory.map((chat) => ({
         id: `actions:galaxy-ai:${chat.id}`,
         icon: faComments,
         title: chat.query || "Untitled conversation",
@@ -219,14 +213,14 @@ const ACTIONS: Gated<PaletteItem>[] = [
     },
     {
         anonymous: false,
-        configGate: (ctx) => Boolean(ctx.config.llm_api_configured),
+        configGate: (ctx) => Boolean(ctx.config.llm_api_configured && ctx.config.ai_chat_plugin),
         item: {
             id: "actions:galaxy-ai",
             icon: faMagic,
             keywords: "chat assistant llm question help",
             subtitle: "Ask the Galaxy assistant about tools, workflows or errors",
             title: "Ask GalaxyAI",
-            handler: (ctx: PaletteContext) => ctx.startNewChat?.(true),
+            handler: (ctx: PaletteContext) => ctx.navigate?.("/galaxyai"),
             argumentMode: {
                 emptyHint: "Type a question to start a new chat…",
                 getItems: (argQuery: string) => galaxyAiItems(argQuery),

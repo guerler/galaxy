@@ -8,10 +8,10 @@ import { useChatPlugin } from "@/composables/useChatPlugin";
 import { useChatStore } from "@/stores/chatStore";
 
 import PluginChat from "./PluginChat.vue";
-import GalaxyAI from "@/components/GalaxyAI.vue";
+import GAlert from "@/components/BaseComponents/GAlert.vue";
 
-/** The center view's chat: the chat plugin when Galaxy has one, GalaxyAI's own otherwise. */
-const props = defineProps<{ exchangeId?: string; compact?: boolean; initialQuestion?: string }>();
+/** The center view's chat: the chat plugin, opening a saved chat or a question when given one. */
+const props = defineProps<{ exchangeId?: string; initialQuestion?: string }>();
 
 const { isConfigLoaded } = useConfig();
 const chatPlugin = useChatPlugin();
@@ -37,11 +37,10 @@ watch(
     { immediate: true },
 );
 
-// The address follows the conversation the brain reports, so a reload reopens it. GalaxyAI's own
-// chat keeps its address itself.
+// The address follows the conversation the brain reports, so a reload reopens it.
 watch(activeChatId, () => {
     const path = activePath();
-    if (chatPlugin.value && route.path !== path && !props.initialQuestion) {
+    if (route.path !== path && !props.initialQuestion) {
         router.replace(path);
     }
 });
@@ -50,9 +49,5 @@ watch(activeChatId, () => {
 <template>
     <div v-if="!isConfigLoaded" />
     <PluginChat v-else-if="chatPlugin" :plugin="chatPlugin" source="center" />
-    <GalaxyAI
-        v-else
-        :exchange-id="props.exchangeId"
-        :compact="props.compact"
-        :initial-question="props.initialQuestion" />
+    <GAlert v-else variant="info" show>This Galaxy has no AI chat.</GAlert>
 </template>

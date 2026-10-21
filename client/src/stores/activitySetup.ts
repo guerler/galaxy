@@ -246,6 +246,7 @@ export interface ActivityAvailability {
     config?: {
         interactivetools_enable?: boolean;
         llm_api_configured?: boolean;
+        ai_chat_plugin?: string | null;
     };
 }
 
@@ -264,7 +265,7 @@ export function isActivityAvailable(activityId: string, availability: ActivityAv
         case "interactivetools":
             return Boolean(availability.config?.interactivetools_enable);
         case "galaxyai":
-            return Boolean(availability.config?.llm_api_configured);
+            return Boolean(availability.config?.llm_api_configured && availability.config?.ai_chat_plugin);
         default:
             return true;
     }

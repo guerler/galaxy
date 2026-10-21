@@ -602,7 +602,6 @@ export function getRouter(Galaxy) {
                         redirect: redirectAnon(),
                         props: (route) => ({
                             exchangeId: route.params.exchangeId || undefined,
-                            compact: route.query.compact === "true",
                             // `?q=` seeds a fresh conversation, e.g. from the command palette
                             initialQuestion: typeof route.query.q === "string" ? route.query.q : undefined,
                         }),

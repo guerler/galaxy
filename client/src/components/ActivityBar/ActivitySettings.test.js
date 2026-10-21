@@ -53,7 +53,7 @@ describe("ActivitySettings", () => {
     let wrapper;
 
     beforeEach(async () => {
-        mockConfig.value = { interactivetools_enable: true, llm_api_configured: true };
+        mockConfig.value = { interactivetools_enable: true, llm_api_configured: true, ai_chat_plugin: "olit" };
         const pinia = createTestingPinia({ createSpy: vi.fn, stubActions: false });
         // Mock the response of the API call
         server.use(
@@ -205,7 +205,7 @@ describe("ActivitySettings", () => {
             expect(renderedTitles(settings)).not.toContain(activityTitle("galaxyai"));
             expect(interactiveTools.visible).toBe(false);
 
-            mockConfig.value = { interactivetools_enable: false, llm_api_configured: true };
+            mockConfig.value = { interactivetools_enable: false, llm_api_configured: true, ai_chat_plugin: "olit" };
             await nextTick();
             expect(renderedTitles(settings)).not.toContain(activityTitle("interactivetools"));
             expect(renderedTitles(settings)).toContain(activityTitle("galaxyai"));

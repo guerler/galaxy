@@ -6,7 +6,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { PANE_PATH } from "@/components/GalaxyAI/pane";
-import { useActiveChatPlugin } from "@/composables/useChatPlugin";
+import { useChatPlugin } from "@/composables/useChatPlugin";
 import { usePanels } from "@/composables/usePanels";
 import { useChatStore } from "@/stores/chatStore";
 import { useUserStore } from "@/stores/userStore";
@@ -15,7 +15,6 @@ import { eventBus } from "@/utils/eventBus";
 import CenterFrame from "./CenterFrame.vue";
 import ActivityBar from "@/components/ActivityBar/ActivityBar.vue";
 import GButton from "@/components/BaseComponents/GButton.vue";
-import GalaxyAI from "@/components/GalaxyAI.vue";
 import ChatPanel from "@/components/GalaxyAI/ChatPanel.vue";
 import PluginChat from "@/components/GalaxyAI/PluginChat.vue";
 import HistoryIndex from "@/components/History/Index.vue";
@@ -23,11 +22,11 @@ import FlexPanel from "@/components/Panels/FlexPanel.vue";
 import DragAndDropModal from "@/components/Upload/DragAndDropModal.vue";
 
 const chatStore = useChatStore();
-const { isRightPanelOpen, isBottomPanelOpen, activeChatId } = storeToRefs(chatStore);
+const { isRightPanelOpen, isBottomPanelOpen } = storeToRefs(chatStore);
 const { historyPanelWidth, chatPanelWidth } = storeToRefs(useUserStore());
 
 const route = useRoute();
-const chatPlugin = useActiveChatPlugin();
+const chatPlugin = useChatPlugin();
 
 watch(
     () => route.path,
@@ -53,10 +52,9 @@ const isNoPaddingPath = computed(() => {
 });
 
 /**
- * Every `/galaxyai` route renders one and the same GalaxyAI instance: it rewrites its own route as a
- * conversation is created (`/galaxyai` to `/galaxyai/<id>`) or reset (`/galaxyai/new`) and follows
- * those changes through its `exchangeId` prop, so the live conversation stays in place. All other
- * routes get a fresh component per path.
+ * Every `/galaxyai` route renders one and the same chat place, which follows the route through its
+ * props, so moving between chats keeps the place where it is. All other routes get a fresh component
+ * per path.
  */
 const routerViewKey = computed(() => (route.path.startsWith("/galaxyai") ? "/galaxyai" : route.fullPath));
 
@@ -102,7 +100,7 @@ onUnmounted(() => {
                     <router-view :key="routerViewKey" class="h-100" />
                 </div>
             </div>
-            <ChatPanel v-if="isBottomPanelOpen" />
+            <ChatPanel v-if="chatPlugin && isBottomPanelOpen" :plugin="chatPlugin" />
         </div>
         <FlexPanel v-if="showPanels" ref="historyPanel" v-model:reactive-width="historyPanelWidth" side="right">
             <template v-slot:closed-button="{ open }">
@@ -117,13 +115,12 @@ onUnmounted(() => {
             <HistoryIndex @show="onShow" />
         </FlexPanel>
         <FlexPanel
-            v-if="showPanels && isRightPanelOpen"
+            v-if="showPanels && chatPlugin && isRightPanelOpen"
             v-model:reactive-width="chatPanelWidth"
             panel-id="chat-panel"
             side="right"
             @close="chatStore.hideChat()">
-            <PluginChat v-if="chatPlugin" :plugin="chatPlugin" source="docked" />
-            <GalaxyAI v-else :exchange-id="activeChatId || undefined" docked />
+            <PluginChat :plugin="chatPlugin" source="docked" />
         </FlexPanel>
         <DragAndDropModal />
     </div>

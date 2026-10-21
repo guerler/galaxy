@@ -9,7 +9,7 @@ import { useChatStore } from "@/stores/chatStore";
 
 import GalaxyAIRoute from "./GalaxyAIRoute.vue";
 import PluginChat from "./PluginChat.vue";
-import GalaxyAI from "@/components/GalaxyAI.vue";
+import GAlert from "@/components/BaseComponents/GAlert.vue";
 
 const mockPlugin = ref<string | null>(null);
 const mockReplace = vi.fn();
@@ -89,11 +89,11 @@ describe("GalaxyAIRoute", () => {
         vi.unstubAllGlobals();
     });
 
-    it("shows the plugin, or GalaxyAI's own chat without one", () => {
+    it("shows the plugin, or says there is no chat", () => {
         mountRoute("olit", {});
         expect(mounted[0]!.findComponent(PluginChat).props("plugin")).toBe("olit");
         mountRoute(null, {});
         expect(mounted[1]!.findComponent(PluginChat).exists()).toBe(false);
-        expect(mounted[1]!.findComponent(GalaxyAI).exists()).toBe(true);
+        expect(mounted[1]!.findComponent(GAlert).exists()).toBe(true);
     });
 });

@@ -7,9 +7,11 @@ import VisualizationFrame from "./VisualizationFrame.vue";
 
 /**
  * One visualization mounted for the whole page and drawn over its current slot, so the plugin keeps
- * running as its slot moves or disappears; hidden while it has none.
+ * running as its slot moves or disappears; hidden while it has none. Its slots are the plugin's own
+ * unless `slotName` names others, for a plugin mounted twice.
  */
-const props = withDefaults(defineProps<{ name: string; frameId?: string; config?: object }>(), {
+const props = withDefaults(defineProps<{ name: string; slotName?: string; frameId?: string; config?: object }>(), {
+    slotName: undefined,
     frameId: undefined,
     config: () => ({}),
 });
@@ -25,7 +27,7 @@ interface Box {
     height: number;
 }
 
-const slot = visualizationSlot(props.name);
+const slot = visualizationSlot(props.slotName ?? props.name);
 /** Where the slot is, or was last: hidden, the frame keeps its size rather than lay out for zero. */
 const box = ref<Box>({ top: 0, left: 0, width: 0, height: 0 });
 const visible = ref(false);

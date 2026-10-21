@@ -38,6 +38,8 @@ export interface HostOptions {
     onActiveChanged(params: ChatActiveChangedParams): void;
     /** From a brain that declared `chat.unsaved`. */
     onUnsavedChanged?(params: ChatUnsavedChangedParams): void;
+    /** A brain that declared `chat.pane` asks for its pane apart to be shown. */
+    onShowPane?(): void;
     timeoutMs?: number;
 }
 
@@ -142,6 +144,11 @@ export function hostBrain(frame: () => Window | null | undefined, options: HostO
                                 options.onUnsavedChanged?.({ unsaved });
                             }
                         },
+                        [METHODS.chatShowPane]: () => {
+                            if (current.ready && current.brain.capabilities.chat?.pane) {
+                                options.onShowPane?.();
+                            }
+                        },
                     },
                 }),
             };
@@ -150,7 +157,7 @@ export function hostBrain(frame: () => Window | null | undefined, options: HostO
             const result: InitializeResult = {
                 protocolVersion: PROTOCOL_VERSION,
                 hostInfo: options.hostInfo,
-                capabilities: { chat: { unsaved: {} } },
+                capabilities: { chat: { unsaved: {}, pane: {} } },
             };
             brain.postMessage({ jsonrpc: "2.0", id: request.id, result }, origin, [port2]);
         }

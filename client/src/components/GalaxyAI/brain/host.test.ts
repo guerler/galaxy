@@ -43,7 +43,7 @@ describe("the host's handshake", () => {
                     result: {
                         protocolVersion: PROTOCOL_VERSION,
                         hostInfo: { name: "galaxy", version: "test" },
-                        capabilities: { chat: { unsaved: {} } },
+                        capabilities: { chat: { unsaved: {}, pane: {} } },
                     },
                 },
             },
@@ -158,6 +158,23 @@ describe("a session", () => {
         silent.send({ jsonrpc: "2.0", method: "chat/unsavedChanged", params: { unsaved: true } });
         await flush();
         expect(unsaved).toEqual([false, true]);
+    });
+
+    it("asks for the pane apart for a brain that declared it, and ignores the ask from one that did not", async () => {
+        const onShowPane = vi.fn();
+        const declaring = mockBrain();
+        host(declaring, { onShowPane });
+        declaring.initialize(1, { chat: { pane: {} } });
+        declaring.send({ jsonrpc: "2.0", method: "chat/showPane" });
+        declaring.initialized();
+        declaring.send({ jsonrpc: "2.0", method: "chat/showPane" });
+        const silent = mockBrain();
+        host(silent, { onShowPane });
+        silent.initialize();
+        silent.initialized();
+        silent.send({ jsonrpc: "2.0", method: "chat/showPane" });
+        await flush();
+        expect(onShowPane).toHaveBeenCalledTimes(1);
     });
 
     it("ends when the brain loads again: pending commands fail, the old port is shut, the new brain is ready afresh", async () => {

@@ -28,10 +28,14 @@ export const useChatStore = defineStore("chatStore", () => {
      * reloads, until the new one says, so the warnings hold meanwhile.
      */
     const unsaved = ref(false);
+    /** Whether the brain draws its pane apart from its chat (`chat.pane`), as the last brain ready said. */
+    const brainPane = ref(false);
 
     const isRightPanelOpen = computed(() => chatLocation.value === "right" && chatVisible.value);
     const isBottomPanelOpen = computed(() => chatLocation.value === "bottom" && chatVisible.value);
     const isCenterMode = computed(() => chatLocation.value === "center");
+    /** The brain's pane is mounted apart while the chat is docked beside other content. */
+    const isPaneApart = computed(() => brainPane.value && !isCenterMode.value);
 
     const activeChatId = computed({
         get: () => cachedActiveChatId.value || null,
@@ -185,6 +189,7 @@ export const useChatStore = defineStore("chatStore", () => {
         if (!session.capabilities.chat?.unsaved) {
             unsaved.value = false;
         }
+        brainPane.value = !!session.capabilities.chat?.pane;
         const initial = pending ?? {
             method: "open",
             params: activeChatId.value ? { exchange_id: activeChatId.value } : {},
@@ -238,6 +243,7 @@ export const useChatStore = defineStore("chatStore", () => {
         isRightPanelOpen,
         isBottomPanelOpen,
         isCenterMode,
+        isPaneApart,
         deleteChatById,
         deleteChats,
         deleteChatsByIds,

@@ -135,3 +135,35 @@ describe("the chat store's unsaved changes", () => {
         expect(store.unsaved).toBe(false);
     });
 });
+
+describe("the chat store's pane apart", () => {
+    beforeEach(() => {
+        localStorage.clear();
+        setActivePinia(createPinia());
+    });
+
+    it("mounts the pane apart only for a brain that draws one, and only while the chat is docked", () => {
+        const store = useChatStore();
+        store.dockChat("right");
+        expect(store.isPaneApart).toBe(false);
+        store.brainReady(session({ chat: { pane: {} } }));
+        expect(store.isPaneApart).toBe(true);
+        // Hidden, the docked chat keeps its pane, so showing it again moves nothing.
+        store.hideChat();
+        expect(store.isPaneApart).toBe(true);
+        store.dockChat("bottom");
+        expect(store.isPaneApart).toBe(true);
+        store.setLocation("center");
+        expect(store.isPaneApart).toBe(false);
+    });
+
+    it("keeps the pane through a brain reload, and drops it for a brain that does not draw one", () => {
+        const store = useChatStore();
+        store.dockChat("right");
+        store.brainReady(session({ chat: { pane: {} } }));
+        store.brainClosed();
+        expect(store.isPaneApart).toBe(true);
+        store.brainReady(session());
+        expect(store.isPaneApart).toBe(false);
+    });
+});

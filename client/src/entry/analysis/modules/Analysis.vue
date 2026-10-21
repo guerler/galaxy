@@ -5,6 +5,7 @@ import { storeToRefs } from "pinia";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
+import { PANE_PATH } from "@/components/GalaxyAI/pane";
 import { useActiveChatPlugin } from "@/composables/useChatPlugin";
 import { usePanels } from "@/composables/usePanels";
 import { useChatStore } from "@/stores/chatStore";
@@ -45,6 +46,7 @@ watch(
 const isNoPaddingPath = computed(() => {
     return (
         route.path.startsWith("/galaxyai") ||
+        route.path === PANE_PATH ||
         (route.path.startsWith("/histories/") && route.path.includes("/pages/")) ||
         route.path.startsWith("/pages/editor")
     );

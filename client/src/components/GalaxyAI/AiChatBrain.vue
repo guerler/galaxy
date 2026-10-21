@@ -1,21 +1,32 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { onBeforeUnmount, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import { useChatStore } from "@/stores/chatStore";
 
 import { hostBrain } from "./brain/host";
+import { PANE_PATH, paneSlot } from "./pane";
 
 import PinnedVisualization from "@/components/Visualizations/PinnedVisualization.vue";
 
 /**
  * GalaxyAI's brain: the `ai_chat_plugin` mounted once for the page, and Galaxy's side of the brain
  * protocol with it (`brain/protocol.ts`). The plugin keeps running as the chat moves between places.
+ * While the chat is docked, a brain that draws its pane apart (`chat.pane`) has it mounted too,
+ * shown in the center view at `PANE_PATH`.
  */
 const props = defineProps<{ plugin: string }>();
 
 const FRAME_ID = "galaxy_ai_chat";
+const PANE_FRAME_ID = "galaxy_ai_pane";
+/** The brain's pane apart, mounted from the same plugin. */
+const PANE_CONFIG = { view: "pane" };
 
 const chatStore = useChatStore();
+const { isPaneApart } = storeToRefs(chatStore);
+const route = useRoute();
+const router = useRouter();
 
 /** Counts the brain's mounts: one whose page went away leaves an empty frame, mounted anew. */
 const mounts = ref(0);
@@ -31,6 +42,11 @@ const host = hostBrain(() => (document.getElementById(FRAME_ID) as HTMLIFrameEle
     },
     onActiveChanged: ({ exchange_id }) => chatStore.activeChanged(exchange_id),
     onUnsavedChanged: ({ unsaved }) => chatStore.unsavedChanged(unsaved),
+    onShowPane: () => {
+        if (isPaneApart.value && route.path !== PANE_PATH) {
+            router.push(PANE_PATH);
+        }
+    },
 });
 
 onBeforeUnmount(() => host.close());
@@ -38,4 +54,10 @@ onBeforeUnmount(() => host.close());
 
 <template>
     <PinnedVisualization :key="mounts" :name="props.plugin" :frame-id="FRAME_ID" />
+    <PinnedVisualization
+        v-if="isPaneApart"
+        :name="props.plugin"
+        :slot-name="paneSlot(props.plugin)"
+        :frame-id="PANE_FRAME_ID"
+        :config="PANE_CONFIG" />
 </template>

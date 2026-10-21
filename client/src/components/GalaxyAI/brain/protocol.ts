@@ -46,6 +46,13 @@
  *   needs no warning, as the brain stays mounted. The host keeps the last value of a session that
  *   ended until the next session's first report, so the warning holds while a brain reloads, and
  *   tells the user when a brain's page went away with unsaved changes, as they may not come back.
+ * - The pane apart (`chat.pane`): the brain's pane, where what it makes shows, can show in a frame
+ *   of its own: the same plugin, which the host mounts a second time with `{"view": "pane"}` as its
+ *   config, and which takes no part in this protocol. The brain's two frames fill it between
+ *   themselves; the host only places it. While the chat is docked beside other content, the host
+ *   keeps the pane mounted and shows it in its main view when the brain notifies `chat/showPane`;
+ *   while the chat has the main view to itself, the host removes the pane and the brain shows its
+ *   pane beside its chat.
  * - Additive evolution: params and results are objects, unknown fields and unknown notifications are
  *   ignored, an unknown request is answered with `METHOD_NOT_FOUND`. Methods come in features, which
  *   each side declares in `capabilities`; neither side calls a feature the other did not declare.
@@ -62,6 +69,7 @@ export const METHODS = {
     chatAsk: "chat/ask",
     chatActiveChanged: "chat/activeChanged",
     chatUnsavedChanged: "chat/unsavedChanged",
+    chatShowPane: "chat/showPane",
 } as const;
 
 /** JSON-RPC 2.0's own error codes, the only ones this version uses. */
@@ -81,9 +89,11 @@ export interface Info {
  * Features each side takes part in, keyed by name; unknown keys are ignored. `chat`: the brain
  * handles `chat/open` and `chat/ask` and sends `chat/activeChanged`; the host sends the commands and
  * accepts the event. `chat.unsaved`: the brain sends `chat/unsavedChanged`, the host accepts it.
+ * `chat.pane`: the brain draws its pane in a frame of its own and sends `chat/showPane`; the host
+ * mounts that frame and accepts the notification.
  */
 export interface Capabilities {
-    chat?: { unsaved?: Record<string, never> };
+    chat?: { unsaved?: Record<string, never>; pane?: Record<string, never> };
     [feature: string]: unknown;
 }
 

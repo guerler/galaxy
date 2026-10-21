@@ -43,7 +43,7 @@ describe("the host's handshake", () => {
                     result: {
                         protocolVersion: PROTOCOL_VERSION,
                         hostInfo: { name: "galaxy", version: "test" },
-                        capabilities: { chat: {} },
+                        capabilities: { chat: { unsaved: {} } },
                     },
                 },
             },
@@ -139,6 +139,25 @@ describe("a session", () => {
         brain.send({ jsonrpc: "2.0", method: "chat/somethingNew", params: {} });
         await flush();
         expect(active).toEqual(["c1", null]);
+    });
+
+    it("reports unsaved changes from a brain that declared them, and ignores them from one that did not", async () => {
+        const unsaved: boolean[] = [];
+        const declaring = mockBrain();
+        host(declaring, { onUnsavedChanged: (params) => unsaved.push(params.unsaved) });
+        declaring.initialize(1, { chat: { unsaved: {} } });
+        declaring.send({ jsonrpc: "2.0", method: "chat/unsavedChanged", params: { unsaved: true } });
+        declaring.initialized();
+        declaring.send({ jsonrpc: "2.0", method: "chat/unsavedChanged", params: { unsaved: false } });
+        declaring.send({ jsonrpc: "2.0", method: "chat/unsavedChanged", params: { unsaved: true } });
+        declaring.send({ jsonrpc: "2.0", method: "chat/unsavedChanged", params: { unsaved: "yes" } });
+        const silent = mockBrain();
+        host(silent, { onUnsavedChanged: (params) => unsaved.push(params.unsaved) });
+        silent.initialize();
+        silent.initialized();
+        silent.send({ jsonrpc: "2.0", method: "chat/unsavedChanged", params: { unsaved: true } });
+        await flush();
+        expect(unsaved).toEqual([false, true]);
     });
 
     it("ends when the brain loads again: pending commands fail, the old port is shut, the new brain is ready afresh", async () => {

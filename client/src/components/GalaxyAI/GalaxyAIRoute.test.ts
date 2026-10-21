@@ -8,6 +8,8 @@ import { ref } from "vue";
 import { useChatStore } from "@/stores/chatStore";
 
 import GalaxyAIRoute from "./GalaxyAIRoute.vue";
+import PluginChat from "./PluginChat.vue";
+import GalaxyAI from "@/components/GalaxyAI.vue";
 
 const mockPlugin = ref<string | null>(null);
 const mockReplace = vi.fn();
@@ -28,10 +30,15 @@ afterEach(() => {
     mounted = [];
 });
 
-function mountRoute(plugin: string | null, propsData: { exchangeId?: string; initialQuestion?: string }) {
+function mountRoute(
+    plugin: string | null,
+    propsData: { exchangeId?: string; initialQuestion?: string },
+    before: (store: ReturnType<typeof useChatStore>) => void = () => {},
+) {
     mockPlugin.value = plugin;
     const pinia = createTestingPinia({ createSpy: vi.fn, stubActions: false });
     setActivePinia(pinia);
+    before(useChatStore());
     mounted.push(shallowMount(GalaxyAIRoute as object, { localVue, pinia, propsData }));
     return useChatStore();
 }
@@ -39,7 +46,11 @@ function mountRoute(plugin: string | null, propsData: { exchangeId?: string; ini
 /** The commands a brain is given once ready, after the route was mounted. */
 function commanded(plugin: string | null, propsData: { exchangeId?: string; initialQuestion?: string }) {
     const store = mountRoute(plugin, propsData);
-    const brain = { open: vi.fn(async (_params: object) => {}), ask: vi.fn(async (_params: object) => {}) };
+    const brain = {
+        capabilities: { chat: {} },
+        open: vi.fn(async (_params: object) => {}),
+        ask: vi.fn(async (_params: object) => {}),
+    };
     store.brainReady(brain as never);
     return { open: brain.open.mock.calls.map(([params]) => params), ask: brain.ask.mock.calls.map(([p]) => p) };
 }
@@ -60,5 +71,29 @@ describe("GalaxyAIRoute", () => {
         const { ask } = commanded("olit", { exchangeId: "new", initialQuestion: "What is in my history?" });
         expect(ask).toEqual([{ question: "What is in my history?" }]);
         expect(mockReplace).toHaveBeenCalledWith({ path: "/galaxyai/new", query: {} });
+    });
+
+    it("sends the address back to the chat shown when the user keeps its unsaved changes", () => {
+        const confirm = vi.fn(() => false);
+        vi.stubGlobal("confirm", confirm);
+        const unsavedOn = (store: ReturnType<typeof useChatStore>) => {
+            store.activeChanged("a1");
+            store.unsavedChanged(true);
+        };
+        mockReplace.mockClear();
+        mountRoute("olit", { exchangeId: "b2" }, unsavedOn);
+        expect(mockReplace).toHaveBeenLastCalledWith("/galaxyai/a1");
+        mountRoute("olit", { exchangeId: "new", initialQuestion: "Count my reads" }, unsavedOn);
+        expect(mockReplace).toHaveBeenLastCalledWith("/galaxyai/a1");
+        expect(confirm).toHaveBeenCalledTimes(2);
+        vi.unstubAllGlobals();
+    });
+
+    it("shows the plugin, or GalaxyAI's own chat without one", () => {
+        mountRoute("olit", {});
+        expect(mounted[0]!.findComponent(PluginChat).props("plugin")).toBe("olit");
+        mountRoute(null, {});
+        expect(mounted[1]!.findComponent(PluginChat).exists()).toBe(false);
+        expect(mounted[1]!.findComponent(GalaxyAI).exists()).toBe(true);
     });
 });

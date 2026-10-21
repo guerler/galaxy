@@ -25,8 +25,12 @@ const host = hostBrain(() => (document.getElementById(FRAME_ID) as HTMLIFrameEle
     hostInfo: { name: "galaxy", version: "1" },
     onReady: (session) => chatStore.brainReady(session),
     onClosed: () => chatStore.brainClosed(),
-    onUnloaded: () => mounts.value++,
+    onUnloaded: () => {
+        chatStore.brainUnloaded();
+        mounts.value++;
+    },
     onActiveChanged: ({ exchange_id }) => chatStore.activeChanged(exchange_id),
+    onUnsavedChanged: ({ unsaved }) => chatStore.unsavedChanged(unsaved),
 });
 
 onBeforeUnmount(() => host.close());

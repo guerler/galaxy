@@ -23,6 +23,11 @@ export const useChatStore = defineStore("chatStore", () => {
     const brain = shallowRef<BrainSession | null>(null);
     /** The latest command given while no brain was ready, for the next one that is. */
     let pending: Command | null = null;
+    /**
+     * Whether the brain's conversation has unsaved changes, as it last said. Kept while a brain
+     * reloads, until the new one says, so the warnings hold meanwhile.
+     */
+    const unsaved = ref(false);
 
     const isRightPanelOpen = computed(() => chatLocation.value === "right" && chatVisible.value);
     const isBottomPanelOpen = computed(() => chatLocation.value === "bottom" && chatVisible.value);
@@ -149,21 +154,37 @@ export const useChatStore = defineStore("chatStore", () => {
         given.catch((e) => Toast.error(errorMessageAsString(e), "GalaxyAI did not take that"));
     }
 
-    /** Show a saved chat in the brain; the one it already shows stays as it is. */
-    function openChat(id: string) {
-        if (activeChatId.value !== id) {
-            command({ method: "open", params: { exchange_id: id } });
-        }
+    /** Whether the brain's conversation may be replaced: it has nothing unsaved, or the user agrees. */
+    function mayReplace() {
+        return !unsaved.value || window.confirm("This chat has unsaved changes, which may be lost. Continue?");
     }
 
-    /** Start a new conversation in the brain with a question. */
+    /** Show a saved chat in the brain; the one it already shows stays as it is. False if declined. */
+    function openChat(id: string) {
+        const replacing = activeChatId.value !== id;
+        const accepted = !replacing || mayReplace();
+        if (replacing && accepted) {
+            command({ method: "open", params: { exchange_id: id } });
+        }
+        return accepted;
+    }
+
+    /** Start a new conversation in the brain with a question. False if declined. */
     function askChat(question: string) {
-        command({ method: "ask", params: { question } });
+        const accepted = mayReplace();
+        if (accepted) {
+            command({ method: "ask", params: { question } });
+        }
+        return accepted;
     }
 
     /** A brain is ready: it is given the command kept for it, or told to show what was shown. */
     function brainReady(session: BrainSession) {
         brain.value = session;
+        // A brain that does not say leaves nothing known to warn about.
+        if (!session.capabilities.chat?.unsaved) {
+            unsaved.value = false;
+        }
         const initial = pending ?? {
             method: "open",
             params: activeChatId.value ? { exchange_id: activeChatId.value } : {},
@@ -174,6 +195,20 @@ export const useChatStore = defineStore("chatStore", () => {
 
     function brainClosed() {
         brain.value = null;
+    }
+
+    /** The brain's page went away; it is mounted again. What it had unsaved may not come back. */
+    function brainUnloaded() {
+        if (unsaved.value) {
+            Toast.warning(
+                "The AI chat reloaded while it had unsaved changes. Check that they are still there.",
+                "GalaxyAI reloaded",
+            );
+        }
+    }
+
+    function unsavedChanged(value: boolean) {
+        unsaved.value = value;
     }
 
     /** The brain reports the conversation it shows; a newly saved one is listed. */
@@ -215,6 +250,9 @@ export const useChatStore = defineStore("chatStore", () => {
         askChat,
         brainClosed,
         brainReady,
+        brainUnloaded,
+        unsaved,
+        unsavedChanged,
         openChat,
         requestNewChat,
         toggleChat,

@@ -96,7 +96,11 @@ describe("ChatHistoryPanel", () => {
     it("opens a saved chat in the brain when docked", async () => {
         const { wrapper, store } = mountPanel("olit");
         store.setLocation("right");
-        const brain = { open: vi.fn(async (_params: object) => {}), ask: vi.fn(async (_params: object) => {}) };
+        const brain = {
+            capabilities: { chat: {} },
+            open: vi.fn(async (_params: object) => {}),
+            ask: vi.fn(async (_params: object) => {}),
+        };
         store.brainReady(brain as never);
         await flushPromises();
         await wrapper.find(".chat-history-item").trigger("click");

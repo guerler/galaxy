@@ -10,6 +10,7 @@ import {
     type ChatActiveChangedParams,
     type ChatAskParams,
     type ChatOpenParams,
+    type ChatUnsavedChangedParams,
     ERRORS,
     type Info,
     type InitializeParams,
@@ -35,6 +36,8 @@ export interface HostOptions {
     /** The brain's page went away and no brain is left in the frame: mount it again to have one. */
     onUnloaded?(): void;
     onActiveChanged(params: ChatActiveChangedParams): void;
+    /** From a brain that declared `chat.unsaved`. */
+    onUnsavedChanged?(params: ChatUnsavedChangedParams): void;
     timeoutMs?: number;
 }
 
@@ -132,6 +135,13 @@ export function hostBrain(frame: () => Window | null | undefined, options: HostO
                                 options.onActiveChanged({ exchange_id: id });
                             }
                         },
+                        [METHODS.chatUnsavedChanged]: (params) => {
+                            const unsaved = (params as Partial<ChatUnsavedChangedParams> | undefined)?.unsaved;
+                            const declared = !!current.brain.capabilities.chat?.unsaved;
+                            if (current.ready && declared && typeof unsaved === "boolean") {
+                                options.onUnsavedChanged?.({ unsaved });
+                            }
+                        },
                     },
                 }),
             };
@@ -140,7 +150,7 @@ export function hostBrain(frame: () => Window | null | undefined, options: HostO
             const result: InitializeResult = {
                 protocolVersion: PROTOCOL_VERSION,
                 hostInfo: options.hostInfo,
-                capabilities: { chat: {} },
+                capabilities: { chat: { unsaved: {} } },
             };
             brain.postMessage({ jsonrpc: "2.0", id: request.id, result }, origin, [port2]);
         }

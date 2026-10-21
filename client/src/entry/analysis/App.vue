@@ -70,6 +70,7 @@ import { useHasStagedUploads } from "@/composables/upload/useUploadStaging";
 import { useChatPlugin } from "@/composables/useChatPlugin";
 import { useCommandPalette } from "@/composables/useCommandPalette";
 import { getAppRoot } from "@/onload";
+import { useChatStore } from "@/stores/chatStore";
 import { useConfigStore } from "@/stores/configurationStore";
 import { useEntryPointStore } from "@/stores/entryPointStore";
 import { useHistoryStore } from "@/stores/historyStore";
@@ -113,6 +114,7 @@ const confirmDialogRef = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 watch(confirmDialogRef, (instance) => setConfirmDialogComponentRef(instance));
 
 const windowManagerStore = useWindowManagerStore();
+const chatStore = useChatStore();
 const hasStagedUploads = useHasStagedUploads();
 
 // Unmounting the palette takes its ctrl/cmd+k listener with it, so an
@@ -233,7 +235,7 @@ const windowTab = computed(() => windowManagerStore.getTab());
 
 if (!embedded.value) {
     window.onbeforeunload = () => {
-        if (confirmation.value || windowManagerStore.beforeUnload() || hasStagedUploads.value) {
+        if (confirmation.value || windowManagerStore.beforeUnload() || hasStagedUploads.value || chatStore.unsaved) {
             return "Are you sure you want to leave the page?";
         }
     };

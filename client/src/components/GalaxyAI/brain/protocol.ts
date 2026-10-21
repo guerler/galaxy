@@ -41,6 +41,11 @@
  *   `initialize` in time, or one it cannot take, says so in its frame; it does not run another way.
  * - A command's result says it was accepted, not that its effect is done: effects are reported by
  *   events, which are authoritative.
+ * - Unsaved changes (`chat.unsaved`): while the brain says its conversation has them, the host warns
+ *   before its page unloads and before a command replaces that conversation. Moving about the host
+ *   needs no warning, as the brain stays mounted. The host keeps the last value of a session that
+ *   ended until the next session's first report, so the warning holds while a brain reloads, and
+ *   tells the user when a brain's page went away with unsaved changes, as they may not come back.
  * - Additive evolution: params and results are objects, unknown fields and unknown notifications are
  *   ignored, an unknown request is answered with `METHOD_NOT_FOUND`. Methods come in features, which
  *   each side declares in `capabilities`; neither side calls a feature the other did not declare.
@@ -56,6 +61,7 @@ export const METHODS = {
     chatOpen: "chat/open",
     chatAsk: "chat/ask",
     chatActiveChanged: "chat/activeChanged",
+    chatUnsavedChanged: "chat/unsavedChanged",
 } as const;
 
 /** JSON-RPC 2.0's own error codes, the only ones this version uses. */
@@ -74,10 +80,10 @@ export interface Info {
 /**
  * Features each side takes part in, keyed by name; unknown keys are ignored. `chat`: the brain
  * handles `chat/open` and `chat/ask` and sends `chat/activeChanged`; the host sends the commands and
- * accepts the event.
+ * accepts the event. `chat.unsaved`: the brain sends `chat/unsavedChanged`, the host accepts it.
  */
 export interface Capabilities {
-    chat?: Record<string, never>;
+    chat?: { unsaved?: Record<string, never> };
     [feature: string]: unknown;
 }
 
@@ -104,6 +110,14 @@ export interface ChatOpenParams {
 /** Start a new conversation with this question. Accepted, not answered, when the request returns. */
 export interface ChatAskParams {
     question: string;
+}
+
+/**
+ * Whether the conversation the brain shows has changes that are not saved. Sent once after
+ * `initialized` and then whenever it changes, the shown conversation changing included.
+ */
+export interface ChatUnsavedChangedParams {
+    unsaved: boolean;
 }
 
 /** The conversation the brain now shows, by its saved chat's id; null while it is not saved. */

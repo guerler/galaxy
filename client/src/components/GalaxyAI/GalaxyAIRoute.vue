@@ -20,15 +20,18 @@ const { activeChatId } = storeToRefs(chatStore);
 const route = useRoute();
 const router = useRouter();
 
+/** Where the address points for the conversation the brain shows. */
+const activePath = () => (activeChatId.value ? `/galaxyai/${activeChatId.value}` : "/galaxyai");
+
 watch(
     [chatPlugin, () => props.exchangeId, () => props.initialQuestion],
     ([plugin, exchangeId, question]) => {
         if (plugin && question) {
-            chatStore.askChat(question);
-            // Asked once: a reload of the page does not ask again.
-            router.replace({ path: route.path, query: {} });
-        } else if (plugin && exchangeId && exchangeId !== "new") {
-            chatStore.openChat(exchangeId);
+            // Asked once: a reload of the page does not ask again. Declined, the address goes back.
+            const asked = chatStore.askChat(question);
+            router.replace(asked ? { path: route.path, query: {} } : activePath());
+        } else if (plugin && exchangeId && exchangeId !== "new" && !chatStore.openChat(exchangeId)) {
+            router.replace(activePath());
         }
     },
     { immediate: true },
@@ -36,8 +39,8 @@ watch(
 
 // The address follows the conversation the brain reports, so a reload reopens it. GalaxyAI's own
 // chat keeps its address itself.
-watch(activeChatId, (id) => {
-    const path = id ? `/galaxyai/${id}` : "/galaxyai";
+watch(activeChatId, () => {
+    const path = activePath();
     if (chatPlugin.value && route.path !== path && !props.initialQuestion) {
         router.replace(path);
     }

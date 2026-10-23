@@ -20,6 +20,8 @@ const props = defineProps<{ plugin: string }>();
 
 const FRAME_ID = "galaxy_ai_chat";
 const PANE_FRAME_ID = "galaxy_ai_pane";
+/** Tells the plugin it is mounted as the chat, so one that is also a visualization of its own can tell. */
+const CHAT_CONFIG = { view: "chat" };
 /** The brain's pane apart, mounted from the same plugin. */
 const PANE_CONFIG = { view: "pane" };
 
@@ -53,7 +55,7 @@ onBeforeUnmount(() => host.close());
 </script>
 
 <template>
-    <PinnedVisualization :key="mounts" :name="props.plugin" :frame-id="FRAME_ID" />
+    <PinnedVisualization :key="mounts" :name="props.plugin" :frame-id="FRAME_ID" :config="CHAT_CONFIG" />
     <PinnedVisualization
         v-if="isPaneApart"
         :name="props.plugin"

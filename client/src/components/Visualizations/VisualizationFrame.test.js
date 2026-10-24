@@ -54,14 +54,6 @@ describe("what the frame hands the plugin", () => {
             root: "http://localhost/",
         });
     });
-
-    it("says when it is embedded in a Page, and nothing otherwise", async () => {
-        const embedded = mountFrame({ embedded: true });
-        const standalone = mountFrame({});
-        await flushPromises();
-        expect(incomingOf(embedded).visualization_embedded).toBe(true);
-        expect(incomingOf(standalone)).not.toHaveProperty("visualization_embedded");
-    });
 });
 
 describe("several visualizations on one page", () => {

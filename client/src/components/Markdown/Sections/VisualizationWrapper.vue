@@ -43,7 +43,6 @@ const fixedHeight = computed(() =>
                 :config="props.config"
                 :name="props.name"
                 :style="fixedHeight"
-                embedded
                 @change="emit('change', $event)"
                 @load="emit('load')" />
         </div>

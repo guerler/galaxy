@@ -16,15 +16,12 @@ interface Props {
     visualizationId?: string;
     /** The iframe's DOM id; several frames on one page each need their own. */
     frameId?: string;
-    /** Whether the plugin is shown inside a Page, which keeps its config. */
-    embedded?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     title: undefined,
     visualizationId: undefined,
     frameId: "galaxy_visualization",
-    embedded: false,
 });
 
 const emit = defineEmits<{
@@ -69,7 +66,6 @@ async function render() {
             const dataIncoming = {
                 root: window.location.origin + getAppRoot(),
                 visualization_config: props.config,
-                visualization_embedded: props.embedded || undefined,
                 visualization_id: props.visualizationId,
                 visualization_plugin: plugin,
                 visualization_title: props.title,

@@ -425,4 +425,3 @@ class TestDocumentChats:
             mgr.add_message(trans, 7, json.dumps({"query": "more", "response": "..."}))
         assert len(saved.messages) == 1
         trans.sa_session.commit.assert_not_called()
-

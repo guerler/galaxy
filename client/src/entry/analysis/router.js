@@ -36,7 +36,6 @@ import ManageFileSourceIndex from "@/components/FileSources/Instances/ManageInde
 import UpgradeFileSourceInstance from "@/components/FileSources/Instances/UpgradeInstance.vue";
 import CreateUserFileSource from "@/components/FileSources/Templates/CreateUserFileSource.vue";
 import FormGeneric from "@/components/Form/FormGeneric.vue";
-import GalaxyAIPane from "@/components/GalaxyAI/GalaxyAIPane.vue";
 import GalaxyAIRoute from "@/components/GalaxyAI/GalaxyAIRoute.vue";
 import GalaxyWizard from "@/components/GalaxyWizard.vue";
 import GridInvocation from "@/components/Grid/GridInvocation.vue";
@@ -590,11 +589,6 @@ export function getRouter(Galaxy) {
                     {
                         path: "tours",
                         component: TourList,
-                    },
-                    {
-                        path: "artifacts",
-                        component: GalaxyAIPane,
-                        redirect: redirectAnon(),
                     },
                     {
                         path: "galaxyai/:exchangeId?",

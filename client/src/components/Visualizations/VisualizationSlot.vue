@@ -3,7 +3,7 @@ import { onBeforeUnmount, onMounted, ref } from "vue";
 
 import { claimVisualizationSlot } from "./visualizationSlots";
 
-/** Marks where the pinned visualization with the slots `name` shows; it is drawn over this element. */
+/** Marks where the pinned visualization `name` shows; it is drawn over this element. */
 const props = defineProps<{ name: string }>();
 
 const element = ref<HTMLElement | null>(null);

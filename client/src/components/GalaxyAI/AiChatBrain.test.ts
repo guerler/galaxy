@@ -2,11 +2,13 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import flushPromises from "flush-promises";
 import { createPinia, setActivePinia } from "pinia";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { defineComponent, h, ref } from "vue";
 
 import { Toast } from "@/composables/toast";
 import { useChatStore } from "@/stores/chatStore";
 
 import AiChatBrain from "./AiChatBrain.vue";
+import VisualizationSlot from "@/components/Visualizations/VisualizationSlot.vue";
 
 const PLUGIN = { href: "/static/plugins/visualizations/olit/static", entry_point: { attr: { src: "index.js" } } };
 
@@ -103,16 +105,40 @@ describe("GalaxyAI's chat plugin", () => {
         expect(store.unsaved).toBe(false);
     });
 
-    it("mounts the pane apart only while docked, and brings it into view when the plugin asks", async () => {
+    it("stays one running frame as the chat moves between the center and the docks", async () => {
+        wrapper.unmount();
         const store = useChatStore();
-        expect(frame("galaxy_ai_pane")).toBeNull();
-        fromPlugin({ show_pane: true });
-        expect(mockPush).not.toHaveBeenCalled();
-        store.dockChat("right");
+        const place = ref("center");
+        const Places = defineComponent({
+            setup: () => () =>
+                h("div", [
+                    h(AiChatBrain, { plugin: "olit" }),
+                    ...["center", "right", "bottom"].map((where) =>
+                        place.value === where
+                            ? h("div", { class: where, key: where }, [h(VisualizationSlot, { name: "olit" })])
+                            : null,
+                    ),
+                ]),
+        });
+        wrapper = mount(Places as object, { attachTo: document.body });
         await flushPromises();
-        expect(configOf("galaxy_ai_pane")).toEqual({ view: "pane" });
-        fromPlugin({ show_pane: true });
-        expect(mockPush).toHaveBeenCalledWith("/artifacts");
+        const running = frame()!;
+        (running.contentWindow as any).__running = "a turn in flight";
+        for (const [where, move] of [
+            ["right", () => store.dockChat("right")],
+            ["bottom", () => store.dockChat("bottom")],
+            ["bottom", () => store.hideChat()],
+            ["bottom", () => store.showChat()],
+            ["center", () => store.setLocation("center")],
+        ] as const) {
+            move();
+            place.value = where;
+            await flushPromises();
+            expect(frame()).toBe(running);
+            expect((frame()!.contentWindow as any).__running).toBe("a turn in flight");
+        }
+        expect(store.chatMounts).toBe(0);
+        expect(document.querySelectorAll("iframe")).toHaveLength(1);
     });
 
     it("mounts a plugin whose page went away anew, saying unsaved changes may be gone", async () => {

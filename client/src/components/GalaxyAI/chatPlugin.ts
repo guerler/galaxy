@@ -1,6 +1,6 @@
 /**
  * How GalaxyAI runs its chat plugin (`ai_chat_plugin`): as a visualization, over the channel every
- * visualization has with `VisualizationFrame`, with one message of its own.
+ * visualization has with `VisualizationFrame`, in one frame that GalaxyAI places and the plugin fills.
  *
  * - In: the plugin is mounted with a `ChatConfig`. Opening a saved chat or asking a question mounts
  *   it anew with the config that says so; nothing is sent to a plugin already mounted.
@@ -9,9 +9,7 @@
  *   plugin reopens that chat; a config the plugin sends never mounts it anew. `visualization_saved`
  *   says whether the chat shown is saved, for the warnings before a command replaces it or the page
  *   unloads; the last word holds until the plugin mounted next says.
- * - Its pane: while the chat is docked, the plugin is also mounted with `PANE_CONFIG`, shown in the
- *   center view at `PANE_PATH`, and the chat asks for it to be brought into view with `show_pane`.
- *   The two frames fill the pane between themselves; GalaxyAI only places it.
+ * - A saved chat it cannot open, such as one another plugin saved, it says so about and starts anew.
  */
 
 export const CHAT_VIEW = "chat";
@@ -23,9 +21,6 @@ export interface ChatConfig {
     /** A question to ask in a new conversation. */
     question?: string;
 }
-
-/** The plugin's pane, mounted apart from its chat. */
-export const PANE_CONFIG = { view: "pane" } as const;
 
 /** The saved chat a config the plugin sent names; null for none or for anything that is not one. */
 export function shownChat(config: unknown): string | null {

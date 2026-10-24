@@ -7,11 +7,9 @@ import VisualizationFrame from "./VisualizationFrame.vue";
 
 /**
  * One visualization mounted for the whole page and drawn over its current slot, so the plugin keeps
- * running as its slot moves or disappears; hidden while it has none. Its slots are the plugin's own
- * unless `slotName` names others, for a plugin mounted twice.
+ * running as its slot moves or disappears; hidden while it has none.
  */
-const props = withDefaults(defineProps<{ name: string; slotName?: string; frameId?: string; config?: object }>(), {
-    slotName: undefined,
+const props = withDefaults(defineProps<{ name: string; frameId?: string; config?: object }>(), {
     frameId: undefined,
     config: () => ({}),
 });
@@ -20,7 +18,6 @@ const emit = defineEmits<{
     (e: "change", payload: Record<string, any>): void;
     (e: "saved", saved: boolean): void;
     (e: "load"): void;
-    (e: "show-pane"): void;
 }>();
 
 interface Box {
@@ -30,7 +27,7 @@ interface Box {
     height: number;
 }
 
-const slot = visualizationSlot(props.slotName ?? props.name);
+const slot = visualizationSlot(props.name);
 /** Where the slot is, or was last: hidden, the frame keeps its size rather than lay out for zero. */
 const box = ref<Box>({ top: 0, left: 0, width: 0, height: 0 });
 const visible = ref(false);
@@ -79,8 +76,7 @@ const style = computed(() => {
             :frame-id="frameId"
             @change="emit('change', $event)"
             @saved="emit('saved', $event)"
-            @load="emit('load')"
-            @show-pane="emit('show-pane')" />
+            @load="emit('load')" />
     </div>
 </template>
 

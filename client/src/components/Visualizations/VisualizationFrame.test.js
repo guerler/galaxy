@@ -141,16 +141,6 @@ describe("what a message is allowed to say", () => {
         expect(wrapper.emitted("saved")).toEqual([[false]]);
     });
 
-    it("asks for GalaxyAI's pane only when a message says so, which changes nothing else", async () => {
-        const wrapper = await frame();
-        postFrom(wrapper, { from: "galaxy-visualization", show_pane: "yes" });
-        postFrom(wrapper, { from: "galaxy-visualization", show_pane: true });
-        await settle();
-        expect(wrapper.emitted("show-pane")).toEqual([[]]);
-        expect(wrapper.emitted("change")).toBeFalsy();
-        expect(wrapper.emitted("saved")).toBeFalsy();
-    });
-
     it("describes the visualization only when the message carries a config", async () => {
         const wrapper = await frame();
         postFrom(wrapper, { from: "galaxy-visualization", visualization_config: { a: 1 }, visualization_saved: true });

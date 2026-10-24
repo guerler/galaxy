@@ -30,8 +30,6 @@ export const useChatStore = defineStore("chatStore", () => {
     const isRightPanelOpen = computed(() => chatLocation.value === "right" && chatVisible.value);
     const isBottomPanelOpen = computed(() => chatLocation.value === "bottom" && chatVisible.value);
     const isCenterMode = computed(() => chatLocation.value === "center");
-    /** The plugin's pane is mounted apart while the chat is docked beside other content. */
-    const isPaneApart = computed(() => !isCenterMode.value);
 
     function deleteChats(ids: Set<string>) {
         chatHistory.value = chatHistory.value.filter((item) => !ids.has(item.id));
@@ -173,7 +171,6 @@ export const useChatStore = defineStore("chatStore", () => {
         isRightPanelOpen,
         isBottomPanelOpen,
         isCenterMode,
-        isPaneApart,
         deleteChatById,
         deleteChats,
         deleteChatsByIds,

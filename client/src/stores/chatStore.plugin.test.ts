@@ -112,24 +112,3 @@ describe("the chat store's unsaved changes", () => {
         expect(store.chatMounts).toBe(2);
     });
 });
-
-describe("the chat store's pane apart", () => {
-    beforeEach(() => {
-        localStorage.clear();
-        setActivePinia(createPinia());
-    });
-
-    it("mounts the pane apart while the chat is docked, hidden or not", () => {
-        const store = useChatStore();
-        expect(store.isPaneApart).toBe(false);
-        store.dockChat("right");
-        expect(store.isPaneApart).toBe(true);
-        // Hidden, the docked chat keeps its pane, so showing it again moves nothing.
-        store.hideChat();
-        expect(store.isPaneApart).toBe(true);
-        store.dockChat("bottom");
-        expect(store.isPaneApart).toBe(true);
-        store.setLocation("center");
-        expect(store.isPaneApart).toBe(false);
-    });
-});

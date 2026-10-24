@@ -71,6 +71,20 @@ describe("a pinned visualization", () => {
         wrapper.unmount();
     });
 
+    it("is not mounted until a slot first shows it", async () => {
+        const place = ref("none");
+        const wrapper = mount(
+            defineComponent(() => () => h(Page, { place: place.value })),
+            { attachTo: document.body },
+        );
+        await nextTick();
+        expect(frameMounts).toBe(0);
+        place.value = "right";
+        await nextTick();
+        expect(frameMounts).toBe(1);
+        wrapper.unmount();
+    });
+
     it("hides without unmounting while no slot is shown, keeping its last size", async () => {
         const place = ref("right");
         const wrapper = mount(

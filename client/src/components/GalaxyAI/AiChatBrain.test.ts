@@ -28,7 +28,11 @@ beforeEach(async () => {
     mockPush.mockClear();
     vi.stubGlobal("requestAnimationFrame", () => 0);
     vi.stubGlobal("cancelAnimationFrame", () => {});
-    wrapper = mount(AiChatBrain as object, { propsData: { plugin: "olit" }, attachTo: document.body });
+    // Shown in a place: the plugin is mounted once a place shows it.
+    const Shown = defineComponent({
+        setup: () => () => h("div", [h(AiChatBrain, { plugin: "olit" }), h(VisualizationSlot, { name: "olit" })]),
+    });
+    wrapper = mount(Shown as object, { attachTo: document.body });
     await flushPromises();
 });
 

@@ -31,6 +31,7 @@ const emit = defineEmits<{
     (e: "change", payload: Record<string, any>): void;
     (e: "saved", saved: boolean): void;
     (e: "load"): void;
+    (e: "show-pane"): void;
 }>();
 
 const emitChange = debounce((newValue: Record<string, any>) => {
@@ -52,6 +53,10 @@ function onFrameMessage(event: MessageEvent) {
     // A change rebuilds persisted content from the config, so a message without one is not a change.
     if (message.visualization_config !== undefined) {
         emitChange(message);
+    }
+    // GalaxyAI's chat plugin asks for its pane apart to be brought into view (`chatPlugin.ts`).
+    if (message.show_pane === true) {
+        emit("show-pane");
     }
 }
 

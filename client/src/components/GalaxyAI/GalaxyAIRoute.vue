@@ -20,7 +20,7 @@ const { activeChatId } = storeToRefs(chatStore);
 const route = useRoute();
 const router = useRouter();
 
-/** Where the address points for the conversation the brain shows. */
+/** Where the address points for the conversation the plugin shows. */
 const activePath = () => (activeChatId.value ? `/galaxyai/${activeChatId.value}` : "/galaxyai");
 
 watch(
@@ -37,7 +37,7 @@ watch(
     { immediate: true },
 );
 
-// The address follows the conversation the brain reports, so a reload reopens it.
+// The address follows the conversation the plugin reports, so a reload reopens it.
 watch(activeChatId, () => {
     const path = activePath();
     if (route.path !== path && !props.initialQuestion) {

@@ -43,33 +43,31 @@ function mountRoute(
     return useChatStore();
 }
 
-/** The commands a brain is given once ready, after the route was mounted. */
+/** The config the chat plugin is mounted with once the route was mounted, and whether a command mounted it. */
 function commanded(plugin: string | null, propsData: { exchangeId?: string; initialQuestion?: string }) {
     const store = mountRoute(plugin, propsData);
-    const brain = {
-        capabilities: { chat: {} },
-        open: vi.fn(async (_params: object) => {}),
-        ask: vi.fn(async (_params: object) => {}),
-    };
-    store.brainReady(brain as never);
-    return { open: brain.open.mock.calls.map(([params]) => params), ask: brain.ask.mock.calls.map(([p]) => p) };
+    return { config: store.chatConfig, mounts: store.chatMounts };
 }
 
 describe("GalaxyAIRoute", () => {
-    it("opens a saved chat named in the URL in the brain", () => {
-        expect(commanded("olit", { exchangeId: "a1" }).open).toEqual([{ exchange_id: "a1" }]);
+    it("opens a saved chat named in the URL in the plugin", () => {
+        expect(commanded("olit", { exchangeId: "a1" })).toEqual({
+            config: { view: "chat", exchange_id: "a1" },
+            mounts: 1,
+        });
     });
 
-    it("leaves the brain its own default for a new chat, no chat, or no plugin", () => {
-        expect(commanded("olit", { exchangeId: "new" }).open).toEqual([{}]);
-        expect(commanded("olit", {}).open).toEqual([{}]);
-        expect(commanded(null, { exchangeId: "a1" }).open).toEqual([{}]);
+    it("leaves the plugin its own default for a new chat, no chat, or no plugin", () => {
+        const none = { config: { view: "chat" }, mounts: 0 };
+        expect(commanded("olit", { exchangeId: "new" })).toEqual(none);
+        expect(commanded("olit", {})).toEqual(none);
+        expect(commanded(null, { exchangeId: "a1" })).toEqual(none);
     });
 
     it("starts a new chat in the plugin with a question handed over in the URL, once", () => {
         mockReplace.mockClear();
-        const { ask } = commanded("olit", { exchangeId: "new", initialQuestion: "What is in my history?" });
-        expect(ask).toEqual([{ question: "What is in my history?" }]);
+        const { config } = commanded("olit", { exchangeId: "new", initialQuestion: "What is in my history?" });
+        expect(config).toEqual({ view: "chat", question: "What is in my history?" });
         expect(mockReplace).toHaveBeenCalledWith({ path: "/galaxyai/new", query: {} });
     });
 

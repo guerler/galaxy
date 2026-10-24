@@ -12,7 +12,7 @@ import GAlert from "@/components/BaseComponents/GAlert.vue";
 import Heading from "@/components/Common/Heading.vue";
 import VisualizationSlot from "@/components/Visualizations/VisualizationSlot.vue";
 
-/** The center view's place for the brain's pane, which shows apart from the chat while it is docked. */
+/** The center view's place for the chat plugin's pane, which shows apart from the chat while it is docked. */
 const { isConfigLoaded } = useConfig();
 const chatPlugin = useChatPlugin();
 const { isPaneApart } = storeToRefs(useChatStore());

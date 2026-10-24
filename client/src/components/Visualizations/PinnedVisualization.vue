@@ -17,7 +17,10 @@ const props = withDefaults(defineProps<{ name: string; slotName?: string; frameI
 });
 
 const emit = defineEmits<{
+    (e: "change", payload: Record<string, any>): void;
     (e: "saved", saved: boolean): void;
+    (e: "load"): void;
+    (e: "show-pane"): void;
 }>();
 
 interface Box {
@@ -70,7 +73,14 @@ const style = computed(() => {
 
 <template>
     <div class="pinned-visualization" :class="{ 'pinned-visualization-hidden': !visible }" :style="style">
-        <VisualizationFrame :name="name" :config="config" :frame-id="frameId" @saved="emit('saved', $event)" />
+        <VisualizationFrame
+            :name="name"
+            :config="config"
+            :frame-id="frameId"
+            @change="emit('change', $event)"
+            @saved="emit('saved', $event)"
+            @load="emit('load')"
+            @show-pane="emit('show-pane')" />
     </div>
 </template>
 

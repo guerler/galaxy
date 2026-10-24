@@ -2,40 +2,36 @@ import { defineStore } from "pinia";
 import { computed, ref, shallowRef } from "vue";
 
 import { GalaxyApi } from "@/api/client";
-import type { BrainSession } from "@/components/GalaxyAI/brain/host";
+import { CHAT_VIEW, type ChatConfig } from "@/components/GalaxyAI/chatPlugin";
 import type { ChatHistoryItem } from "@/components/GalaxyAI/chatTypes";
 import { Toast } from "@/composables/toast";
 import { useUserLocalStorage } from "@/composables/userLocalStorage";
-import { errorMessageAsString, rethrowSimple } from "@/utils/simple-error";
+import { rethrowSimple } from "@/utils/simple-error";
 
 export type ChatLocation = "center" | "right" | "bottom";
-
-type Command = { method: "open"; params: { exchange_id?: string } } | { method: "ask"; params: { question: string } };
 
 export const useChatStore = defineStore("chatStore", () => {
     const chatLocation = useUserLocalStorage<ChatLocation>("chat-location", "center");
     const chatVisible = useUserLocalStorage("chat-visible", false);
     const chatHistory = ref<ChatHistoryItem[]>([]);
     const loading = ref(false);
-    /** The saved chat the brain shows, as the brain last reported it; null while it shows none. */
+    /** The saved chat the plugin shows, as the plugin last reported it; null while it shows none. */
     const activeChatId = ref<string | null>(null);
-    /** The initialized brain, while there is one. */
-    const brain = shallowRef<BrainSession | null>(null);
-    /** The latest command given while no brain was ready, for the next one that is. */
-    let pending: Command | null = null;
+    /** What the chat plugin is mounted with: the last command's, then the chat the plugin reports. */
+    const chatConfig = shallowRef<ChatConfig>({ view: CHAT_VIEW });
+    /** Counts the chat plugin's mounts: each command mounts it anew with its config. */
+    const chatMounts = ref(0);
     /**
-     * Whether the brain's conversation has unsaved changes, as it last said. Kept while a brain
-     * reloads, until the new one says, so the warnings hold meanwhile.
+     * Whether the plugin's conversation has unsaved changes, as it last said. Kept while the plugin
+     * mounts anew, until it says, so the warnings hold meanwhile.
      */
     const unsaved = ref(false);
-    /** Whether the brain draws its pane apart from its chat (`chat.pane`), as the last brain ready said. */
-    const brainPane = ref(false);
 
     const isRightPanelOpen = computed(() => chatLocation.value === "right" && chatVisible.value);
     const isBottomPanelOpen = computed(() => chatLocation.value === "bottom" && chatVisible.value);
     const isCenterMode = computed(() => chatLocation.value === "center");
-    /** The brain's pane is mounted apart while the chat is docked beside other content. */
-    const isPaneApart = computed(() => brainPane.value && !isCenterMode.value);
+    /** The plugin's pane is mounted apart while the chat is docked beside other content. */
+    const isPaneApart = computed(() => !isCenterMode.value);
 
     function deleteChats(ids: Set<string>) {
         chatHistory.value = chatHistory.value.filter((item) => !ids.has(item.id));
@@ -107,81 +103,58 @@ export const useChatStore = defineStore("chatStore", () => {
         }
     }
 
-    /** Give the brain a command now, or keep it for the brain that is ready next. */
-    function command(next: Command) {
-        if (brain.value) {
-            send(brain.value, next);
-        } else {
-            pending = next;
-        }
+    /** Mount the chat plugin anew with `config`. */
+    function command(config: Omit<ChatConfig, "view">) {
+        chatConfig.value = { view: CHAT_VIEW, ...config };
+        chatMounts.value++;
     }
 
-    function send(session: BrainSession, next: Command) {
-        const given = next.method === "open" ? session.open(next.params) : session.ask(next.params);
-        given.catch((e) => Toast.error(errorMessageAsString(e), "GalaxyAI did not take that"));
-    }
-
-    /** Whether the brain's conversation may be replaced: it has nothing unsaved, or the user agrees. */
+    /** Whether the plugin's conversation may be replaced: it has nothing unsaved, or the user agrees. */
     function mayReplace() {
         return !unsaved.value || window.confirm("This chat has unsaved changes, which may be lost. Continue?");
     }
 
-    /** Show a saved chat in the brain; the one it already shows stays as it is. False if declined. */
+    /** Show a saved chat in the plugin; the one it already shows stays as it is. False if declined. */
     function openChat(id: string) {
         const replacing = activeChatId.value !== id;
         const accepted = !replacing || mayReplace();
         if (replacing && accepted) {
-            command({ method: "open", params: { exchange_id: id } });
+            command({ exchange_id: id });
         }
         return accepted;
     }
 
-    /** Start a new conversation in the brain with a question. False if declined. */
+    /** Start a new conversation in the plugin with a question. False if declined. */
     function askChat(question: string) {
         const accepted = mayReplace();
         if (accepted) {
-            command({ method: "ask", params: { question } });
+            command({ question });
         }
         return accepted;
     }
 
-    /** A brain is ready: it is given the command kept for it, or told to show what was shown. */
-    function brainReady(session: BrainSession) {
-        brain.value = session;
-        // A brain that does not say leaves nothing known to warn about.
-        if (!session.capabilities.chat?.unsaved) {
-            unsaved.value = false;
-        }
-        brainPane.value = !!session.capabilities.chat?.pane;
-        const initial = pending ?? {
-            method: "open",
-            params: activeChatId.value ? { exchange_id: activeChatId.value } : {},
-        };
-        pending = null;
-        send(session, initial);
-    }
-
-    function brainClosed() {
-        brain.value = null;
-    }
-
-    /** The brain's page went away; it is mounted again. What it had unsaved may not come back. */
-    function brainUnloaded() {
+    /** The plugin's page went away; it is mounted again. What it had unsaved may not come back. */
+    function chatUnloaded() {
         if (unsaved.value) {
             Toast.warning(
                 "The AI chat reloaded while it had unsaved changes. Check that they are still there.",
                 "GalaxyAI reloaded",
             );
         }
+        chatMounts.value++;
     }
 
     function unsavedChanged(value: boolean) {
         unsaved.value = value;
     }
 
-    /** The brain reports the conversation it shows; a newly saved one is listed. */
+    /**
+     * The plugin reports the conversation it shows, kept for its next mount; a newly saved one is
+     * listed.
+     */
     function activeChanged(id: string | null) {
         activeChatId.value = id;
+        chatConfig.value = id ? { view: CHAT_VIEW, exchange_id: id } : { view: CHAT_VIEW };
         if (id && !chatHistory.value.some((item) => item.id === id)) {
             loadHistory().catch(() => {});
         }
@@ -211,9 +184,9 @@ export const useChatStore = defineStore("chatStore", () => {
         activeChanged,
         activeChatId,
         askChat,
-        brainClosed,
-        brainReady,
-        brainUnloaded,
+        chatConfig,
+        chatMounts,
+        chatUnloaded,
         unsaved,
         unsavedChanged,
         openChat,

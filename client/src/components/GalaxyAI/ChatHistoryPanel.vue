@@ -81,7 +81,7 @@ async function deleteSelected() {
         try {
             await chatStore.deleteChatsByIds(deletedIds);
             pruneAfterDelete();
-            // The address no longer names a chat that is gone; the brain keeps what it shows until it saves anew.
+            // The address no longer names a chat that is gone; the plugin keeps what it shows until it saves anew.
             if (chatStore.isCenterMode && routedChatId && deletedIds.has(routedChatId)) {
                 router.push("/galaxyai");
             }

@@ -70,7 +70,7 @@ describe("ChatHistoryPanel", () => {
         expect(wrapper.find("[title='New Chat']").exists()).toBe(false);
     });
 
-    it("opens a saved chat through the address in the center, and marks the one the brain reports", async () => {
+    it("opens a saved chat through the address in the center, and marks the one the plugin reports", async () => {
         const { wrapper, store } = mountPanel();
         await flushPromises();
         await wrapper.find(".chat-history-item").trigger("click");
@@ -80,18 +80,13 @@ describe("ChatHistoryPanel", () => {
         expect(wrapper.find(".chat-history-item").classes()).toContain("current");
     });
 
-    it("opens a saved chat in the brain when docked", async () => {
+    it("opens a saved chat in the plugin when docked", async () => {
         const { wrapper, store } = mountPanel();
         store.setLocation("right");
-        const brain = {
-            capabilities: { chat: {} },
-            open: vi.fn(async (_params: object) => {}),
-            ask: vi.fn(async (_params: object) => {}),
-        };
-        store.brainReady(brain as never);
         await flushPromises();
         await wrapper.find(".chat-history-item").trigger("click");
-        expect(brain.open).toHaveBeenLastCalledWith({ exchange_id: "a1" });
+        expect(store.chatConfig).toEqual({ view: "chat", exchange_id: "a1" });
+        expect(store.chatMounts).toBe(1);
         expect(mockPush).not.toHaveBeenCalled();
     });
 });

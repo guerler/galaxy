@@ -14,9 +14,15 @@ interface Props {
     config: object;
     title?: string;
     visualizationId?: string;
+    /** The iframe's DOM id; several frames on one page each need their own. */
+    frameId?: string;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    title: undefined,
+    visualizationId: undefined,
+    frameId: "galaxy_visualization",
+});
 
 const emit = defineEmits<{
     (e: "change", payload: Record<string, any>): void;
@@ -128,7 +134,7 @@ onBeforeUnmount(() => {
     </div>
     <iframe
         v-else
-        id="galaxy_visualization"
+        :id="props.frameId"
         ref="iframeRef"
         class="position-relative h-100 w-100 border-0"
         title="visualization" />

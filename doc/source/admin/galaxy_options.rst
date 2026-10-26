@@ -5988,6 +5988,20 @@
 :Type: str
 
 
+~~~~~~~~~~~~~~~~~~
+``ai_chat_plugin``
+~~~~~~~~~~~~~~~~~~
+
+:Description:
+    Visualization plugin that Galaxy AI shows as its chat for
+    signed-in users. Unset, Galaxy AI uses its own chat.
+    The plugin's model is configured under its name in
+    ``inference_services``.
+    The plugin chat has no notebook context or page edit proposals.
+:Default: ``None``
+:Type: str
+
+
 ~~~~~~~~~~~~~~~~~~~~~~
 ``inference_services``
 ~~~~~~~~~~~~~~~~~~~~~~

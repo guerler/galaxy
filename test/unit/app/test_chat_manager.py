@@ -5,7 +5,11 @@ from unittest import mock
 
 import pytest
 
-from galaxy.managers.chat import ChatManager
+from galaxy import exceptions
+from galaxy.managers.chat import (
+    ChatManager,
+    MAX_CHAT_DOCUMENT_SIZE,
+)
 
 
 def _make_trans(user_id=1):
@@ -29,6 +33,7 @@ class _FakeChatExchange:
         self.user = user
         self.job_id = job_id
         self.page_id = page_id
+        self.document = None
         self.messages = []
         if message:
             self.add_message(message)
@@ -332,3 +337,109 @@ class TestGetExchangeMessagesAttribution:
             }
         )
         assert self._assistant_turn(message)["agent_type"] == "gtn_training"
+
+
+class TestDocumentChats:
+    def test_saves_a_new_plugin_chat_with_one_message_per_turn(self):
+        mgr = ChatManager()
+        trans = _make_trans()
+        document = {"olit_session": 1, "entries": [{"tool": "run_python"}]}
+
+        exchange = mgr.save_document_chat(trans, "olit", [("Hi", "Hello"), ("Plot it", "Done")], document)
+
+        assert exchange.document == document
+        assert exchange.job_id is None and exchange.page_id is None
+        assert [json.loads(m.message) for m in exchange.messages] == [
+            {"query": "Hi", "response": "Hello", "agent_type": "olit"},
+            {"query": "Plot it", "response": "Done", "agent_type": "olit"},
+        ]
+        trans.sa_session.add.assert_called_once_with(exchange)
+        trans.sa_session.commit.assert_called_once()
+
+    def test_saving_again_replaces_turns_and_document(self):
+        mgr = ChatManager()
+        trans = _make_trans()
+        existing = _FakeChatExchange(message=json.dumps({"query": "Hi", "response": "Hello", "agent_type": "olit"}))
+        existing.document = {"entries": []}
+        old_message = existing.messages[0]
+
+        with mock.patch.object(mgr, "get_exchange_by_id", return_value=existing):
+            exchange = mgr.save_document_chat(trans, "olit", [("Again", "Sure")], {"entries": [1]}, exchange_id=7)
+
+        assert exchange is existing
+        assert exchange.document == {"entries": [1]}
+        assert [json.loads(m.message)["query"] for m in exchange.messages] == ["Again"]
+        trans.sa_session.delete.assert_called_once_with(old_message)
+
+    def test_does_not_replace_a_galaxyai_chat(self):
+        mgr = ChatManager()
+        galaxyai_chat = _FakeChatExchange(message=json.dumps({"query": "Hi", "response": "Hello"}))
+
+        with mock.patch.object(mgr, "get_exchange_by_id", return_value=galaxyai_chat):
+            with pytest.raises(exceptions.ObjectNotFound):
+                mgr.save_document_chat(_make_trans(), "olit", [("q", "r")], {}, exchange_id=7)
+        assert len(galaxyai_chat.messages) == 1
+
+    def test_does_not_replace_a_chat_it_cannot_find(self):
+        mgr = ChatManager()
+        with mock.patch.object(mgr, "get_exchange_by_id", return_value=None):
+            with pytest.raises(exceptions.ObjectNotFound):
+                mgr.save_document_chat(_make_trans(), "olit", [("q", "r")], {}, exchange_id=7)
+
+    def test_reads_back_the_document_and_who_saved_it(self):
+        mgr = ChatManager()
+        saved = _FakeChatExchange(message=json.dumps({"query": "Hi", "response": "Hello", "agent_type": "olit"}))
+        saved.document = {"entries": [1]}
+
+        with mock.patch.object(mgr, "get_exchange_by_id", return_value=saved):
+            exchange, agent_type = mgr.get_document_chat(_make_trans(), 7)
+
+        assert exchange.document == {"entries": [1]}
+        assert agent_type == "olit"
+
+    def test_reads_a_galaxyai_chat_without_a_document(self):
+        mgr = ChatManager()
+        held = _FakeChatExchange(
+            message=json.dumps(
+                {"query": "Hi", "response": "Hello", "agent_type": "auto", "agent_response": {"agent_type": "router"}}
+            )
+        )
+
+        with mock.patch.object(mgr, "get_exchange_by_id", return_value=held):
+            exchange, agent_type = mgr.get_document_chat(_make_trans(), 7)
+
+        assert exchange.document is None
+        assert agent_type == "router"
+
+    def test_does_not_read_a_chat_it_cannot_find(self):
+        mgr = ChatManager()
+        with mock.patch.object(mgr, "get_exchange_by_id", return_value=None):
+            with pytest.raises(exceptions.ObjectNotFound):
+                mgr.get_document_chat(_make_trans(), 7)
+
+    def test_galaxyai_does_not_continue_a_plugin_chat(self):
+        mgr = ChatManager()
+        trans = _make_trans()
+        saved = _FakeChatExchange(message=json.dumps({"query": "Hi", "response": "Hello", "agent_type": "olit"}))
+        saved.document = {"entries": []}
+        trans.sa_session.execute.return_value.scalar_one.return_value = saved
+
+        with pytest.raises(exceptions.RequestParameterInvalidException):
+            mgr.add_message(trans, 7, json.dumps({"query": "more", "response": "..."}))
+        assert len(saved.messages) == 1
+        trans.sa_session.commit.assert_not_called()
+
+    def test_saves_a_document_at_the_size_limit(self):
+        mgr = ChatManager()
+        filler = MAX_CHAT_DOCUMENT_SIZE - len('{"text":""}')
+        exchange = mgr.save_document_chat(_make_trans(), "olit", [("q", "r")], {"text": "x" * filler})
+        assert len(exchange.document["text"]) == filler
+
+    def test_refuses_a_document_over_the_size_limit(self):
+        mgr = ChatManager()
+        trans = _make_trans()
+        filler = MAX_CHAT_DOCUMENT_SIZE - len('{"text":""}') + 1
+        with pytest.raises(exceptions.RequestParameterInvalidException, match="too large"):
+            mgr.save_document_chat(trans, "olit", [("q", "r")], {"text": "x" * filler})
+        trans.sa_session.add.assert_not_called()
+        trans.sa_session.commit.assert_not_called()

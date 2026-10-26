@@ -41,6 +41,9 @@ from galaxy.schema.agents import (
 from galaxy.schema.fields import DecodedDatabaseIdField
 from galaxy.schema.schema import (
     ChatExchangeBatchDeletePayload,
+    ChatExchangeDocumentResponse,
+    ChatExchangeSavePayload,
+    ChatExchangeSaveResponse,
     ChatHistoryItemResponse,
     ChatPayload,
     ChatResponse,
@@ -464,6 +467,20 @@ class ChatAPI:
             "feedback": chat_exchange.messages[0].feedback,
         }
 
+    @router.get("/api/chat/exchange/{exchange_id}", unstable=True)
+    def get_exchange(
+        self,
+        exchange_id: DecodedDatabaseIdField,
+        trans: ProvidesUserContext = DependsOnTrans,
+        user: User = DependsOnUser,
+    ) -> ChatHistoryItemResponse:
+        """Get a chat exchange as the chat history lists it."""
+        exchange = self.chat_manager.get_exchange_by_id(trans, exchange_id)
+        items = self._format_exchange_history([exchange] if exchange else [])
+        if not items:
+            raise ObjectNotFound("No accessible chat exchange found with the ID provided.")
+        return items[0]
+
     @router.get("/api/chat/exchange/{exchange_id}/messages", unstable=True)
     def get_exchange_messages(
         self,
@@ -473,6 +490,48 @@ class ChatAPI:
     ) -> list[dict[str, Any]]:
         """Get all messages for a specific chat exchange."""
         return self.chat_manager.get_exchange_messages(trans, exchange_id)
+
+    @router.post("/api/chat/exchanges", unstable=True)
+    def create_document_exchange(
+        self,
+        payload: ChatExchangeSavePayload,
+        trans: ProvidesUserContext = DependsOnTrans,
+        user: User = DependsOnUser,
+    ) -> ChatExchangeSaveResponse:
+        """Save a chat plugin's conversation as a new chat exchange, without running an agent."""
+        exchange = self.chat_manager.save_document_chat(
+            trans, payload.agent_type, [(turn.query, turn.response) for turn in payload.messages], payload.document
+        )
+        return ChatExchangeSaveResponse(id=exchange.id)
+
+    @router.put("/api/chat/exchange/{exchange_id}", unstable=True)
+    def update_document_exchange(
+        self,
+        exchange_id: DecodedDatabaseIdField,
+        payload: ChatExchangeSavePayload,
+        trans: ProvidesUserContext = DependsOnTrans,
+        user: User = DependsOnUser,
+    ) -> ChatExchangeSaveResponse:
+        """Replace a chat plugin's saved conversation."""
+        exchange = self.chat_manager.save_document_chat(
+            trans,
+            payload.agent_type,
+            [(turn.query, turn.response) for turn in payload.messages],
+            payload.document,
+            exchange_id=exchange_id,
+        )
+        return ChatExchangeSaveResponse(id=exchange.id)
+
+    @router.get("/api/chat/exchange/{exchange_id}/document", unstable=True)
+    def get_exchange_document(
+        self,
+        exchange_id: DecodedDatabaseIdField,
+        trans: ProvidesUserContext = DependsOnTrans,
+        user: User = DependsOnUser,
+    ) -> ChatExchangeDocumentResponse:
+        """A saved chat for the chat plugin to restore: its document, or null for a chat GalaxyAI held."""
+        exchange, agent_type = self.chat_manager.get_document_chat(trans, exchange_id)
+        return ChatExchangeDocumentResponse(id=exchange.id, agent_type=agent_type, document=exchange.document)
 
     def _format_exchange_history(self, exchanges) -> list[ChatHistoryItemResponse]:
         """Convert a list of ChatExchange ORM objects into API response models."""
@@ -495,6 +554,7 @@ class ChatAPI:
                         timestamp=message.create_time.isoformat() if message.create_time else None,
                         feedback=message.feedback,
                         message_count=len(exchange.messages),
+                        has_document=exchange.document is not None,
                     )
                 )
             except (json.JSONDecodeError, AttributeError):

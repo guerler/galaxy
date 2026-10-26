@@ -3265,6 +3265,17 @@ galaxy:
   # AI model to enable the wizard. Global fallback for all AI agents.
   #ai_model: gpt-4o
 
+  # Name of a visualization plugin Galaxy mounts as its AI chat for
+  # signed-in users: in the center view and in the right and bottom
+  # docks. It opens every saved chat, including those GalaxyAI held
+  # before; GalaxyAI shows the chats the plugin saved, read-only. The
+  # plugin stays an ordinary visualization plugin, loaded, served and
+  # proxied as before, and is also offered in visualization lists unless
+  # its XML sets ``hidden``. Its model settings come from
+  # ``inference_services`` under the plugin's name. Unset, Galaxy offers
+  # GalaxyAI's own chat, as before.
+  #ai_chat_plugin: null
+
   # Configuration for AI inference services used by agents and
   # visualization plugins. Supports per-agent or per-plugin model,
   # temperature, max_tokens, retries, api_key, api_base_url, and enabled

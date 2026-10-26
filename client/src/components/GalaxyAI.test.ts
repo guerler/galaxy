@@ -14,6 +14,8 @@ import { useChatStore } from "@/stores/chatStore";
 import { usePageEditorStore } from "@/stores/pageEditorStore";
 
 import GalaxyAI from "./GalaxyAI.vue";
+import ChatInput from "./GalaxyAI/ChatInput.vue";
+import GAlert from "@/components/BaseComponents/GAlert.vue";
 
 // API mock
 const { server, http } = useServerMock();
@@ -304,5 +306,51 @@ describe("GalaxyAI fetch operations on mount", () => {
             await flushPromises();
             expect(toastError).toHaveBeenCalledWith(expect.any(String), title);
         });
+    });
+});
+
+describe("GalaxyAI showing a conversation a chat plugin saved", () => {
+    function makeExchangeFetch(hasDocument: boolean) {
+        server.use(
+            http.get("/api/chat/exchange/{exchange_id}", ({ response }) =>
+                response(200).json({
+                    id: EXCHANGE_ID,
+                    query: "Hello",
+                    response: "Hi",
+                    agent_type: hasDocument ? "olit" : "router",
+                    message_count: 1,
+                    has_document: hasDocument,
+                }),
+            ),
+        );
+    }
+
+    beforeEach(() => {
+        mockActiveContext.value = null;
+        // Not among the listed chats: the exchange itself says who saved it.
+        makeHistoryFetch([]);
+        makeSuccessfulFetch();
+    });
+
+    afterEach(() => {
+        lastWrapper?.unmount();
+        lastWrapper = null;
+        vi.restoreAllMocks();
+    });
+
+    it("shows it read-only and says why", async () => {
+        makeExchangeFetch(true);
+        const { wrapper } = mountGalaxyAI({ props: { exchangeId: EXCHANGE_ID } });
+        await flushPromises();
+        expect(wrapper.findComponent(GAlert).exists()).toBe(true);
+        expect(wrapper.findComponent(ChatInput).props("disabled")).toBe(true);
+    });
+
+    it("leaves Galaxy's own conversations open to reply", async () => {
+        makeExchangeFetch(false);
+        const { wrapper } = mountGalaxyAI({ props: { exchangeId: EXCHANGE_ID } });
+        await flushPromises();
+        expect(wrapper.findComponent(GAlert).exists()).toBe(false);
+        expect(wrapper.findComponent(ChatInput).props("disabled")).toBe(false);
     });
 });

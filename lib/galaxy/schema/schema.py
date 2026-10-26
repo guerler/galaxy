@@ -4412,6 +4412,11 @@ class ChatHistoryItemResponse(BaseModel):
         title="Message Count",
         description="Total number of messages in this exchange.",
     )
+    has_document: bool = Field(
+        default=False,
+        title="Has Document",
+        description="Whether a chat plugin saved this exchange, which only a chat plugin continues.",
+    )
 
 
 class ChatExchangeBatchDeletePayload(Model):
@@ -4419,6 +4424,69 @@ class ChatExchangeBatchDeletePayload(Model):
         ...,
         title="Exchange IDs",
         description="List of chat exchange IDs to delete.",
+    )
+
+
+class ChatExchangeTurn(Model):
+    query: str = Field(
+        ...,
+        title="Query",
+        description="What the user asked in this turn.",
+    )
+    response: str = Field(
+        ...,
+        title="Response",
+        description="The assistant's answer in this turn.",
+    )
+
+
+class ChatExchangeSavePayload(Model):
+    agent_type: str = Field(
+        ...,
+        title="Agent Type",
+        description="Who held the conversation: the chat plugin's name.",
+        pattern=r"^[A-Za-z0-9_.-]+$",
+        max_length=255,
+    )
+    messages: list[ChatExchangeTurn] = Field(
+        ...,
+        title="Messages",
+        description="The conversation's turns, as Galaxy lists and shows them.",
+        min_length=1,
+    )
+    document: dict[str, Any] = Field(
+        ...,
+        title="Document",
+        description="The whole conversation as the chat plugin restores it; Galaxy stores it as given.",
+    )
+
+
+class ChatExchangeSaveResponse(Model):
+    id: EncodedDatabaseIdField = Field(
+        ...,
+        title="Exchange ID",
+        description="The encoded ID of the saved chat exchange.",
+    )
+
+
+class ChatExchangeDocumentResponse(Model):
+    id: EncodedDatabaseIdField = Field(
+        ...,
+        title="Exchange ID",
+        description="The encoded ID of the chat exchange.",
+    )
+    agent_type: str = Field(
+        ...,
+        title="Agent Type",
+        description="Who held the conversation: the chat plugin's name.",
+    )
+    document: dict[str, Any] | None = Field(
+        None,
+        title="Document",
+        description=(
+            "The whole conversation as the chat plugin saved it, or null for a chat GalaxyAI held, "
+            "whose turns are at /api/chat/exchange/{exchange_id}/messages."
+        ),
     )
 
 

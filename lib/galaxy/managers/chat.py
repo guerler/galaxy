@@ -37,6 +37,9 @@ from galaxy.model import (
 )
 from galaxy.util import unicodify
 
+# The largest chat plugin document Galaxy stores, in bytes of compact JSON.
+MAX_CHAT_DOCUMENT_SIZE = 16 * 1024 * 1024
+
 
 class ChatManager:
     """
@@ -220,12 +223,79 @@ class ChatManager:
         except Exception as e:
             raise InternalServerError(f"Error loading from the database: {unicodify(e)}")
 
+        if chat_exchange.document is not None:
+            raise RequestParameterInvalidException("This chat was saved by a chat plugin and continues there.")
+
         chat_message = ChatExchangeMessage(message=message, feedback=None)
         chat_exchange.messages.append(chat_message)
 
         trans.sa_session.add(chat_message)
         trans.sa_session.commit()
         return chat_message
+
+    def save_document_chat(
+        self,
+        trans: ProvidesUserContext,
+        agent_type: str,
+        turns: list[tuple[str, str]],
+        document: dict[str, Any],
+        exchange_id: int | None = None,
+    ) -> ChatExchange:
+        """
+        Save a chat plugin's conversation: the document it restores the conversation from, and one
+        message per turn so Galaxy can list and show it. Saving again replaces both.
+
+        :param agent_type: the chat plugin's name, recorded on every message
+        :param turns: the conversation's (query, response) pairs
+        :param document: the whole conversation, stored as given
+        :param exchange_id: the plugin chat to replace, or None for a new one
+        :raises: ObjectNotFound, RequestParameterInvalidException
+        """
+        size = len(json.dumps(document, separators=(",", ":")).encode())
+        if size > MAX_CHAT_DOCUMENT_SIZE:
+            raise RequestParameterInvalidException(
+                f"This conversation is too large to save ({size} bytes, the limit is {MAX_CHAT_DOCUMENT_SIZE})."
+            )
+        if exchange_id is None:
+            chat_exchange = ChatExchange(user=trans.user)
+            trans.sa_session.add(chat_exchange)
+        else:
+            chat_exchange = self._get_document_chat(trans, exchange_id)
+            for message in list(chat_exchange.messages):
+                trans.sa_session.delete(message)
+            chat_exchange.messages = []
+        chat_exchange.document = document
+        for query, response in turns:
+            content = json.dumps({"query": query, "response": response, "agent_type": agent_type})
+            chat_exchange.messages.append(ChatExchangeMessage(message=content))
+        trans.sa_session.commit()
+        return chat_exchange
+
+    def get_document_chat(self, trans: ProvidesUserContext, exchange_id: int) -> tuple[ChatExchange, str]:
+        """
+        A saved chat for the chat plugin to restore, and who held it. A chat GalaxyAI held has no
+        document; the plugin restores it from its turns.
+
+        :raises: ObjectNotFound
+        """
+        chat_exchange = self.get_exchange_by_id(trans, exchange_id)
+        if chat_exchange is None:
+            raise exceptions.ObjectNotFound("No accessible chat exchange found with the ID provided.")
+        agent_type = "unknown"
+        if chat_exchange.messages:
+            try:
+                agent_type = self.responder_agent_type(json.loads(chat_exchange.messages[0].message))
+            except (json.JSONDecodeError, AttributeError):
+                pass
+        return chat_exchange, agent_type
+
+    def _get_document_chat(self, trans: ProvidesUserContext, exchange_id: int) -> ChatExchange:
+        chat_exchange = self.get_exchange_by_id(trans, exchange_id)
+        if chat_exchange is None:
+            raise exceptions.ObjectNotFound("No accessible chat exchange found with the ID provided.")
+        if chat_exchange.document is None:
+            raise exceptions.ObjectNotFound("This chat was not saved by a chat plugin.")
+        return chat_exchange
 
     def get(self, trans: ProvidesUserContext, job_id: int) -> ChatExchange | None:
         """

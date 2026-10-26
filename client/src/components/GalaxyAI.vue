@@ -26,6 +26,7 @@ import ChatInput from "./GalaxyAI/ChatInput.vue";
 import ChatMessageCell from "./GalaxyAI/ChatMessageCell.vue";
 import ProposalDiffView from "./PageEditor/ProposalDiffView.vue";
 import SectionPatchView from "./PageEditor/SectionPatchView.vue";
+import GAlert from "@/components/BaseComponents/GAlert.vue";
 import Heading from "@/components/Common/Heading.vue";
 
 const props = withDefaults(
@@ -115,6 +116,9 @@ const chatContainer = ref<HTMLElement>();
 const selectedAgentType = ref("auto");
 const currentChatId = ref<string | null>(null);
 const hasLoadedInitialChat = ref(false);
+
+/** Whether a chat plugin saved the conversation shown, which only a chat plugin continues */
+const savedByPlugin = ref(false);
 
 // Bumped whenever the displayed conversation changes so that responses still in
 // flight for a previous conversation can be recognized as stale and dropped.
@@ -433,6 +437,9 @@ async function fetchConversation(exchangeId: string) {
 
     const generation = ++conversationGeneration;
 
+    const exchange = GalaxyApi()
+        .GET("/api/chat/exchange/{exchange_id}", { params: { path: { exchange_id: exchangeId } } })
+        .catch(() => ({ data: undefined }));
     let result;
     try {
         result = await GalaxyApi().GET(`/api/chat/exchange/{exchange_id}/messages`, {
@@ -444,6 +451,7 @@ async function fetchConversation(exchangeId: string) {
         result = { error: e };
     }
     const { data: fullConversation, error } = result;
+    const { data: shown } = await exchange;
 
     if (generation !== conversationGeneration) {
         // A newer conversation was loaded (or a new chat started) while this one
@@ -483,6 +491,7 @@ async function fetchConversation(exchangeId: string) {
     });
 
     currentChatId.value = exchangeId;
+    savedByPlugin.value = Boolean(shown?.has_document);
     nextTick(() => scrollToBottom(chatContainer.value));
 
     const ctx = activeContext.value;
@@ -531,6 +540,7 @@ function startNewChat() {
         },
     ];
     currentChatId.value = null;
+    savedByPlugin.value = false;
     query.value = "";
     clearProposals();
     if (props.docked || props.panel) {
@@ -678,7 +688,15 @@ watch(currentChatId, async (newId) => {
         </div>
 
         <div class="galaxyai-footer">
-            <ChatInput :value="query" :busy="busy" @input="(v: string) => (query = v)" @submit="submitQuery" />
+            <GAlert v-if="savedByPlugin" variant="info" show>
+                This conversation was saved by another AI chat. It can be read here and continued only there.
+            </GAlert>
+            <ChatInput
+                :value="query"
+                :busy="busy"
+                :disabled="savedByPlugin"
+                @input="(v: string) => (query = v)"
+                @submit="submitQuery" />
         </div>
     </div>
 </template>

@@ -99,6 +99,23 @@ describe("several visualizations on one page", () => {
         expect(second.emitted("change")).toBeFalsy();
     });
 
+    it("takes a message its plugin posts to its own window, from Galaxy's origin only", async () => {
+        const { first, second } = await twoFrames();
+        const own = first.find("iframe").element.contentWindow;
+        const post = (origin) =>
+            own.dispatchEvent(
+                new MessageEvent("message", {
+                    data: { from: "galaxy-visualization", visualization_saved: false },
+                    origin,
+                }),
+            );
+        post("https://example.org");
+        expect(first.emitted("saved")).toBeFalsy();
+        post(window.location.origin);
+        expect(first.emitted("saved")).toEqual([[false]]);
+        expect(second.emitted("saved")).toBeFalsy();
+    });
+
     it("does not emit a debounced change after it has been removed", async () => {
         const { first } = await twoFrames();
         postFrom(first, { from: "galaxy-visualization", visualization_config: {}, visualization_title: "in flight" });

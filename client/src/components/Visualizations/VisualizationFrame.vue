@@ -59,6 +59,12 @@ function onWindowMessage(event: MessageEvent) {
     }
 }
 
+function onOwnMessage(event: MessageEvent) {
+    if (event.origin === window.location.origin) {
+        onFrameMessage(event);
+    }
+}
+
 async function render() {
     if (props.name) {
         try {
@@ -100,7 +106,7 @@ async function render() {
                         iframeDocument.head.appendChild(link);
                     }
 
-                    iframe.contentWindow?.addEventListener("message", onFrameMessage);
+                    iframe.contentWindow?.addEventListener("message", onOwnMessage);
 
                     emit("load");
                     errorMessage.value = "";
@@ -125,7 +131,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     window.removeEventListener("message", onWindowMessage);
-    iframeRef.value?.contentWindow?.removeEventListener("message", onFrameMessage);
+    iframeRef.value?.contentWindow?.removeEventListener("message", onOwnMessage);
     emitChange.cancel();
 });
 </script>
